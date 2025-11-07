@@ -589,28 +589,28 @@ namespace AutoFlight{
 
 
 // 这个是原本的run函数，不知道为什么在跑圆圈，有可能是重写了，现在我要它停止
-	// void mpcNavigation::run(){
-	// 	// take off the drone
-	// 	this->takeoff();
-
-	// 	// register timer callback
-	// 	this->registerCallback();
-	// }
-
-
 	void mpcNavigation::run(){
-    // 起飞
-    this->takeoff();
+		// take off the drone
+		this->takeoff();
 
-    // 改为：起飞后直接停止，不执行圆形轨迹
-    this->stop();
-    
-    cout << "[AutoFlight]: Drone is holding position after takeoff." << endl;
+		// register timer callback
+		this->registerCallback();
+	}
 
-    // 注册回调函数（保持其他功能）
-    this->registerCallback();
+
+// 	void mpcNavigation::run(){
+//     // 起飞
+//     this->takeoff();
+
+//     // 改为：起飞后直接停止，不执行圆形轨迹
+//     this->stop();
     
-}
+//     cout << "[AutoFlight]: Drone is holding position after takeoff." << endl;
+
+//     // 注册回调函数（保持其他功能）
+//     this->registerCallback();
+    
+// }
 
 	bool mpcNavigation::goalHasCollision(){
 		Eigen::Vector3d p;

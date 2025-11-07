@@ -394,92 +394,93 @@ namespace AutoFlight{
 
 
 
-	// 原地悬停
+	// // 原地悬停
+	// void flightBase::run(){
+	// 	// 直接停止，保持当前位置
+	// 	this->stop();
+		
+	// 	cout << "[AutoFlight]: Drone is holding position." << endl;
+		
+	// 	// 保持运行状态
+	// 	ros::Rate rate(30);
+	// 	while (ros::ok()){
+	// 		ros::spinOnce();
+	// 		rate.sleep();
+	// 	}
+	// }
+	
+// 跑圆圈
 	void flightBase::run(){
-		// 直接停止，保持当前位置
-		this->stop();
+		// flight test with circle
+		double r; // radius
+		double v; // circle velocity
+    	
+    	// track circle radius parameters    	
+		if (not this->nh_.getParam("autonomous_flight/circle_radius", r)){
+			r = 2.0;
+			cout << "[AutoFlight]: No circle radius param found. Use default: 2.0 m." << endl;
+		}
+		else{
+			cout << "[AutoFlight]: Circle radius: " << r << "m." << endl;
+		}
+
+    	// track circle velocity parameters    	
+		if (not this->nh_.getParam("autonomous_flight/velocity", v)){
+			v = 1.0;
+			cout << "[AutoFlight]: No circle velocity param found. Use default: 1.0 m/s." << endl;
+		}
+		else{
+			cout << "[AutoFlight]: Circle velocity: " << v << "m/s." << endl;
+		}
+
+		double z = this->odom_.pose.pose.position.z;
+		geometry_msgs::PoseStamped startPs;
+		startPs.pose.position.x = r;
+		startPs.pose.position.y = 0.0;
+		startPs.pose.position.z = z;
+		this->updateTarget(startPs);
 		
-		cout << "[AutoFlight]: Drone is holding position." << endl;
-		
-		// 保持运行状态
-		ros::Rate rate(30);
+		cout << "[AutoFlight]: Go to target point..." << endl;
+		ros::Rate rate (30);
+		while (ros::ok() and std::abs(this->odom_.pose.pose.position.x - startPs.pose.position.x) >= 0.1){
+			ros::spinOnce();
+			rate.sleep();
+		}
+		cout << "[AutoFlight]: Reach target point." << endl;
+
+		ros::Time startTime = ros::Time::now();
 		while (ros::ok()){
+			ros::Time currTime = ros::Time::now();
+			double t = (currTime - startTime).toSec();
+			double rad = v * t / r;
+			double x = r * cos(rad);
+			double y = r * sin(rad);
+			double vx = -v * sin(rad);
+			double vy = v * cos(rad);
+			double vz = 0.0;
+			double aNorm = v*v/r;
+			Eigen::Vector3d accVec (x, y, 0);
+			accVec = -aNorm * accVec / accVec.norm();
+			double ax = accVec(0);
+			double ay = accVec(1);
+			double az = 0.0;
+
+			// state target message
+			tracking_controller::Target target;
+			target.position.x = x;
+			target.position.y = y;
+			target.position.z = z;
+			target.velocity.x = vx;
+			target.velocity.y = vy;
+			target.velocity.z = vz;
+			target.acceleration.x = ax;
+			target.acceleration.y = ay;
+			target.acceleration.z = az;
+			this->updateTargetWithState(target);
 			ros::spinOnce();
 			rate.sleep();
 		}
 	}
-// 跑圆圈
-	// void flightBase::run(){
-		// // flight test with circle
-		// double r; // radius
-		// double v; // circle velocity
-    	
-    	// // track circle radius parameters    	
-		// if (not this->nh_.getParam("autonomous_flight/circle_radius", r)){
-		// 	r = 2.0;
-		// 	cout << "[AutoFlight]: No circle radius param found. Use default: 2.0 m." << endl;
-		// }
-		// else{
-		// 	cout << "[AutoFlight]: Circle radius: " << r << "m." << endl;
-		// }
-
-    	// // track circle velocity parameters    	
-		// if (not this->nh_.getParam("autonomous_flight/velocity", v)){
-		// 	v = 1.0;
-		// 	cout << "[AutoFlight]: No circle velocity param found. Use default: 1.0 m/s." << endl;
-		// }
-		// else{
-		// 	cout << "[AutoFlight]: Circle velocity: " << v << "m/s." << endl;
-		// }
-
-		// double z = this->odom_.pose.pose.position.z;
-		// geometry_msgs::PoseStamped startPs;
-		// startPs.pose.position.x = r;
-		// startPs.pose.position.y = 0.0;
-		// startPs.pose.position.z = z;
-		// this->updateTarget(startPs);
-		
-		// cout << "[AutoFlight]: Go to target point..." << endl;
-		// ros::Rate rate (30);
-		// while (ros::ok() and std::abs(this->odom_.pose.pose.position.x - startPs.pose.position.x) >= 0.1){
-		// 	ros::spinOnce();
-		// 	rate.sleep();
-		// }
-		// cout << "[AutoFlight]: Reach target point." << endl;
-
-		// ros::Time startTime = ros::Time::now();
-		// while (ros::ok()){
-		// 	ros::Time currTime = ros::Time::now();
-		// 	double t = (currTime - startTime).toSec();
-		// 	double rad = v * t / r;
-		// 	double x = r * cos(rad);
-		// 	double y = r * sin(rad);
-		// 	double vx = -v * sin(rad);
-		// 	double vy = v * cos(rad);
-		// 	double vz = 0.0;
-		// 	double aNorm = v*v/r;
-		// 	Eigen::Vector3d accVec (x, y, 0);
-		// 	accVec = -aNorm * accVec / accVec.norm();
-		// 	double ax = accVec(0);
-		// 	double ay = accVec(1);
-		// 	double az = 0.0;
-
-		// 	// state target message
-		// 	tracking_controller::Target target;
-		// 	target.position.x = x;
-		// 	target.position.y = y;
-		// 	target.position.z = z;
-		// 	target.velocity.x = vx;
-		// 	target.velocity.y = vy;
-		// 	target.velocity.z = vz;
-		// 	target.acceleration.x = ax;
-		// 	target.acceleration.y = ay;
-		// 	target.acceleration.z = az;
-		// 	this->updateTargetWithState(target);
-		// 	ros::spinOnce();
-		// 	rate.sleep();
-		// }
-	// }
 
 	void flightBase::stop(){
 		geometry_msgs::PoseStamped ps;
