@@ -1,0 +1,2 @@
+Intent-MPC/autonomous_flight:Intent-MPC/dynamic_predictor:Intent-MPC/global_planner:Intent-MPC/map_manager:Intent-MPC/onboard_detector:Intent-MPC/remote_control:Intent-MPC/time_optimizer:Intent-MPC/tracking_controller:Intent-MPC/trajectory_planner:Intent-MPC/uav_simulator
+-DCATKIN_DEVEL_PREFIX=/home/ff/intent-mpc/devel -DCMAKE_INSTALL_PREFIX=/home/ff/intent-mpc/install -G Unix Makefiles

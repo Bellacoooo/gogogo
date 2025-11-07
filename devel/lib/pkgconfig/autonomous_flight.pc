@@ -1,0 +1,8 @@
+prefix=/home/ff/intent-mpc/devel
+
+Name: autonomous_flight
+Description: Description of autonomous_flight
+Version: 1.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,8 @@
+prefix=/home/ff/intent-mpc/devel
+
+Name: dynamic_predictor
+Description: Description of dynamic_predictor
+Version: 1.0.0
+Cflags: -I/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include
+Libs: -L${prefix}/lib -ldynamic_predictor
+Requires: roscpp rospy std_msgs

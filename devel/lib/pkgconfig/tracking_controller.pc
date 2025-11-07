@@ -1,0 +1,8 @@
+prefix=/home/ff/intent-mpc/devel
+
+Name: tracking_controller
+Description: Description of tracking_controller
+Version: 1.0.0
+Cflags: -I/home/ff/intent-mpc/devel/include -I/home/ff/intent-mpc/src/Intent-MPC/tracking_controller/include
+Libs: -L${prefix}/lib -ltracking_controller
+Requires: roscpp rospy std_msgs message_runtime

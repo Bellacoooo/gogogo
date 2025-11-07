@@ -1,0 +1,8 @@
+prefix=/home/ff/intent-mpc/devel
+
+Name: time_optimizer
+Description: Description of time_optimizer
+Version: 1.0.0
+Cflags: -I/home/ff/intent-mpc/src/Intent-MPC/time_optimizer/include
+Libs: -L${prefix}/lib -ltime_optimizer
+Requires: 
