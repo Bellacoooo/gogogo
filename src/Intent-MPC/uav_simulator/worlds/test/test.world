@@ -40,11 +40,15 @@
   <angular_velocity>2.5</angular_velocity>  <!-- 提高角速度，让转向更急 -->
   <path>
     <!-- 创建一个密集的、方向多变的航点集 -->
-    <waypoint> 2.0  -5.0 0.0</waypoint>  <!-- 突然右前方 -->
-    <waypoint> 1.0  -6.0 0.0</waypoint>  <!-- 急转回左侧 -->
-    <waypoint> 2.0 -5.0 0.0</waypoint>  <!-- 急转至右后方 -->
-    <waypoint> 3.0  -6.0 0.0</waypoint>  <!-- 再回到原点右侧 -->
-    <waypoint> 0.0  -6.0 0.0</waypoint>  <!-- 直线冲回原点 -->
+      <waypoint>2.0 5.0 0.0</waypoint>
+      <waypoint>1.5 4.2 0.0</waypoint>
+      <waypoint>1.0 4.0 0.0</waypoint>
+      <waypoint>1.5 4.5 0.0</waypoint>
+      <waypoint>2.0 5.0 0.0</waypoint>
+      <waypoint>2.8 4.3 0.0</waypoint>
+      <waypoint>3.0 4.0 0.0</waypoint>
+      <waypoint>1.5 4.0 0.0</waypoint>
+      <waypoint>0.0 4.0 0.0</waypoint>
   </path>
 </plugin>
 
