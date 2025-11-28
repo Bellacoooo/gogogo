@@ -68,7 +68,7 @@ include Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen.dir/progres
 
 Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic UIC for target keyboard_control"
-	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen.dir/AutogenInfo.json Release
+	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen.dir/AutogenInfo.json ""
 
 keyboard_control_autogen: Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen
 keyboard_control_autogen: Intent-MPC/uav_simulator/CMakeFiles/keyboard_control_autogen.dir/build.make

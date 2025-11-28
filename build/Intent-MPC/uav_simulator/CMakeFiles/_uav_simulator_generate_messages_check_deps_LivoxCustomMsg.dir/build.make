@@ -67,7 +67,7 @@ include Intent-MPC/uav_simulator/CMakeFiles/_uav_simulator_generate_messages_che
 include Intent-MPC/uav_simulator/CMakeFiles/_uav_simulator_generate_messages_check_deps_LivoxCustomMsg.dir/progress.make
 
 Intent-MPC/uav_simulator/CMakeFiles/_uav_simulator_generate_messages_check_deps_LivoxCustomMsg:
-	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && ../../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py uav_simulator /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg std_msgs/Header:uav_simulator/CustomPoint
+	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && ../../catkin_generated/env_cached.sh /usr/bin/python3 /opt/ros/noetic/share/genmsg/cmake/../../../lib/genmsg/genmsg_check_deps.py uav_simulator /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg uav_simulator/CustomPoint:std_msgs/Header
 
 _uav_simulator_generate_messages_check_deps_LivoxCustomMsg: Intent-MPC/uav_simulator/CMakeFiles/_uav_simulator_generate_messages_check_deps_LivoxCustomMsg
 _uav_simulator_generate_messages_check_deps_LivoxCustomMsg: Intent-MPC/uav_simulator/CMakeFiles/_uav_simulator_generate_messages_check_deps_LivoxCustomMsg.dir/build.make

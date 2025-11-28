@@ -2469,7 +2469,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/eventfd.h \
   /usr/include/x86_64-linux-gnu/bits/fcntl-linux.h \
   /usr/include/x86_64-linux-gnu/bits/fcntl.h \
-  /usr/include/x86_64-linux-gnu/bits/fcntl2.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/flt-eval-method.h \
@@ -2490,11 +2489,9 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
-  /usr/include/x86_64-linux-gnu/bits/mathinline.h \
   /usr/include/x86_64-linux-gnu/bits/netdb.h \
   /usr/include/x86_64-linux-gnu/bits/param.h \
   /usr/include/x86_64-linux-gnu/bits/poll.h \
-  /usr/include/x86_64-linux-gnu/bits/poll2.h \
   /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
   /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
   /usr/include/x86_64-linux-gnu/bits/posix_opt.h \
@@ -2502,7 +2499,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/sched.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
-  /usr/include/x86_64-linux-gnu/bits/select2.h \
   /usr/include/x86_64-linux-gnu/bits/semaphore.h \
   /usr/include/x86_64-linux-gnu/bits/setjmp.h \
   /usr/include/x86_64-linux-gnu/bits/sigaction.h \
@@ -2518,7 +2514,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/sigthread.h \
   /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
   /usr/include/x86_64-linux-gnu/bits/socket.h \
-  /usr/include/x86_64-linux-gnu/bits/socket2.h \
   /usr/include/x86_64-linux-gnu/bits/socket_type.h \
   /usr/include/x86_64-linux-gnu/bits/ss_flags.h \
   /usr/include/x86_64-linux-gnu/bits/stat.h \
@@ -2526,14 +2521,8 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/statx.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio.h \
-  /usr/include/x86_64-linux-gnu/bits/stdio2.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
-  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
-  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
   /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
   /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
   /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
@@ -2594,12 +2583,10 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
   /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
   /usr/include/x86_64-linux-gnu/bits/uio-ext.h \
   /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/unistd.h \
   /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar2.h \
   /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h \
   /usr/include/x86_64-linux-gnu/bits/wordsize.h \
   /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
@@ -2792,11 +2779,7 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h:
 
-/usr/include/x86_64-linux-gnu/bits/wchar2.h:
-
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
-
-/usr/include/x86_64-linux-gnu/bits/unistd.h:
 
 /usr/include/x86_64-linux-gnu/bits/typesizes.h:
 
@@ -2874,15 +2857,7 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h:
 
-/usr/include/x86_64-linux-gnu/bits/strings_fortified.h:
-
-/usr/include/x86_64-linux-gnu/bits/string_fortified.h:
-
 /usr/include/x86_64-linux-gnu/bits/stdlib-float.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h:
-
-/usr/include/x86_64-linux-gnu/bits/stdio2.h:
 
 /usr/include/x86_64-linux-gnu/bits/statx-generic.h:
 
@@ -2910,8 +2885,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/x86_64-linux-gnu/bits/semaphore.h:
 
-/usr/include/x86_64-linux-gnu/bits/select2.h:
-
 /usr/include/x86_64-linux-gnu/bits/sched.h:
 
 /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h:
@@ -2922,15 +2895,11 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
 
-/usr/include/x86_64-linux-gnu/bits/poll2.h:
-
 /usr/include/x86_64-linux-gnu/bits/poll.h:
 
 /usr/include/x86_64-linux-gnu/bits/param.h:
 
 /usr/include/x86_64-linux-gnu/bits/netdb.h:
-
-/usr/include/x86_64-linux-gnu/bits/mathinline.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h:
 
@@ -2947,8 +2916,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 /usr/include/x86_64-linux-gnu/bits/floatn.h:
 
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
-
-/usr/include/x86_64-linux-gnu/bits/fcntl2.h:
 
 /usr/include/x86_64-linux-gnu/bits/fcntl.h:
 
@@ -4150,8 +4117,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/ignition/msgs5/ignition/msgs/pose_animation.pb.h:
 
-/usr/include/x86_64-linux-gnu/bits/socket2.h:
-
 /usr/include/boost/asio/detail/thread_info_base.hpp:
 
 /usr/include/boost/predef/compiler/intel.h:
@@ -5062,8 +5027,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 
 /usr/include/boost/asio/detail/handler_invoke_helpers.hpp:
 
-/usr/include/x86_64-linux-gnu/bits/stdio.h:
-
 /usr/include/boost/mpl/aux_/config/compiler.hpp:
 
 /usr/include/boost/asio/basic_signal_set.hpp:
@@ -5831,8 +5794,6 @@ Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin.dir/src/obstaclePathPlugi
 /usr/include/boost/interprocess/detail/posix_time_types_wrk.hpp:
 
 /usr/include/boost/date_time/gregorian/greg_weekday.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
 /usr/include/sdformat-9.10/sdf/system_util.hh:
 

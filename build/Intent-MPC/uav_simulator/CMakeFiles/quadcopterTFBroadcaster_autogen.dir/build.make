@@ -68,7 +68,7 @@ include Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen.dir/
 
 Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic UIC for target quadcopterTFBroadcaster"
-	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen.dir/AutogenInfo.json Release
+	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen.dir/AutogenInfo.json ""
 
 quadcopterTFBroadcaster_autogen: Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen
 quadcopterTFBroadcaster_autogen: Intent-MPC/uav_simulator/CMakeFiles/quadcopterTFBroadcaster_autogen.dir/build.make

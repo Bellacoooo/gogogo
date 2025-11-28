@@ -44,7 +44,7 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/wchar2.h /usr/include/c++/9/cstdint \
+ /usr/include/c++/9/cstdint \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h /usr/include/stdint.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/timesize.h \
@@ -112,10 +112,7 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/x86_64-linux-gnu/bits/select.h \
  /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/select2.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+ /usr/include/alloca.h /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/9/bits/std_abs.h /usr/include/c++/9/cstdio \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
@@ -123,10 +120,9 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/sys_errlist.h \
- /usr/include/x86_64-linux-gnu/bits/stdio.h \
- /usr/include/x86_64-linux-gnu/bits/stdio2.h /usr/include/c++/9/cerrno \
- /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
- /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/c++/9/cerrno /usr/include/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/9/bits/basic_string.tcc /usr/include/c++/9/vector \
@@ -183,7 +179,6 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
  /usr/include/x86_64-linux-gnu/bits/mathcalls-narrow.h \
  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
- /usr/include/x86_64-linux-gnu/bits/mathinline.h \
  /usr/include/c++/9/bits/specfun.h /usr/include/c++/9/tr1/gamma.tcc \
  /usr/include/c++/9/tr1/special_function_util.h \
  /usr/include/c++/9/tr1/bessel_function.tcc \
@@ -220,7 +215,6 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/x86_64-linux-gnu/bits/confname.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_posix.h \
  /usr/include/x86_64-linux-gnu/bits/getopt_core.h \
- /usr/include/x86_64-linux-gnu/bits/unistd.h \
  /usr/include/x86_64-linux-gnu/bits/unistd_ext.h \
  /usr/include/boost/config/detail/select_platform_config.hpp \
  /usr/include/boost/config/platform/linux.hpp \
@@ -262,8 +256,6 @@ Intent-MPC/uav_simulator/CMakeFiles/keyboard_control.dir/src/droneObjectRos.cpp.
  /usr/include/c++/9/bits/quoted_string.h /usr/include/c++/9/sstream \
  /usr/include/c++/9/bits/sstream.tcc /usr/include/c++/9/cstring \
  /usr/include/string.h /usr/include/strings.h \
- /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
- /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/boost/config/no_tr1/complex.hpp /usr/include/c++/9/complex \
  /usr/include/boost/math/policies/policy.hpp \
  /usr/include/boost/mpl/list.hpp /usr/include/boost/mpl/limits/list.hpp \

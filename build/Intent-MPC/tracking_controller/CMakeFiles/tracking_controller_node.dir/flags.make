@@ -6,5 +6,5 @@ CXX_DEFINES = -DROSCONSOLE_BACKEND_LOG4CXX -DROS_BUILD_SHARED_LIBS=1 -DROS_PACKA
 
 CXX_INCLUDES = -I/home/ff/intent-mpc/devel/include -I/home/ff/intent-mpc/src/Intent-MPC/tracking_controller/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/eigen3
 
-CXX_FLAGS = -std=c++14  -O3 -Wall -O3 -DNDEBUG
+CXX_FLAGS = -std=c++14  -O3 -Wall
 

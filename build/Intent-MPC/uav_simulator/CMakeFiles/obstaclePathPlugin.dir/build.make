@@ -154,8 +154,8 @@ obstaclePathPlugin_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libccd.so
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libfcl.so
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libassimp.so
-/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/liboctomap.so.1.9.3
-/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/liboctomath.so.1.9.3
+/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /opt/ros/noetic/lib/liboctomap.so.1.9.8
+/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /opt/ros/noetic/lib/liboctomath.so.1.9.8
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libboost_atomic.so.1.71.0
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libignition-transport8.so.8.5.0
 /home/ff/intent-mpc/src/Intent-MPC/uav_simulator/plugins/libobstaclePathPlugin.so: /usr/lib/x86_64-linux-gnu/libignition-fuel_tools4.so.4.9.1

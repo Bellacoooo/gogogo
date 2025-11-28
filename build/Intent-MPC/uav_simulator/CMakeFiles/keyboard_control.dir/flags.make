@@ -6,5 +6,5 @@ CXX_DEFINES = -DBOOST_TEST_DYN_LINK -DLIBBULLET_VERSION=2.88 -DLIBBULLET_VERSION
 
 CXX_INCLUDES = -I/home/ff/intent-mpc/build/Intent-MPC/uav_simulator/keyboard_control_autogen/include -I/home/ff/intent-mpc/devel/include -I/usr/include/vtk-7.1 -I/usr/include/freetype2 -I/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/gazebo-11 -I/usr/include/bullet -I/usr/include/simbody -I/usr/include/sdformat-9.10 -I/usr/include/ignition/math6 -I/usr/include/OGRE -I/usr/include/OGRE/Terrain -I/usr/include/OGRE/Paging -I/usr/include/ignition/transport8 -I/usr/include/ignition/msgs5 -I/usr/include/ignition/common3 -I/usr/include/ignition/fuel_tools4 -I/usr/include/pcl-1.10 -I/usr/include/eigen3 -I/usr/include/ni -I/usr/include/openni2 -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -isystem /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 
-CXX_FLAGS = -O3 -DNDEBUG -std=c++17 -fPIC
+CXX_FLAGS = -std=c++17 -fPIC
 

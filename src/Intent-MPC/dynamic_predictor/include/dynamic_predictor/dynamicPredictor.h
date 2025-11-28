@@ -13,6 +13,8 @@
 #include <onboard_detector/fakeDetector.h>
 #include <map_manager/dynamicMap.h>
 #include <dynamic_predictor/utils.h>
+// 在dynamicPredictor.h开头的#include区域新增一行（如果没有）
+#include <std_msgs/Float32.h>
 
 namespace dynamicPredictor{
     class predictor{
@@ -29,6 +31,8 @@ namespace dynamicPredictor{
         ros::Publisher intentVisPub_;
         ros::Publisher varPointsPub_;
         ros::Publisher predBBoxPub_;
+
+        ros::Publisher sValuePub_; // 新增：用于发布 s 值的 Publisher
 
         // Param
         Eigen::Vector3d robotSize_ = Eigen::Vector3d(0.0,0.0,0.0);
@@ -61,6 +65,29 @@ namespace dynamicPredictor{
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePred_;
         std::vector<Eigen::VectorXd> intentProb_;
 
+
+        // 为了自适应新增的的
+            // 新增：自适应方案所需变量
+        std::vector<Eigen::Vector3d> accHistory_;  // 存储历史加速度，用于计算加加速度
+        std::vector<Eigen::Vector3d> caPredHistory_; // 存储CA模型预测位置
+        double gamma1_, gamma2_;  // M_t的权重系数
+        double lambda1_, lambda2_; // D_t的敏感度参数
+        double M_thresh_;         // 运动诊断阈值
+        double s_max_;            // 最大权重（原pscale_的替代）
+        size_t historyWindow_ = 1;   // 历史数据窗口大小（至少1）
+
+        // 新增：核心指标计算函数
+        double computeJerkNorm(const Eigen::Vector3d& currAcc);  // 计算加加速度幅值
+        double computeNIS(const Eigen::Vector3d& currPos, const Eigen::Vector3d& caPredPos, const Eigen::Matrix3d& residualCov);  // 计算归一化残差平方
+        double computeIntentEntropy(const Eigen::VectorXd& intentProb);  // 计算意图熵H_t
+        double computeAdaptiveS(const double Ht, const double Mt);  // 计算自适应权重s_adaptive
+
+        std::ofstream logFile_;  // 日志文件流
+
+        
+        
+
+
     public:
         predictor(const ros::NodeHandle& nh);
 
@@ -75,8 +102,9 @@ namespace dynamicPredictor{
         // main function for prediction
         void predict();
         void intentProb(std::vector<Eigen::VectorXd> &intentProbTemp);
-        Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel);
-        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
+        // 添加了自适应的参数
+        Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, 
+                                   const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
         void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp);
         void genPoints(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
         void genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize);
@@ -99,6 +127,8 @@ namespace dynamicPredictor{
         // user function
         void getPrediction(std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predSize, std::vector<Eigen::VectorXd> &intentProb);
         void getPrediction(std::vector<dynamicPredictor::obstacle> &predOb);
+
+        ~predictor(); // 析构函数声明
 
     };
 }

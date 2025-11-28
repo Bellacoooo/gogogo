@@ -1,1 +1,1 @@
-/usr/bin/c++ -fPIC -std=c++14  -O3 -Wall -O3 -DNDEBUG -shared -Wl,-soname,libtracking_controller.so -o /home/ff/intent-mpc/devel/lib/libtracking_controller.so CMakeFiles/tracking_controller.dir/include/tracking_controller/trackingController.cpp.o
+/usr/bin/c++ -fPIC -std=c++14  -O3 -Wall -shared -Wl,-soname,libtracking_controller.so -o /home/ff/intent-mpc/devel/lib/libtracking_controller.so CMakeFiles/tracking_controller.dir/include/tracking_controller/trackingController.cpp.o

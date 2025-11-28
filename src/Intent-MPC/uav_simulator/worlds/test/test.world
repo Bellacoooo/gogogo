@@ -32,25 +32,92 @@
        -->
 
 
+    <!-- 乱走 -->
+    <!-- -->
+            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <loop>1</loop>  <!-- 开启循环 -->
+        <velocity>1.5</velocity>  <!-- 提高速度 -->
+        <angular_velocity>2.5</angular_velocity>  <!-- 提高角速度，让转向更急 -->
+        <path>
+          <!-- 创建一个密集的、方向多变的航点集 -->
+            <waypoint>2.0 5.0 0.0</waypoint>
+            <waypoint>1.5 4.2 0.0</waypoint>
+            <waypoint>1.0 4.0 0.0</waypoint>
+            <waypoint>1.5 4.5 0.0</waypoint>
+            <waypoint>2.0 5.0 0.0</waypoint>
+            <waypoint>2.8 4.3 0.0</waypoint>
+            <waypoint>3.0 4.0 0.0</waypoint>
+            <waypoint>1.5 4.0 0.0</waypoint>
+            <waypoint>0.0 4.0 0.0</waypoint>
+        </path>
+        </plugin>
+    <!-- -->
 
 
+
+
+    <!-- 先直行再急停（调头） -->
+    <!-- -->
       <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
-  <loop>1</loop>  <!-- 开启循环 -->
-  <velocity>1.5</velocity>  <!-- 提高速度 -->
-  <angular_velocity>2.5</angular_velocity>  <!-- 提高角速度，让转向更急 -->
-  <path>
-    <!-- 创建一个密集的、方向多变的航点集 -->
-      <waypoint>2.0 5.0 0.0</waypoint>
-      <waypoint>1.5 4.2 0.0</waypoint>
-      <waypoint>1.0 4.0 0.0</waypoint>
-      <waypoint>1.5 4.5 0.0</waypoint>
-      <waypoint>2.0 5.0 0.0</waypoint>
-      <waypoint>2.8 4.3 0.0</waypoint>
-      <waypoint>3.0 4.0 0.0</waypoint>
-      <waypoint>1.5 4.0 0.0</waypoint>
-      <waypoint>0.0 4.0 0.0</waypoint>
-  </path>
-</plugin>
+      <loop>1</loop>  <!-- 保持开启循环（与原配置一致） -->
+      <velocity>1.5</velocity>  <!-- 保持原速度（与原配置一致） -->
+      <angular_velocity>2.5</angular_velocity>  <!-- 保持原角速度（与原配置一致） -->
+      <path>
+          <!-- 1. 起点：与原配置一致（2.0 5.0 0.0） -->
+          <waypoint>2.0 5.0 0.0</waypoint>
+          
+          <!-- 2. 直行3秒的终点：距离=1.5m/s×3s=4.5m（沿X轴正方向，Z保持0.0与原配置一致） -->
+          <waypoint>6.5 5.0 0.0</waypoint>
+          
+          <!-- 3. 停止3秒：通过重复终点航点触发停留（插件会计算旋转时间，与原多航点逻辑兼容） -->
+          <waypoint>6.5 5.0 0.0</waypoint>
+          
+          <!-- 4. 返回起点：距离4.5m，耗时3秒（回到起点，完成循环） -->
+          <waypoint>2.0 5.0 0.0</waypoint>
+      </path>
+      </plugin>
+    <!-- -->
+
+
+    <!-- 急转弯 -->
+    <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <loop>1</loop>  <!-- 循环执行正方形路径 -->
+        <velocity>1.5</velocity>  <!-- 直行速度（与原配置一致） -->
+        <angular_velocity>2.0</angular_velocity>  <!-- 高角速度确保急转弯 -->
+        <path>
+            <!-- 正方形4个顶点（边长3米，半边长1.5米，基于中心点(0,6,0)） -->
+            <!-- 顶点1：右上（x+1.5, y+1.5） -->
+            <waypoint>1.5 7.5 0.0</waypoint>
+            <!-- 顶点2：左上（x-1.5, y+1.5）→ 第一次左转90度（急转弯） -->
+            <waypoint>-1.5 7.5 0.0</waypoint>
+            <!-- 顶点3：左下（x-1.5, y-1.5）→ 第二次左转90度（急转弯） -->
+            <waypoint>-1.5 4.5 0.0</waypoint>
+            <!-- 顶点4：右下（x+1.5, y-1.5）→ 第三次左转90度（急转弯） -->
+            <waypoint>1.5 4.5 0.0</waypoint>
+            <!-- 回到顶点1 → 第四次左转90度（急转弯，完成闭环） -->
+            <waypoint>1.5 7.5 0.0</waypoint>
+        </path>
+    </plugin>
+
+
+
+    <!-- 急转弯：直走→右转→直走→返回起点（循环） -->
+    <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <loop>0</loop>  <!-- 0=无限循环（满足“一直反复”需求），1=单次执行 -->
+        <velocity>1.5</velocity>  <!-- 直行速度保持不变（1.5m/s） -->
+        <!-- 右转90度参数：0.1s内完成，角速度=90°/0.1s=900°/s≈15.7rad/s，负值表示顺时针（右转） -->
+        <angular_velocity>-15.7</angular_velocity>  
+        <path>
+            <!-- 起点A：与原配置一致（1.5, 7.5, 0.0），0s开始运动 -->
+            <waypoint>1.5 7.5 0.0</waypoint>
+            <!-- 终点B：0-2s直走（沿Y轴负方向），2s×1.5m/s=3米 → 坐标(1.5, 7.5-3, 0.0) -->
+            <waypoint>1.5 4.5 0.0</waypoint>
+            <!-- 终点C：2.1-4.1s直走（右转90度后沿X轴负方向），2s×1.5m/s=3米 → 坐标(1.5-3, 4.5, 0.0) -->
+            <waypoint>-1.5 4.5 0.0</waypoint>
+        </path>
+    </plugin>
+
+
 
 
 

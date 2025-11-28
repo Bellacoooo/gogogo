@@ -2,7 +2,7 @@
 prediction_size: 33
  # prediction length
 prediction_time_step: 0.1 #sec
-min_turning_time: 2.0 #sec
+min_turning_time: 0.8 #sec
 max_turning_time: 3.0 #sec
 prediction_z_score: 0.674 #3.291 for 99% confidence level
 
@@ -12,4 +12,13 @@ max_front_prob: 0.5 # unscaled front prob when angle = 0, stop prob = 0
 front_angle: 10.0 # angle in degree that front prob = left/right prob
 stop_velocity_thereshold: 0.1 # vel that stop prob = non-stop prob
 prob_scale_param: 5.0 
+
+# 自适应方案参数
+gamma1: 0.5         # NIS权重
+gamma2: 0.5         # 加加速度权重
+lambda1: 1.0        # 熵敏感度
+lambda2: 2.0        # 运动诊断敏感度
+M_thresh: 1.0       # 运动突变阈值
+s_max: 2.0          # 最大自适应权重
+history_window: 1   # 历史窗口大小
 

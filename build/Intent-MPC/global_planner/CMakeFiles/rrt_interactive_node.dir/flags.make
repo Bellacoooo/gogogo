@@ -6,5 +6,5 @@ CXX_DEFINES = -DDISABLE_LIBUSB_1_0 -DDISABLE_PCAP -DDISABLE_PNG -DROSCONSOLE_BAC
 
 CXX_INCLUDES = -I/home/ff/intent-mpc/src/Intent-MPC/global_planner/include -I/home/ff/intent-mpc/devel/include -I/home/ff/intent-mpc/src/Intent-MPC/map_manager/include -I/home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include -I/opt/ros/noetic/include -I/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp -I/usr/include/opencv4 -isystem /usr/include/pcl-1.10 -isystem /usr/include/eigen3 -isystem /usr/include/vtk-7.1 -isystem /usr/include/freetype2 -isystem /usr/include/ni -isystem /usr/include/openni2
 
-CXX_FLAGS = -std=c++14  -O3 -Wall -O3 -DNDEBUG
+CXX_FLAGS = -std=c++14  -O3 -Wall
 

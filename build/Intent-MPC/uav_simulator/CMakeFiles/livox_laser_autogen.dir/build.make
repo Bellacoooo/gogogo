@@ -68,7 +68,7 @@ include Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen.dir/progress.mak
 
 Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic UIC for target livox_laser"
-	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen.dir/AutogenInfo.json Release
+	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen.dir/AutogenInfo.json ""
 
 livox_laser_autogen: Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen
 livox_laser_autogen: Intent-MPC/uav_simulator/CMakeFiles/livox_laser_autogen.dir/build.make

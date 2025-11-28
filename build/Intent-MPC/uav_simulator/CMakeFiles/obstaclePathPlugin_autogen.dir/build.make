@@ -68,7 +68,7 @@ include Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen.dir/progr
 
 Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Automatic UIC for target obstaclePathPlugin"
-	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen.dir/AutogenInfo.json Release
+	cd /home/ff/intent-mpc/build/Intent-MPC/uav_simulator && /usr/bin/cmake -E cmake_autogen /home/ff/intent-mpc/build/Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen.dir/AutogenInfo.json ""
 
 obstaclePathPlugin_autogen: Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen
 obstaclePathPlugin_autogen: Intent-MPC/uav_simulator/CMakeFiles/obstaclePathPlugin_autogen.dir/build.make

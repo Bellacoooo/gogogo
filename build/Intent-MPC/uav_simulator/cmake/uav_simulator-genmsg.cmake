@@ -24,7 +24,7 @@ add_custom_target(_uav_simulator_generate_messages_check_deps_${_filename}
 
 get_filename_component(_filename "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg" NAME_WE)
 add_custom_target(_uav_simulator_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "uav_simulator" "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg" "std_msgs/Header:uav_simulator/CustomPoint"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "uav_simulator" "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg" "uav_simulator/CustomPoint:std_msgs/Header"
 )
 
 #
@@ -42,7 +42,7 @@ _generate_msg_cpp(uav_simulator
 _generate_msg_cpp(uav_simulator
   "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg"
+  "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/uav_simulator
 )
 
@@ -83,7 +83,7 @@ _generate_msg_eus(uav_simulator
 _generate_msg_eus(uav_simulator
   "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg"
+  "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/uav_simulator
 )
 
@@ -124,7 +124,7 @@ _generate_msg_lisp(uav_simulator
 _generate_msg_lisp(uav_simulator
   "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg"
+  "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/uav_simulator
 )
 
@@ -165,7 +165,7 @@ _generate_msg_nodejs(uav_simulator
 _generate_msg_nodejs(uav_simulator
   "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg"
+  "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/uav_simulator
 )
 
@@ -206,7 +206,7 @@ _generate_msg_py(uav_simulator
 _generate_msg_py(uav_simulator
   "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/LivoxCustomMsg.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg"
+  "/home/ff/intent-mpc/src/Intent-MPC/uav_simulator/msg/CustomPoint.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/uav_simulator
 )
 

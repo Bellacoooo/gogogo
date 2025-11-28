@@ -1649,6 +1649,7 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /opt/ros/noetic/include/sensor_msgs/image_encodings.h \
   /opt/ros/noetic/include/std_msgs/ColorRGBA.h \
   /opt/ros/noetic/include/std_msgs/Empty.h \
+  /opt/ros/noetic/include/std_msgs/Float32.h \
   /opt/ros/noetic/include/std_msgs/Header.h \
   /opt/ros/noetic/include/tf2/LinearMath/Matrix3x3.h \
   /opt/ros/noetic/include/tf2/LinearMath/MinMax.h \
@@ -4457,6 +4458,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 /usr/include/c++/9/bits/stl_deque.h:
 
 /opt/ros/noetic/include/vision_msgs/Detection2DArray.h:
+
+/opt/ros/noetic/include/std_msgs/Float32.h:
 
 /opt/ros/noetic/include/std_msgs/ColorRGBA.h:
 
