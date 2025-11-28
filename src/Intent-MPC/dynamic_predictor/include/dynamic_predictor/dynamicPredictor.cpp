@@ -1111,45 +1111,7 @@ namespace dynamicPredictor{
 
 
 
-// 把数据导出到桌面上的CSV文件中，包含表头，即使没有数据也会生成文件
-    void predictor::saveAllPredTraj() {
-        // 生成桌面路径（Linux/Mac示例，Windows需修改为"../Users/用户名/Desktop/"）
-        std::string desktop_path = getenv("HOME");
-        desktop_path += "/Desktop/";
 
-        // 生成带时间戳的文件名（格式：pred_traj_YYYYMMDD_HHMMSS.csv）
-        std::time_t now = std::time(nullptr);
-        char timestamp[20];
-        std::strftime(timestamp, sizeof(timestamp), "%Y%m%d_%H%M%S", std::localtime(&now));
-        std::string filename = desktop_path + "pred_traj_" + timestamp + ".csv";
-
-        std::ofstream file(filename);
-        // 写入表头（无论是否有数据都写入）
-        file << "obs_id,intent_type,sample_idx,t,x,y,z\n";
-
-        // 即使数据为空，也会生成带表头的文件
-        if (allPredPoints_.empty()) {
-            file.close();
-            return;
-        }
-
-        // 有数据时写入内容
-        for (size_t obs_id = 0; obs_id < allPredPoints_.size(); ++obs_id) {
-            for (size_t intent = 0; intent < allPredPoints_[obs_id].size(); ++intent) {
-                for (size_t sample = 0; sample < allPredPoints_[obs_id][intent].size(); ++sample) {
-                    for (size_t t = 0; t < allPredPoints_[obs_id][intent][sample].size(); ++t) {
-                        const auto& p = allPredPoints_[obs_id][intent][sample][t];
-                        file << obs_id << ","
-                            << intent << ","
-                            << sample << ","
-                            << t << ","
-                            << p.x() << "," << p.y() << "," << p.z() << "\n";
-                    }
-                }
-            }
-        }
-        file.close();
-    }
 
 
 

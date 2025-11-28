@@ -128,6 +128,8 @@ namespace dynamicPredictor{
         void getPrediction(std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predSize, std::vector<Eigen::VectorXd> &intentProb);
         void getPrediction(std::vector<dynamicPredictor::obstacle> &predOb);
 
+     
+
         ~predictor(); // 析构函数声明
 
     };
