@@ -15,6 +15,10 @@
 #include <dynamic_predictor/utils.h>
 // 在dynamicPredictor.h开头的#include区域新增一行（如果没有）
 #include <std_msgs/Float32.h>
+// 先添加头文件依赖
+#include <chrono>
+
+
 
 namespace dynamicPredictor{
     class predictor{
@@ -84,6 +88,13 @@ namespace dynamicPredictor{
 
         std::ofstream logFile_;  // 日志文件流
 
+        // 新增：计时相关变量
+        std::chrono::duration<double, std::milli> mainIntentTime_;    // 主意图生成耗时(ms)
+        std::chrono::duration<double, std::milli> nonMainIntentTime_; // 非主意图总耗时(ms)
+        std::chrono::duration<double, std::milli> genPointsTotalTime_;// genPoints总耗时(ms)
+         // 新增：获取主意图索引
+        std::vector<int> getMainIntents(const std::vector<Eigen::VectorXd>& intentProb);   
+
         
         
 
@@ -105,7 +116,8 @@ namespace dynamicPredictor{
         // 添加了自适应的参数
         Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, 
                                    const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
-        void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp);
+        //    新增 mainIntents 主意图参数
+        void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp   , const std::vector<int>& mainIntents);
         void genPoints(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
         void genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize);
         void modelForward(const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
@@ -127,6 +139,8 @@ namespace dynamicPredictor{
         // user function
         void getPrediction(std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predSize, std::vector<Eigen::VectorXd> &intentProb);
         void getPrediction(std::vector<dynamicPredictor::obstacle> &predOb);
+
+        void calculateAndPrintErrors(); // 新增声明
 
      
 

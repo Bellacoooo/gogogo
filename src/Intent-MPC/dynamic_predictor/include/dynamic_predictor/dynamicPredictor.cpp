@@ -260,22 +260,58 @@ namespace dynamicPredictor{
             this->detector_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->robotSize_);
         }
         if (this->posHist_.size()){
-            if (this->posHist_[0].size()){
-                // intent prediction
-                std::vector<Eigen::VectorXd> intentProbTemp;
-                this->intentProb(intentProbTemp);
+            // 原有的代码，我要加主意图的确定和耗时打印，就修改了这部分
+            // if (this->posHist_[0].size()){
+            //     // intent prediction
+            //     std::vector<Eigen::VectorXd> intentProbTemp;
+            //     this->intentProb(intentProbTemp);
 
-                // trajectory prediction
-                std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPointsTemp;
-                std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPredTemp;
-                std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
-                this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp);
+            //     // trajectory prediction
+            //     std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPointsTemp;
+            //     std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPredTemp;
+            //     std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
+            //     this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp);
 
-                this->intentProb_ = intentProbTemp;
-                this->posPred_ = posPredTemp;
-                this->sizePred_ = sizePredTemp;
-                this->allPredPoints_ = allPredPointsTemp;
-            }
+            //     this->intentProb_ = intentProbTemp;
+            //     this->posPred_ = posPredTemp;
+            //     this->sizePred_ = sizePredTemp;
+            //     this->allPredPoints_ = allPredPointsTemp;
+            // }
+                if (this->posHist_.size() && this->posHist_[0].size()) {
+                    // 意图预测
+                    std::vector<Eigen::VectorXd> intentProbTemp;
+                    this->intentProb(intentProbTemp);
+
+                    // 新增：确定主意图
+                    std::vector<int> mainIntents = getMainIntents(intentProbTemp);
+
+                    // 轨迹预测（修改调用方式，传入主意图信息）
+                    std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPointsTemp;
+                    std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPredTemp;
+                    std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
+
+                    // 新增：重置计时变量
+                    mainIntentTime_ = std::chrono::duration<double, std::milli>::zero();
+                    nonMainIntentTime_ = std::chrono::duration<double, std::milli>::zero();
+                    genPointsTotalTime_ = std::chrono::duration<double, std::milli>::zero();
+
+                    // 调用predTraj时传入主意图，用于内部计时
+                    this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp, mainIntents);
+
+                    // 新增：打印耗时统计
+                    std::cout << "\n===== 轨迹生成耗时统计 =====" << std::endl;
+                    std::cout << "genPoints总耗时: " << genPointsTotalTime_.count() << " ms" << std::endl;
+                    std::cout << "主意图生成耗时: " << mainIntentTime_.count() << " ms" << std::endl;
+                    std::cout << "非主意图总耗时: " << nonMainIntentTime_.count() << " ms" << std::endl;
+                    std::cout << "===========================\n" << std::endl;
+
+
+                    this->intentProb_ = intentProbTemp;
+                    this->posPred_ = posPredTemp;
+                    this->sizePred_ = sizePredTemp;
+                    this->allPredPoints_ = allPredPointsTemp;
+        
+    }
         }
         else{
             this->intentProb_.clear();
@@ -283,6 +319,12 @@ namespace dynamicPredictor{
             this->posPred_.clear();
             this->sizePred_.clear();
         }
+
+        // 计算ADE、FDE
+        calculateAndPrintErrors();
+
+
+
     }
 
 
@@ -509,7 +551,8 @@ namespace dynamicPredictor{
 // 为每个障碍物的每种意图生成预测轨迹，包括预测点、位置和大小。关键逻辑genPoints（）、genTraj（）
     void predictor::predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp,
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp,
-        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp){
+        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp,
+        const std::vector<int>& mainIntents){     //这里输入的参数新加了一个主意图的参数
 
         // 清空并重置输出容器，确保不包含旧数据
         posPredTemp.clear();
@@ -524,6 +567,13 @@ namespace dynamicPredictor{
             posPredTemp[i].resize(this->numIntent_);
             sizePredTemp[i].resize(this->numIntent_);
             allPredPointsTemp[i].resize(this->numIntent_);
+
+
+
+
+
+
+
 
             // predict for each number of intent
             for (int j=FORWARD; j<=STOP; ++j){
@@ -1113,9 +1163,104 @@ namespace dynamicPredictor{
 
 
 
+    // 新增成员函数：计算并打印误差
+    void predictor::calculateAndPrintErrors() {
+        if (posHist_.empty() || posPred_.empty()) {
+            ROS_WARN("No reference or prediction data available, skip error calculation.");
+            return;
+        }
+
+        // 预测总时长3s，计算时间步数N（确保不超过实际轨迹长度）
+        const int totalPredSteps = static_cast<int>(3.0 / dt_); // 3s内的时间步数
+        if (totalPredSteps <= 0) {
+            ROS_ERROR("Invalid dt_ (time interval), cannot calculate steps.");
+            return;
+        }
+
+        // 遍历每个障碍物
+        for (size_t obsIdx = 0; obsIdx < posHist_.size(); ++obsIdx) {
+            const auto& refTraj = posHist_[obsIdx]; // 该障碍物的参考轨迹
+            const auto& predTrajs = posPred_[obsIdx]; // 该障碍物的所有意图的预测轨迹
+
+            // 检查参考轨迹是否有效
+            if (refTraj.empty()) {
+                ROS_WARN("Obstacle %zu has no reference trajectory, skip.", obsIdx);
+                continue;
+            }
+
+            // 对齐时间步：取参考轨迹和预测总步数的较小值（避免越界）
+            const int validSteps = std::min(totalPredSteps, static_cast<int>(refTraj.size()));
+            if (validSteps <= 0) {
+                ROS_WARN("Obstacle %zu has no valid time steps for error calculation.", obsIdx);
+                continue;
+            }
+
+            // 遍历所有意图的预测轨迹，找最小ADE和FDE
+            double minADE = INFINITY;
+            double minFDE = INFINITY;
+            int bestIntent = -1;
+
+            for (size_t intentIdx = 0; intentIdx < predTrajs.size(); ++intentIdx) {
+                const auto& predTraj = predTrajs[intentIdx]; // 该意图的预测轨迹
+
+                // 检查预测轨迹时间步是否足够
+                if (predTraj.size() < validSteps) {
+                    ROS_WARN("Obstacle %zu, intent %zu: prediction steps (%zu) < valid steps (%d), skip.",
+                            obsIdx, intentIdx, predTraj.size(), validSteps);
+                    continue;
+                }
+
+                // 计算该意图的ADE和FDE
+                double ade = 0.0;
+                Eigen::Vector3d lastError;
+
+                for (int t = 0; t < validSteps; ++t) {
+                    // 计算t时刻的位置误差（欧氏距离）
+                    Eigen::Vector3d error = predTraj[t] - refTraj[t];
+                    double dist = error.topLeftCorner<2,1>().norm(); // 3D距离，若只需2D可忽略z分量
+                    ade += dist;
+
+                    // 记录最后一步误差（FDE）
+                    if (t == validSteps - 1) {
+                        lastError = error;
+                    }
+                }
+
+                // 计算平均ADE和FDE
+                ade /= validSteps;
+                double fde = lastError.norm();
+
+                // 更新最小ADE和FDE
+                if (ade < minADE) {
+                    minADE = ade;
+                    minFDE = fde;
+                    bestIntent = static_cast<int>(intentIdx);
+                }
+            }
+
+            // 打印结果（只打印有有效预测的障碍物）
+            if (bestIntent != -1) {
+                ROS_INFO_STREAM("Obstacle " << obsIdx 
+                            << " | Min ADE: " << minADE 
+                            << " | Min FDE: " << minFDE 
+                            << " | Best Intent: " << bestIntent 
+                            << " | Valid Steps: " << validSteps);
+            }
+        }
+    }
 
 
 
+    // 新增：获取每个障碍物的主意图（最高概率对应的意图索引）
+    std::vector<int> predictor::getMainIntents(const std::vector<Eigen::VectorXd>& intentProb) {
+        std::vector<int> mainIntents;
+        for (const auto& prob : intentProb) {
+            int mainIntent;
+            prob.maxCoeff(&mainIntent);  // 获取最高概率对应的索引
+            mainIntents.push_back(mainIntent);
+        }
+        return mainIntents;
+    }
 
 
 
