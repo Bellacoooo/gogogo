@@ -2,9 +2,8 @@
   <world name='default'>
     <!-- 动态障碍物：圆柱体，命名符合 fake_detector 识别规则 -->
     <model name="dynamic_cylinder_0.6_0.6_1.7">
-      <!-- L形轨迹：先并列直行，再右转横切到无人机前方 -->
-      <!-- t=0 位置在无人机左侧 2m 处 (0, 2, 0)，朝向与无人机一致（+X） -->
-      <pose>0 2 0 0 0 0</pose>
+      <!-- 场景：右侧 (0,-3,0) 直线穿越到左上 (-3,2,0)，循环往返（使用插件自带 loop） -->
+      <pose>0 -3 0 0 0 0</pose>
       <static>0</static>
       <link name="body">
         <inertial>
@@ -43,16 +42,16 @@
       </link>
 
       <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
-        <loop>0</loop> <!-- 单次执行 -->
+        <loop>1</loop> <!-- 循环执行 -->
         <sin>0</sin>
-        <velocity>1.0</velocity> <!-- 速度 1 m/s -->
-        <angular_velocity>8.0</angular_velocity> <!-- 横向急转 -->
+        <velocity>1.5</velocity> <!-- 直线速度，可按需调整 -->
+        <angular_velocity>0.0</angular_velocity> <!-- 不转弯 -->
         <path>
-          <!-- 阶段1：并行直行（t≈0~2s），保持左侧 2m 间距 -->
-          <waypoint>0.0 2.0 0.0</waypoint>
-          <waypoint>2.0 2.0 0.0</waypoint>
-          <!-- 阶段2：突然向右横切到无人机正前方，形成 L 形 -->
-          <waypoint>2.0 0.0 0.0</waypoint>
+          <!-- 手写往返闭环：0,-3 -> -3,2 -> 0,-3 -> -3,2 ... -->
+          <waypoint>0.000 -3.000 0.0</waypoint>
+          <waypoint>-3.000 2.000 0.0</waypoint>
+          <waypoint>0.000 -3.000 0.0</waypoint>
+          <waypoint>-3.000 2.000 0.0</waypoint>
         </path>
       </plugin>
     </model>

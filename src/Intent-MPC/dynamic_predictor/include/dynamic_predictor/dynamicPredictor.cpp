@@ -1170,7 +1170,7 @@ namespace dynamicPredictor{
             return;
         }
 
-        // 预测总时长3s，计算时间步数N（确保不超过实际轨迹长度）
+        // 预测总时长3s，计算时间步数N
         const int totalPredSteps = static_cast<int>(3.0 / dt_); // 3s内的时间步数
         if (totalPredSteps <= 0) {
             ROS_ERROR("Invalid dt_ (time interval), cannot calculate steps.");
@@ -1179,8 +1179,8 @@ namespace dynamicPredictor{
 
         // 遍历每个障碍物
         for (size_t obsIdx = 0; obsIdx < posHist_.size(); ++obsIdx) {
-            const auto& refTraj = posHist_[obsIdx]; // 该障碍物的参考轨迹
-            const auto& predTrajs = posPred_[obsIdx]; // 该障碍物的所有意图的预测轨迹
+            const auto& refTraj = posHist_[obsIdx]; // 该障碍物的历史轨迹（从过去到现在）
+            const auto& predTrajs = posPred_[obsIdx]; // 该障碍物的所有意图的预测轨迹（从现在到未来）
 
             // 检查参考轨迹是否有效
             if (refTraj.empty()) {
@@ -1188,12 +1188,34 @@ namespace dynamicPredictor{
                 continue;
             }
 
-            // 对齐时间步：取参考轨迹和预测总步数的较小值（避免越界）
-            const int validSteps = std::min(totalPredSteps, static_cast<int>(refTraj.size()));
-            if (validSteps <= 0) {
-                ROS_WARN("Obstacle %zu has no valid time steps for error calculation.", obsIdx);
+            // 说明：posHist_是历史轨迹，最后一个点是当前时刻 t0
+            // posPred_是从当前时刻 t0 开始的未来预测轨迹（t0+1, t0+2, ..., t0+totalPredSteps）
+            // 要计算ADE/FDE，需要未来的真实轨迹（t0+1 到 t0+totalPredSteps），但在实时系统中我们没有
+            
+            // 回测方案：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
+            // 这意味着：假设在 t0 - totalPredSteps 时刻做了预测，预测未来 totalPredSteps 步
+            // 然后用 t0 - totalPredSteps + 1 到 t0 的历史轨迹作为"未来"参考
+            // 注意：这需要历史轨迹足够长，且假设运动模式在短时间内相对稳定
+            
+            const int histSize = static_cast<int>(refTraj.size());
+            if (histSize < totalPredSteps + 1) {
+                // 历史轨迹需要至少 totalPredSteps + 1 个点才能进行回测
+                // （需要 totalPredSteps 个点作为"未来"参考）
+                ROS_WARN("Obstacle %zu: history size (%d) < required steps (%d + 1), skip error calculation.", 
+                        obsIdx, histSize, totalPredSteps);
                 continue;
             }
+
+            // 回测：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
+            // 历史轨迹索引范围：[0, histSize-1]，最后 totalPredSteps 个点的索引是 [histSize - totalPredSteps, histSize - 1]
+            // 假设在 histSize - totalPredSteps - 1 时刻做了预测，预测未来 totalPredSteps 步
+            // 预测的时刻应该是 [histSize - totalPredSteps, histSize - 1]（共 totalPredSteps 个点）
+            const int refStartIdx = histSize - totalPredSteps; // 参考轨迹起始索引
+            const int validSteps = std::min(totalPredSteps, histSize - refStartIdx); // 确保不超过历史轨迹长度
+            
+            // 注意：当前 posPred_ 是在当前时刻 t0（histSize-1）做的预测，不是 predStartIdx 时刻
+            // 这里用当前预测作为近似（假设运动模式稳定）
+            // 理想情况下，应该在 predStartIdx 时刻保存预测结果
 
             // 遍历所有意图的预测轨迹，找最小ADE和FDE
             double minADE = INFINITY;
@@ -1204,7 +1226,7 @@ namespace dynamicPredictor{
                 const auto& predTraj = predTrajs[intentIdx]; // 该意图的预测轨迹
 
                 // 检查预测轨迹时间步是否足够
-                if (predTraj.size() < validSteps) {
+                if (predTraj.size() < static_cast<size_t>(validSteps)) {
                     ROS_WARN("Obstacle %zu, intent %zu: prediction steps (%zu) < valid steps (%d), skip.",
                             obsIdx, intentIdx, predTraj.size(), validSteps);
                     continue;
@@ -1212,23 +1234,41 @@ namespace dynamicPredictor{
 
                 // 计算该意图的ADE和FDE
                 double ade = 0.0;
-                Eigen::Vector3d lastError;
+                double fde = 0.0;
+                int actualSteps = 0; // 实际计算的有效步数
 
                 for (int t = 0; t < validSteps; ++t) {
-                    // 计算t时刻的位置误差（欧氏距离）
-                    Eigen::Vector3d error = predTraj[t] - refTraj[t];
-                    double dist = error.topLeftCorner<2,1>().norm(); // 3D距离，若只需2D可忽略z分量
-                    ade += dist;
-
-                    // 记录最后一步误差（FDE）
-                    if (t == validSteps - 1) {
-                        lastError = error;
+                    // 修复2：时间对齐
+                    // 回测场景：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
+                    // 历史轨迹的最后 totalPredSteps 个点的索引范围：[refStartIdx, histSize - 1]
+                    // 即：[histSize - totalPredSteps, histSize - 1]
+                    // 预测轨迹的 t 时刻对应参考轨迹的 refStartIdx + t
+                    const int refIdx = refStartIdx + t;
+                    if (refIdx >= histSize) {
+                        // 索引越界，提前退出
+                        break;
                     }
+
+                    // 计算t时刻的位置误差（欧氏距离）
+                    Eigen::Vector3d error = predTraj[t] - refTraj[refIdx];
+                    
+                    // ADE和FDE都使用2D距离（忽略z分量），保持一致性
+                    double dist = error.head<2>().norm(); // 使用2D距离（x, y）
+                    ade += dist;
+                    actualSteps++;
+
+                    // 记录最后一步误差（FDE）- 每次更新，确保是真正的最后一步
+                    fde = dist;
                 }
 
-                // 计算平均ADE和FDE
-                ade /= validSteps;
-                double fde = lastError.norm();
+                // 计算平均ADE（使用实际有效步数）
+                if (actualSteps > 0) {
+                    ade /= actualSteps;
+                    // FDE已经在循环中设置为最后一步的误差，不需要额外处理
+                } else {
+                    // 如果没有有效步数，跳过这个意图
+                    continue;
+                }
 
                 // 更新最小ADE和FDE
                 if (ade < minADE) {
