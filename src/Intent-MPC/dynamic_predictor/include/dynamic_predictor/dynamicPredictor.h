@@ -15,6 +15,7 @@
 #include <dynamic_predictor/utils.h>
 // 在dynamicPredictor.h开头的#include区域新增一行（如果没有）
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float64MultiArray.h>
 // 先添加头文件依赖
 #include <chrono>
 
@@ -37,6 +38,7 @@ namespace dynamicPredictor{
         ros::Publisher predBBoxPub_;
 
         ros::Publisher sValuePub_; // 新增：用于发布 s 值的 Publisher
+        ros::Publisher adaptiveMetricsPub_; // 新增：用于发布 D_t 和 s_adaptive 的 Publisher
 
         // Param
         Eigen::Vector3d robotSize_ = Eigen::Vector3d(0.0,0.0,0.0);
@@ -87,13 +89,21 @@ namespace dynamicPredictor{
         double computeAdaptiveS(const double Ht, const double Mt);  // 计算自适应权重s_adaptive
 
         std::ofstream logFile_;  // 日志文件流
+        
+        // 新增：存储当前时刻的自适应指标（每个障碍物一个）
+        std::vector<double> currentDt_;      // 当前时刻的 D_t
+        std::vector<double> currentSAdaptive_; // 当前时刻的 s_adaptive
+        std::vector<int> currentKAdaptive_;   // 当前时刻的 k_adaptive (best intent)
 
         // 新增：计时相关变量
         std::chrono::duration<double, std::milli> mainIntentTime_;    // 主意图生成耗时(ms)
         std::chrono::duration<double, std::milli> nonMainIntentTime_; // 非主意图总耗时(ms)
         std::chrono::duration<double, std::milli> genPointsTotalTime_;// genPoints总耗时(ms)
          // 新增：获取主意图索引
-        std::vector<int> getMainIntents(const std::vector<Eigen::VectorXd>& intentProb);   
+        std::vector<int> getMainIntents(const std::vector<Eigen::VectorXd>& intentProb);
+        
+        // 新增：获取桌面路径（参考 traj_vis6.py 的 get_desktop_path 逻辑）
+        std::string getDesktopPath();
 
         
         
@@ -115,7 +125,7 @@ namespace dynamicPredictor{
         void intentProb(std::vector<Eigen::VectorXd> &intentProbTemp);
         // 添加了自适应的参数
         Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, 
-                                   const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
+                                   const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc, int obsIdx = 0);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
         //    新增 mainIntents 主意图参数
         void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp   , const std::vector<int>& mainIntents);
         void genPoints(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
@@ -134,6 +144,7 @@ namespace dynamicPredictor{
         void publishPredTraj();
         void publishIntentVis();
         void publishPredBBox();
+        void publishAdaptiveMetrics(); // 新增：发布 D_t 和 s_adaptive
         
 
         // user function

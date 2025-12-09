@@ -136,16 +136,9 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/ff/intent-mpc/build/gtest/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/remote_control/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/tracking_controller/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/uav_simulator/cmake_install.cmake")
   include("/home/ff/intent-mpc/build/Intent-MPC/onboard_detector/cmake_install.cmake")
   include("/home/ff/intent-mpc/build/Intent-MPC/map_manager/cmake_install.cmake")
   include("/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/global_planner/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/trajectory_planner/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/time_optimizer/cmake_install.cmake")
-  include("/home/ff/intent-mpc/build/Intent-MPC/autonomous_flight/cmake_install.cmake")
 
 endif()
 

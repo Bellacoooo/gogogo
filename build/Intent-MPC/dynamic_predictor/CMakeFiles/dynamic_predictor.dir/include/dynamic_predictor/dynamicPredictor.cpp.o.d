@@ -2069,4 +2069,7 @@ Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor.dir/include/dynamic_pr
  /home/ff/intent-mpc/devel/include/map_manager/RayCastRequest.h \
  /home/ff/intent-mpc/devel/include/map_manager/RayCastResponse.h \
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/utils.h \
- /opt/ros/noetic/include/std_msgs/Float32.h
+ /opt/ros/noetic/include/std_msgs/Float32.h \
+ /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
+ /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \
+ /opt/ros/noetic/include/std_msgs/MultiArrayDimension.h

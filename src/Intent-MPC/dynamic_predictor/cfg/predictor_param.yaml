@@ -14,11 +14,11 @@ stop_velocity_thereshold: 0.1 # vel that stop prob = non-stop prob
 prob_scale_param: 5.0 
 
 # 自适应方案参数
-gamma1: 0.5         # NIS权重
-gamma2: 0.5         # 加加速度权重
-lambda1: 1.0        # 熵敏感度
-lambda2: 2.0        # 运动诊断敏感度
-M_thresh: 1.0       # 运动突变阈值
+gamma1: 0.3         # NIS权重（降低以减小对NIS的敏感度）
+gamma2: 0.7         # 加加速度权重（增加以更关注物理突变）
+lambda1: 0.5        # 熵敏感度（降低以使D_t不会过快衰减）
+lambda2: 1.0        # 运动诊断敏感度（降低以使D_t不会过快衰减）
+M_thresh: 2.0       # 运动突变阈值（提高以降低对正常运动的敏感度）
 s_max: 2.0          # 最大自适应权重
 history_window: 1   # 历史窗口大小
 

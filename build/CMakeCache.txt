@@ -84,7 +84,7 @@ CATKIN_SKIP_TESTING:BOOL=OFF
 CATKIN_SYMLINK_INSTALL:BOOL=OFF
 
 //List of ';' separated packages to build
-CATKIN_WHITELIST_PACKAGES:STRING=
+CATKIN_WHITELIST_PACKAGES:STRING=dynamic_predictor;map_manager;onboard_detector
 
 //Path to a file.
 CCD_INCLUDE_DIRS:PATH=/usr/include
@@ -1118,8 +1118,7 @@ diagnostic_updater_DIR:PATH=/opt/ros/noetic/share/diagnostic_updater/cmake
 //Value Computed by CMake
 dynamic_predictor_BINARY_DIR:STATIC=/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor
 
-//The directory containing a CMake configuration file for dynamic_predictor.
-dynamic_predictor_DIR:PATH=/home/ff/intent-mpc/devel/share/dynamic_predictor/cmake
+dynamic_predictor_DIR:PATH=
 
 //Value Computed by CMake
 dynamic_predictor_IS_TOP_LEVEL:STATIC=OFF
@@ -1748,7 +1747,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=14
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=7
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP

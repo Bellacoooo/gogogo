@@ -52,13 +52,13 @@
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/empty.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test.world" /> -->
   <!-- 第一个急转弯的场景 -->
-  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_turn.world" /> -->
+  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_turn.world" />
   <!-- 第二个急停的场景 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_stop.world" /> -->
   <!-- 第三个意图混乱的场景 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_change.world" /> -->
   <!-- 第四个场景-正常行走的场景，目前还不能循环 -->
-  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_normal.world" />
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_normal.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test2.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_mill19_1.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_mill19_2.world" /> -->

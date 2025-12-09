@@ -5,6 +5,15 @@
 */
 #include <dynamic_predictor/dynamicPredictor.h>
 #include <ctime>  // 需包含时间戳头文件
+#include <iomanip>  // 用于格式化输出
+#include <sstream>  // 用于字符串流
+#include <fstream>  // 用于文件操作
+#include <cstdlib>  // 用于 getenv
+#include <sys/stat.h>  // 用于检查目录是否存在
+#include <sys/types.h>  // 用于 mkdir
+#include <errno.h>  // 用于 errno
+#include <vector>  // 用于 vector
+#include <unistd.h>  // 用于 access
 
 namespace dynamicPredictor{
     predictor::predictor(const ros::NodeHandle& nh) : nh_(nh){
@@ -13,6 +22,65 @@ namespace dynamicPredictor{
         this->initParam();
         this->registerPub();
         this->registerCallback();
+        
+        // 初始化CSV日志文件（带时间戳，保存到桌面）- 参考 traj_vis6.py 的逻辑
+        std::time_t now = std::time(nullptr);
+        std::tm* timeinfo = std::localtime(&now);
+        std::stringstream ss;
+        ss << std::put_time(timeinfo, "%Y%m%d_%H%M%S");
+        std::string timestamp = ss.str();
+        
+        // 获取桌面路径（参考 Python 的 get_desktop_path 逻辑）
+        std::string desktopPath = getDesktopPath();
+        ROS_INFO_STREAM(this->hint_ << ": 检测到桌面路径: " << desktopPath);
+        
+        // 检查写入权限（参考 Python 的 os.access 逻辑）
+        if (access(desktopPath.c_str(), W_OK) != 0) {
+            ROS_WARN_STREAM(this->hint_ << ": 没有权限写入目录 " << desktopPath << "，将使用 /tmp");
+            desktopPath = "/tmp";
+        }
+        
+        // 构建完整的文件路径（参考 Python 的 os.path.abspath 逻辑）
+        std::string filename = "intent_eval_" + timestamp + ".csv";
+        std::string csvFilePath = desktopPath + "/" + filename;
+        
+        // 强制打开文件（使用绝对路径，确保文件被创建）
+        logFile_.open(csvFilePath.c_str(), std::ios::out | std::ios::trunc);
+        if (logFile_.is_open()) {
+            // 立即写入CSV表头（确保文件被创建，即使没有数据）
+            logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
+            logFile_.flush();  // 确保数据写入缓冲区
+            
+            // 验证文件是否真的被创建
+            struct stat fileInfo;
+            if (stat(csvFilePath.c_str(), &fileInfo) == 0) {
+                ROS_INFO_STREAM(this->hint_ << ": ✓ CSV log file created successfully at: " << csvFilePath);
+                ROS_INFO_STREAM(this->hint_ << ":   File size: " << fileInfo.st_size << " bytes");
+                // 额外输出到标准输出，确保用户能看到（参考 Python 的 print 逻辑）
+                std::cout << "\n========================================" << std::endl;
+                std::cout << "CSV LOG FILE CREATED: " << csvFilePath << std::endl;
+                std::cout << "========================================\n" << std::endl;
+            } else {
+                ROS_WARN_STREAM(this->hint_ << ": File opened but stat() failed: " << csvFilePath);
+            }
+        } else {
+            // 如果打开失败，尝试使用 /tmp 作为备选（参考 Python 的 fallback 逻辑）
+            std::string fallbackPath = "/tmp/" + filename;
+            ROS_WARN_STREAM(this->hint_ << ": Failed to open file at Desktop, trying fallback: " << fallbackPath);
+            logFile_.open(fallbackPath.c_str(), std::ios::out | std::ios::trunc);
+            if (logFile_.is_open()) {
+                logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
+                logFile_.flush();  // 确保数据写入缓冲区
+                ROS_WARN_STREAM(this->hint_ << ": Using fallback location: " << fallbackPath);
+                std::cout << "\n========================================" << std::endl;
+                std::cout << "CSV LOG FILE CREATED (FALLBACK): " << fallbackPath << std::endl;
+                std::cout << "========================================\n" << std::endl;
+                csvFilePath = fallbackPath;  // 更新路径
+            } else {
+                ROS_ERROR_STREAM(this->hint_ << ": CRITICAL: Failed to create CSV log file even in /tmp!");
+                std::cerr << "ERROR: Failed to create CSV log file!" << std::endl;
+            }
+        }
     }
 
     void predictor::initParam(){
@@ -229,6 +297,7 @@ namespace dynamicPredictor{
         this->varPointsPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/var_points", 10);
         this->predBBoxPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/pred_bbox", 10);
         this->sValuePub_ = this->nh_.advertise<std_msgs::Float32>(this->ns_ + "/current_s_value", 1);
+        this->adaptiveMetricsPub_ = this->nh_.advertise<std_msgs::Float64MultiArray>(this->ns_ + "/adaptive_metrics", 10);
     }
 
 
@@ -244,6 +313,7 @@ namespace dynamicPredictor{
         this->publishIntentVis();
         this->publishVarPoints();
         this->publishPredBBox();
+        this->publishAdaptiveMetrics(); // 发布自适应指标
     }
 
     void predictor::predCB(const ros::TimerEvent&){    
@@ -333,15 +403,18 @@ namespace dynamicPredictor{
     // 自适应的指标，和计算。四个函数
     // 1. 计算加加速度幅值 ||j_t||
     double predictor::computeJerkNorm(const Eigen::Vector3d& currAcc) {
-        if (accHistory_.size() < historyWindow_) {
+        // 如果历史为空，初始化并返回0
+        if (accHistory_.empty()) {
             accHistory_.push_back(currAcc);
-            return 0.0;  // 历史不足时返回0
+            return 0.0;
         }
         // 取最近一次历史加速度计算加加速度
         Eigen::Vector3d prevAcc = accHistory_.back();
         double jerkNorm = (currAcc - prevAcc).norm() / dt_;  // dt_为预测时间步长（原有参数）
         // 更新历史（保持窗口大小）
-        accHistory_.erase(accHistory_.begin());
+        if (accHistory_.size() >= historyWindow_) {
+            accHistory_.erase(accHistory_.begin());
+        }
         accHistory_.push_back(currAcc);
         return jerkNorm;
     }
@@ -394,6 +467,12 @@ namespace dynamicPredictor{
         int numOb = this->posHist_.size();  //当前跟踪的目标数量
         
         intentProbTemp.resize(numOb);   //intentProbTemp用来存储每个目标的意图概率（输出结果）
+        
+        // 初始化自适应指标存储（每个障碍物一个）
+        currentDt_.resize(numOb, 0.0);
+        currentSAdaptive_.resize(numOb, 1.0);
+        currentKAdaptive_.resize(numOb, -1);
+        
         for (int i=0; i<numOb; ++i){
             // init state prob P
             // 初始化状态概率（均匀分布，4种意图：前、左、右、停）
@@ -418,7 +497,7 @@ namespace dynamicPredictor{
                 // Eigen::MatrixXd transMat = this->genTransitionMatrix(prevAngle, currAngle, currVel);
                 // 现在改为自适应改为下面的两行，增加了输入
                 Eigen::Vector3d currAcc = this->accHist_[i][numHist-j-2];  // 与pos/vel获取逻辑一致
-                Eigen::MatrixXd transMat = this->genTransitionMatrix(prevAngle, currAngle, currVel, currPos, currAcc);
+                Eigen::MatrixXd transMat = this->genTransitionMatrix(prevAngle, currAngle, currVel, currPos, currAcc, i);
 
                 Eigen::VectorXd newP= transMat*P;
                 P = newP;
@@ -430,7 +509,7 @@ namespace dynamicPredictor{
 
     //据角度和速度，计算“意图转移概率矩阵”
     // Eigen::MatrixXd predictor::genTransitionMatrix(const Eigen::Vector3d &prevPos, const Eigen::Vector3d &currPos, const Eigen::Vector3d &prevVel, const Eigen::Vector3d &currVel){
-    Eigen::MatrixXd predictor::genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc){
+    Eigen::MatrixXd predictor::genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc, int obsIdx){
         // Initialize transMat
         Eigen::MatrixXd transMat;
         Eigen::VectorXd probVec;        
@@ -457,33 +536,50 @@ namespace dynamicPredictor{
         double jerkNorm = computeJerkNorm(currAcc);  // 调用已有计算函数，无需再用 .norm()
 
         // 3.2 NIS 计算（使用传入的 currPos 和 CA 模型预测）
+        // 使用恒定加速度模型预测：基于当前速度和位置预测下一时刻位置
         Eigen::Vector3d caPredPos;
-        if (!caPredHistory_.empty()) {
-            caPredPos = caPredHistory_.back();  // 从历史获取最近的 CA 预测位置
-        } else {
-            caPredPos = currPos;  // 无历史时用当前位置作为默认
-        }
+        // 使用传入的 currVel 和 currAcc 进行 CA 模型预测
+        caPredPos = currPos + currVel * dt_ + 0.5 * currAcc * dt_ * dt_;
         Eigen::Matrix3d residualCov = Eigen::Matrix3d::Identity() * 0.1;  // 残差协方差（根据实际情况调整）
         double nis = computeNIS(currPos, caPredPos, residualCov);  // 调用已有 NIS 计算函数
 
-        // 3.3 意图熵（从当前意图概率计算，若未初始化则用均匀分布）
-        Eigen::VectorXd currIntentProb;
-        if (!this->intentProb_.empty()) {
-            currIntentProb = this->intentProb_.back();  // 从历史获取
-        } else {
-            currIntentProb = Eigen::VectorXd::Constant(this->numIntent_, 1.0 / this->numIntent_);  // 均匀分布初始化
+        // 3.3 意图熵（从当前意图概率计算）
+        // 注意：在 intentProb() 函数中，意图概率 P 正在迭代计算中
+        // 这里使用均匀分布作为初始估计，因为当前时刻的意图概率还未计算完成
+        Eigen::VectorXd currIntentProb = Eigen::VectorXd::Constant(this->numIntent_, 1.0 / this->numIntent_);  // 使用均匀分布作为初始估计
+        double Ht = 0.0;
+        for (int k = 0; k < currIntentProb.size(); ++k) {
+            double p = currIntentProb(k);
+            if (p > 1e-6) {  // 避免log(0)
+                Ht -= p * log(p);
+            }
         }
-        double Ht = - (currIntentProb.array() * currIntentProb.array().log()).sum();  // 熵计算公式
+        // 对于均匀分布，Ht = log(4) ≈ 1.386
 
         // 3.4 运动诊断指标
         double Mt = gamma1_ * nis + gamma2_ * jerkNorm;
 
         // 3.5 自适应权重（使用正确的 computeAdaptiveS 函数）
         double s_adaptive = computeAdaptiveS(Ht, Mt);
+        
+        // 3.6 计算 D_t（衰减因子）
+        double D_entropy = exp(-lambda1_ * Ht);
+        double D_motion = 1.0 / (1.0 + exp(lambda2_ * (Mt - M_thresh_)));
+        double Dt = D_entropy * D_motion;
+        
+        // 保存当前障碍物的自适应指标（用于CSV日志）
+        if (obsIdx >= 0 && obsIdx < static_cast<int>(currentDt_.size())) {
+            currentDt_[obsIdx] = Dt;
+            currentSAdaptive_[obsIdx] = s_adaptive;
+        }
+        
         // 4. 生成转移矩阵的每一列
         for (int i = 0; i < this->numIntent_; ++i) {
             Eigen::VectorXd scale = Eigen::VectorXd::Ones(this->numIntent_);
-            scale(i) = s_adaptive;  // 用自适应权重
+            // 用固定权重
+            scale(i) = this->pscale_;
+            // 用自适应权重
+            // scale(i) = s_adaptive;  
             transMat.col(i) = this->genTransitionVector(theta, r, scale);
         }        
 
@@ -929,14 +1025,14 @@ namespace dynamicPredictor{
     void predictor::publishPredTraj(){
 		if (this->posPred_.size() != 0){
             visualization_msgs::MarkerArray trajMsg;
-            int countMarker = 0;
 			for (int i=0; i<int(this->posPred_.size()); ++i){
                 for (int j=0; j<int(this->posPred_[i].size());j++){
                     visualization_msgs::Marker traj;
                     traj.header.frame_id = "map";
                     traj.header.stamp = ros::Time::now();
                     traj.ns = "predictor";
-                    traj.id = countMarker;
+                    // 编码：obstacle_id * numIntent_ + intent_type，方便 Python 解析
+                    traj.id = i * this->numIntent_ + j;
                     traj.type = visualization_msgs::Marker::LINE_STRIP;  //线段
                     traj.scale.x = 0.1;             //线段粗细和颜色
                     traj.scale.y = 0.1;
@@ -952,7 +1048,6 @@ namespace dynamicPredictor{
                         p.x = pos(0); p.y = pos(1); p.z = pos(2);
                         traj.points.push_back(p);                    //每个轨迹都统计点，但是不知道用来干嘛
                     }
-                    ++countMarker;
                     trajMsg.markers.push_back(traj);
                 }
 			}
@@ -1134,6 +1229,27 @@ namespace dynamicPredictor{
         this->predBBoxPub_.publish(predBBoxMsg);
     }
 
+    void predictor::publishAdaptiveMetrics(){
+        // 发布每个障碍物的 D_t 和 s_adaptive
+        // 格式：对于 N 个障碍物，数组长度为 2*N，每个障碍物有两个值：[D_t, s_adaptive]
+        std_msgs::Float64MultiArray metricsMsg;
+        metricsMsg.layout.dim.resize(1);
+        metricsMsg.layout.dim[0].label = "adaptive_metrics";
+        metricsMsg.layout.dim[0].size = currentDt_.size() * 2; // 每个障碍物2个值
+        metricsMsg.layout.dim[0].stride = 2;
+        metricsMsg.layout.data_offset = 0;
+        
+        // 填充数据：对于每个障碍物，先 D_t，再 s_adaptive
+        for (size_t i = 0; i < currentDt_.size(); ++i) {
+            double Dt = (i < currentDt_.size()) ? currentDt_[i] : 0.0;
+            double s_adap = (i < currentSAdaptive_.size()) ? currentSAdaptive_[i] : 1.0;
+            metricsMsg.data.push_back(Dt);
+            metricsMsg.data.push_back(s_adap);
+        }
+        
+        this->adaptiveMetricsPub_.publish(metricsMsg);
+    }
+
 // 直接返回预测的位置、尺寸和意图概率，适合需要单独处理这些数据的情况
     void predictor::getPrediction(std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predPos, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &predSize, std::vector<Eigen::VectorXd> &intentProb){
         if (this->sizePred_.size()){
@@ -1285,6 +1401,46 @@ namespace dynamicPredictor{
                             << " | Min FDE: " << minFDE 
                             << " | Best Intent: " << bestIntent 
                             << " | Valid Steps: " << validSteps);
+                
+                // 写入CSV文件
+                if (logFile_.is_open()) {
+                    double t_pred = ros::Time::now().toSec();
+                    
+                    // 获取当前意图概率分布
+                    Eigen::VectorXd intentProbVec;
+                    if (static_cast<size_t>(obsIdx) < intentProb_.size() && intentProb_[obsIdx].size() > 0) {
+                        intentProbVec = intentProb_[obsIdx];
+                    } else {
+                        intentProbVec = Eigen::VectorXd::Constant(numIntent_, 1.0 / numIntent_);
+                    }
+                    
+                    // 确保概率向量有4个元素（forward, left, right, stop）
+                    double P_forward = (intentProbVec.size() > 0) ? intentProbVec(0) : 0.25;
+                    double P_left = (intentProbVec.size() > 1) ? intentProbVec(1) : 0.25;
+                    double P_right = (intentProbVec.size() > 2) ? intentProbVec(2) : 0.25;
+                    double P_stop = (intentProbVec.size() > 3) ? intentProbVec(3) : 0.25;
+                    
+                    // 获取自适应指标
+                    double Dt = (static_cast<size_t>(obsIdx) < currentDt_.size()) ? currentDt_[obsIdx] : 0.0;
+                    double s_adap = (static_cast<size_t>(obsIdx) < currentSAdaptive_.size()) ? currentSAdaptive_[obsIdx] : 1.0;
+                    // 确保 bestIntent 在有效范围内 (0-3)
+                    int k_adap = (bestIntent >= 0 && bestIntent < numIntent_) ? bestIntent : -1;
+                    
+                    // 写入CSV行
+                    logFile_ << std::fixed << std::setprecision(6)
+                             << t_pred << ","
+                             << obsIdx << ","
+                             << minADE << ","
+                             << minFDE << ","
+                             << Dt << ","
+                             << s_adap << ","
+                             << k_adap << ","
+                             << P_forward << ","
+                             << P_left << ","
+                             << P_right << ","
+                             << P_stop << "\n";
+                    logFile_.flush();  // 立即刷新到磁盘
+                }
             }
         }
     }
@@ -1310,11 +1466,44 @@ namespace dynamicPredictor{
 
 
 
+    // 获取桌面路径（参考 traj_vis6.py 的 get_desktop_path 逻辑）
+    std::string predictor::getDesktopPath() {
+        const char* home = std::getenv("HOME");
+        if (!home) {
+            ROS_WARN_STREAM(this->hint_ << ": HOME environment variable not set, using /tmp");
+            return "/tmp";
+        }
+        
+        std::string homeStr = std::string(home);
+        
+        // 优先检测中文桌面路径（参考 Python: os.path.join(home, "桌面")）
+        std::string chineseDesktop = homeStr + "/桌面";
+        struct stat info;
+        if (stat(chineseDesktop.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
+            return chineseDesktop;
+        }
+        
+        // 再检测英文桌面路径（参考 Python: os.path.join(home, "Desktop")）
+        std::string englishDesktop = homeStr + "/Desktop";
+        if (stat(englishDesktop.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
+            return englishDesktop;
+        }
+        
+        // 都不存在时使用家目录（保底方案，参考 Python 的 return home）
+        ROS_WARN_STREAM(this->hint_ << ": 未找到桌面目录，将使用家目录保存文件");
+        return homeStr;
+    }
+
     // 日志，添加了析构函数以确保文件正确关闭
     predictor::~predictor() {
-    if (logFile_.is_open()) {
-        logFile_.close();
-        std::cout << hint_ << ": Log file closed." << std::endl;
+        if (logFile_.is_open()) {
+            logFile_.flush();  // 确保所有数据都写入缓冲区
+            logFile_.close();  // 关闭文件，确保数据写入磁盘
+            std::cout << "\n========================================" << std::endl;
+            std::cout << hint_ << ": CSV log file closed and saved." << std::endl;
+            std::cout << "========================================\n" << std::endl;
+        } else {
+            std::cout << hint_ << ": Warning - log file was not open." << std::endl;
+        }
     }
-}
 }
