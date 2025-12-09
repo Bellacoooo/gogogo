@@ -4,7 +4,8 @@
     <model name="dynamic_cylinder_0.6_0.6_1.7">
       <!-- L形轨迹：先并列直行，再右转横切到无人机前方 -->
       <!-- t=0 位置在无人机左侧 2m 处 (0, 2, 0)，朝向与无人机一致（+X） -->
-      <pose>0 2 0 0 0 0</pose>
+      <!-- 初始位置平移到 (-2, 2, 0)，保持与无人机朝向一致 -->
+      <pose>-2 2 0 0 0 0</pose>
       <static>0</static>
       <link name="body">
         <inertial>
@@ -46,13 +47,13 @@
         <loop>0</loop> <!-- 单次执行 -->
         <sin>0</sin>
         <velocity>1.0</velocity> <!-- 速度 1 m/s -->
-        <angular_velocity>8.0</angular_velocity> <!-- 横向急转 -->
+        <angular_velocity>4.0</angular_velocity> <!-- 横向急转 -->
         <path>
           <!-- 阶段1：并行直行（t≈0~2s），保持左侧 2m 间距 -->
-          <waypoint>0.0 2.0 0.0</waypoint>
+          <waypoint>-2.0 2.0 0.0</waypoint>
           <waypoint>2.0 2.0 0.0</waypoint>
           <!-- 阶段2：突然向右横切到无人机正前方，形成 L 形 -->
-          <waypoint>2.0 0.0 0.0</waypoint>
+          <waypoint>2.0 -2.0 0.0</waypoint>
         </path>
       </plugin>
     </model>

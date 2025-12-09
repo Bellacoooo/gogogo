@@ -176,7 +176,7 @@ namespace dynamicPredictor{
 
         // prob scale param
         if (not this->nh_.getParam(this->ns_ + "/prob_scale_param", this->pscale_)){
-            this->pscale_ = 1.5;
+            this->pscale_ = 5;
             std::cout << this->hint_ << ": No prob scale param. Use default: 1.5." << std::endl;
         }
         else{
@@ -231,7 +231,7 @@ namespace dynamicPredictor{
 
         // 新增：自适应方案参数 - s_max（最大自适应权重）
         if (not this->nh_.getParam(this->ns_ + "/s_max", this->s_max_)){
-            this->s_max_ = 2.0;  // 默认值
+            this->s_max_ = 5.0;  // 默认值
             std::cout << this->hint_ << ": No s_max parameter found. Use default: 2.0." << std::endl;
         }
         else{
