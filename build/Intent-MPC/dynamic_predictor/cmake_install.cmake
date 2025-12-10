@@ -57,3 +57,7 @@ if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dynamic_predictor" TYPE FILE FILES "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/package.xml")
 endif()
 
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/dynamic_predictor" TYPE PROGRAM FILES "/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/catkin_generated/installspace/traj_vis8.py")
+endif()
+

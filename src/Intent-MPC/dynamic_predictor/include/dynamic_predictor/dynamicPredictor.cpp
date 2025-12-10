@@ -48,7 +48,7 @@ namespace dynamicPredictor{
         logFile_.open(csvFilePath.c_str(), std::ios::out | std::ios::trunc);
         if (logFile_.is_open()) {
             // 立即写入CSV表头（确保文件被创建，即使没有数据）
-            logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
+            logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,dt,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
             logFile_.flush();  // 确保数据写入缓冲区
             
             // 验证文件是否真的被创建
@@ -447,12 +447,27 @@ namespace dynamicPredictor{
 
     // 4. 计算自适应权重 s_adaptive
     double predictor::computeAdaptiveS(const double Ht, const double Mt) {
-        // 计算熵约束项：e^(-λ1*Ht)
-        double entropyTerm = exp(-lambda1_ * Ht);
-        // 计算运动诊断约束项：1/(1 + e^(λ2*(Mt - M_thresh)))
-        double motionTerm = 1.0 / (1.0 + exp(lambda2_ * (Mt - M_thresh_)));
-        // 衰减因子 D_t
+        // 计算熵约束项：使用指数衰减，但在Ht=Ht_max时保持为1.0
+        // Ht_max = log(4) ≈ 1.386（均匀分布时的最大熵）
+        // 当Ht ≤ Ht_max时（正常或更确定），D_entropy = 1.0（不衰减）
+        // 当Ht > Ht_max时（异常高熵），D_entropy会衰减
+        // 这样在正常状态下（Ht≈Ht_max），D_entropy=1.0，Dt完全由D_motion决定
+        double Ht_max = log(4.0);
+        double entropyTerm = exp(-lambda1_ * std::max(0.0, Ht - Ht_max));
+        entropyTerm = std::max(0.0, std::min(1.0, entropyTerm));  // 限制在[0,1]
+        
+        // 计算运动诊断约束项：使用sigmoid函数，让过渡更平滑
+        // 当Mt << M_thresh时（稳定），D_motion接近1
+        // 当Mt ≈ M_thresh时（中等机动），D_motion在0.5附近，产生中间值
+        // 当Mt >> M_thresh时（大机动），D_motion接近0
+        // 使用sigmoid: 1 / (1 + exp(lambda2 * (Mt - M_thresh)))
+        // 为了产生更多中间值（0.6-0.9），使用较小的lambda2或调整阈值
+        // 这里使用lambda2/2来扩大过渡区间，让更多Mt值落在中间范围
+        double motionTerm = 1.0 / (1.0 + exp((lambda2_ * 0.7) * (Mt - M_thresh_)));
+        
+        // 衰减因子 D_t（稳定时接近1，不稳定时接近0）
         double Dt = entropyTerm * motionTerm;
+        
         // 自适应权重（限制在[1, s_max_]）
         double s_adaptive = 1.0 + (s_max_ - 1.0) * Dt;
         return std::max(1.0, std::min(s_adaptive, s_max_));  // 截断到有效范围
@@ -533,15 +548,14 @@ namespace dynamicPredictor{
     // 3. 新增：计算自适应权重所需指标（根据你的扩展逻辑）
         // 3. 计算自适应权重所需指标
         // 3.1 加加速度 norm（使用传入的 currAcc）
-        double jerkNorm = computeJerkNorm(currAcc);  // 调用已有计算函数，无需再用 .norm()
+        double jerkNormRaw = computeJerkNorm(currAcc);  // 调用已有计算函数，无需再用 .norm()
+        double jerkCap = 50.0; // 加加速度上限，避免异常尖峰
+        double jerkNorm = std::min(jerkNormRaw, jerkCap);
 
-        // 3.2 NIS 计算（使用传入的 currPos 和 CA 模型预测）
-        // 使用恒定加速度模型预测：基于当前速度和位置预测下一时刻位置
-        Eigen::Vector3d caPredPos;
-        // 使用传入的 currVel 和 currAcc 进行 CA 模型预测
-        caPredPos = currPos + currVel * dt_ + 0.5 * currAcc * dt_ * dt_;
-        Eigen::Matrix3d residualCov = Eigen::Matrix3d::Identity() * 0.1;  // 残差协方差（根据实际情况调整）
-        double nis = computeNIS(currPos, caPredPos, residualCov);  // 调用已有 NIS 计算函数
+        // 3.2 NIS 计算：使用已有的 KF（CV）预测
+        Eigen::Vector3d kfPredPos = currPos + currVel * dt_; // 恒速模型预测
+        Eigen::Matrix3d residualCov = Eigen::Matrix3d::Identity() * 0.1;  // 残差协方差（可按需要调整）
+        double nis = computeNIS(currPos, kfPredPos, residualCov);  // 使用 KF 预测位置计算 NIS
 
         // 3.3 意图熵（从当前意图概率计算）
         // 注意：在 intentProb() 函数中，意图概率 P 正在迭代计算中
@@ -559,12 +573,25 @@ namespace dynamicPredictor{
         // 3.4 运动诊断指标
         double Mt = gamma1_ * nis + gamma2_ * jerkNorm;
 
-        // 3.5 自适应权重（使用正确的 computeAdaptiveS 函数）
+        // 3.5 自适应权重
         double s_adaptive = computeAdaptiveS(Ht, Mt);
         
         // 3.6 计算 D_t（衰减因子）
-        double D_entropy = exp(-lambda1_ * Ht);
+        // 熵约束项：使用指数衰减，但在Ht=Ht_max时保持为1.0
+        // Ht_max = log(4) ≈ 1.386（均匀分布时的最大熵）
+        // 当Ht ≤ Ht_max时（正常或更确定），D_entropy = 1.0（不衰减）
+        // 当Ht > Ht_max时（异常高熵），D_entropy会衰减
+        double Ht_max = log(4.0);
+        double D_entropy = exp(-lambda1_ * std::max(0.0, Ht - Ht_max));
+        D_entropy = std::max(0.0, std::min(1.0, D_entropy));  // 限制在[0,1]
+        
+        // 运动诊断约束项：使用sigmoid函数，让过渡更平滑
+        // 当Mt << M_thresh时（稳定），D_motion接近1
+        // 当Mt ≈ M_thresh时（中等机动），D_motion在0.5附近，产生中间值
+        // 当Mt >> M_thresh时（大机动），D_motion接近0
+        // 使用sigmoid: 1 / (1 + exp(lambda2 * (Mt - M_thresh)))
         double D_motion = 1.0 / (1.0 + exp(lambda2_ * (Mt - M_thresh_)));
+        // 衰减因子 D_t（稳定时接近1，不稳定时接近0）
         double Dt = D_entropy * D_motion;
         
         // 保存当前障碍物的自适应指标（用于CSV日志）
@@ -577,9 +604,9 @@ namespace dynamicPredictor{
         for (int i = 0; i < this->numIntent_; ++i) {
             Eigen::VectorXd scale = Eigen::VectorXd::Ones(this->numIntent_);
             // 用固定权重
-            scale(i) = this->pscale_;
+            // scale(i) = this->pscale_;
             // 用自适应权重
-            // scale(i) = s_adaptive;  
+            scale(i) = s_adaptive;  
             transMat.col(i) = this->genTransitionVector(theta, r, scale);
         }        
 

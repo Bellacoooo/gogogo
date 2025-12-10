@@ -11,4 +11,7 @@
 	<node pkg="autonomous_flight" type="mpc_navigation_node" name="mpc_navigation_node" output="screen" />
 	<!-- <node pkg="onboard_detector" type="yolo_detector_node.py" name="yolo_detector_node" output="screen" /> -->
 	<include file="$(find remote_control)/launch/mpc_navigation_rviz.launch" />
+	
+	<!-- 运行轨迹可视化评估脚本 -->
+	<node name="traj_vis8" pkg="dynamic_predictor" type="traj_vis8.py" output="screen" />
 </launch>

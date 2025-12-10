@@ -11,14 +11,26 @@ prediction_z_score: 0.674 #3.291 for 99% confidence level
 max_front_prob: 0.5 # unscaled front prob when angle = 0, stop prob = 0
 front_angle: 10.0 # angle in degree that front prob = left/right prob
 stop_velocity_thereshold: 0.1 # vel that stop prob = non-stop prob
-prob_scale_param: 5.0 
+prob_scale_param: 1.5 
 
-# 自适应方案参数
-gamma1: 0.3         # NIS权重（降低以减小对NIS的敏感度）
-gamma2: 0.7         # 加加速度权重（增加以更关注物理突变）
-lambda1: 0.5        # 熵敏感度（降低以使D_t不会过快衰减）
-lambda2: 1.0        # 运动诊断敏感度（降低以使D_t不会过快衰减）
-M_thresh: 2.0       # 运动突变阈值（提高以降低对正常运动的敏感度）
-s_max: 2.0          # 最大自适应权重
-history_window: 1   # 历史窗口大小
+# 自适应方案参数（示例调参：平稳期基本不衰减，大机动明显衰减）
+# 逻辑解释：
+# - Mt = gamma1 * NIS + gamma2 * Jerk
+# - D_motion = 1 / (1 + exp(lambda2 * (Mt - M_thresh)))
+# - 目标：平稳期 Mt << M_thresh，D_motion≈1；大机动 Mt > M_thresh，D_motion 显著下降
+# 建议值（基于你当前观测：平稳 NIS≈0.03~0.06，Jerk≈0~15；大机动 NIS≈0.4，Jerk≈40~50）
+#   gamma1: 1.0  （让 NIS 主导，稳定/偏差时有区分度）
+#   gamma2: 0.1  （降低 Jerk 权重，避免被尖峰主导；你已对 Jerk 做 50 上限）
+#   lambda1: 0.5 （保持熵项衰减适中，若想更敏感可略增）
+#   lambda2: 1.5 （让 Mt 超过阈值时快速衰减，可根据效果调 1.0~2.0）
+#   M_thresh: 4.0（平稳期 Mt<~1.5，D_motion≈1；大机动 Mt≈5~6，D_motion 明显下降）
+# 如需更强抑制大机动，可降低 M_thresh 到 3.5，或提升 lambda2 到 2.0；
+# 如若过敏感，则提高 M_thresh 或降低 lambda2。
+gamma1: 1.0           # NIS权重（降低以减小对NIS的敏感度）
+gamma2: 0.1            # 加加速度权重（增加以更关注物理突变）
+lambda1: 0.5          # 熵敏感度（降低以使D_t不会过快衰减）
+lambda2: 1.5          # 运动诊断敏感度（降低以使D_t不会过快衰减）
+M_thresh: 4.0         # 运动突变阈值（提高以降低对正常运动的敏感度）
+s_max: 5.0          # 最大自适应权重保持不变
+history_window: 1   # 历史窗口保持最小，减少滞后
 

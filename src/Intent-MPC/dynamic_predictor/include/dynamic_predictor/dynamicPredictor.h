@@ -81,6 +81,7 @@ namespace dynamicPredictor{
         double M_thresh_;         // 运动诊断阈值
         double s_max_;            // 最大权重（原pscale_的替代）
         size_t historyWindow_ = 1;   // 历史数据窗口大小（至少1）
+        ros::Time lastPrintTime_;
 
         // 新增：核心指标计算函数
         double computeJerkNorm(const Eigen::Vector3d& currAcc);  // 计算加加速度幅值
