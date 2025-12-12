@@ -42,6 +42,15 @@ namespace AutoFlight{
 			cout << "[AutoFlight]: Global planner use is set to: " << this->useGlobalPlanner_ << "." << endl;
 		}
 
+		// global planner type (rrt / astar)
+		if (not this->nh_.getParam("autonomous_flight/global_planner_type", this->globalPlannerType_)){
+			this->globalPlannerType_ = "rrt";
+			cout << "[AutoFlight]: No global planner type param found. Use default: rrt." << endl;
+		}
+		else{
+			cout << "[AutoFlight]: Global planner type: " << this->globalPlannerType_ << "." << endl;
+		}
+
 		// No turning of yaw
 		if (not this->nh_.getParam("autonomous_flight/no_yaw_turning", this->noYawTurning_)){
 			this->noYawTurning_ = false;
@@ -145,8 +154,14 @@ namespace AutoFlight{
 		}
 
 		// initialize rrt planner
-		this->rrtPlanner_.reset(new globalPlanner::rrtOccMap<3> (this->nh_));
-		this->rrtPlanner_->setMap(this->map_);
+		if (this->globalPlannerType_ == "astar"){
+			this->aStarPlanner_.reset(new globalPlanner::AStarOccMap (this->nh_));
+			this->aStarPlanner_->setMap(this->map_);
+		}
+		else{ // rrt by default
+			this->rrtPlanner_.reset(new globalPlanner::rrtOccMap<3> (this->nh_));
+			this->rrtPlanner_->setMap(this->map_);
+		}
 
 		// initialize polynomial trajectory planner
 		this->polyTraj_.reset(new trajPlanner::polyTrajOccMap (this->nh_));
@@ -236,10 +251,17 @@ namespace AutoFlight{
 					}
 					else{
 						if (this->useGlobalPlanner_){
-							this->rrtPlanner_->updateStart(this->odom_.pose.pose);
-							this->rrtPlanner_->updateGoal(this->goal_.pose);
 							nav_msgs::Path rrtPathMsgTemp;
-							this->rrtPlanner_->makePlan(rrtPathMsgTemp);
+							if (this->globalPlannerType_ == "astar" && this->aStarPlanner_){
+								this->aStarPlanner_->updateStart(this->odom_.pose.pose);
+								this->aStarPlanner_->updateGoal(this->goal_.pose);
+								this->aStarPlanner_->makePlan(rrtPathMsgTemp);
+							}
+							else if (this->rrtPlanner_){
+								this->rrtPlanner_->updateStart(this->odom_.pose.pose);
+								this->rrtPlanner_->updateGoal(this->goal_.pose);
+								this->rrtPlanner_->makePlan(rrtPathMsgTemp);
+							}
 							if (rrtPathMsgTemp.poses.size() >= 2){
 								this->rrtPathMsg_ = rrtPathMsgTemp;
 							}

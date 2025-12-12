@@ -167,6 +167,8 @@ add_executable(test_dep_node src/test_dep_node.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS})
+# library 增加 A* 源
+target_sources(${PROJECT_NAME} PRIVATE src/a_star_occ.cpp)
 # target_link_libraries(test_kdtree ${catkin_LIBRARIES})
 # target_link_libraries(test_prm_kdtree ${catkin_LIBRARIES} ${PROJECT_NAME} ${OpenCV_LIBS})
 # target_link_libraries(test_blob_detection ${catkin_LIBRARIES})

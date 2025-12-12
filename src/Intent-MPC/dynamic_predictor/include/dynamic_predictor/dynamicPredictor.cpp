@@ -604,10 +604,10 @@ namespace dynamicPredictor{
         for (int i = 0; i < this->numIntent_; ++i) {
             Eigen::VectorXd scale = Eigen::VectorXd::Ones(this->numIntent_);
             // 用固定权重
-            // scale(i) = this->pscale_;
+            scale(i) = this->pscale_;
             // 用自适应权重
             scale(i) = s_adaptive;  
-            transMat.col(i) = this->genTransitionVector(theta, r, scale);
+            // transMat.col(i) = this->genTransitionVector(theta, r, scale);
         }        
 
         // //对每种意图（前进、左、右、停）都生成一个“转移概率列”；

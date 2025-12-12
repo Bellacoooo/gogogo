@@ -404,72 +404,72 @@ namespace mapManager{
 			cout << this->hint_ << ": No prebuilt map found/not using the prebuilt map." << endl;
 		}
 		else {
-			//让静态障碍物消失  静态障碍物写在PCD文件 = 静态障碍物的"蓝图"或"设计图
-			// cout << this->hint_ << ": Map loaded with " << cloud->width * cloud->height << " data points. " << endl;
-			// int address;
-			// Eigen::Vector3i pointIndex;
-			// Eigen::Vector3d pointPos;
-			// Eigen::Vector3i inflateIndex;
-			// int inflateAddress;
+			// 让静态障碍物消失  静态障碍物写在PCD文件 = 静态障碍物的"蓝图"或"设计图
+			cout << this->hint_ << ": Map loaded with " << cloud->width * cloud->height << " data points. " << endl;
+			int address;
+			Eigen::Vector3i pointIndex;
+			Eigen::Vector3d pointPos;
+			Eigen::Vector3i inflateIndex;
+			int inflateAddress;
 
-			// // update occupancy info
-			// int xInflateSize = ceil(this->robotSize_(0)/(2*this->mapRes_));
-			// int yInflateSize = ceil(this->robotSize_(1)/(2*this->mapRes_));
-			// int zInflateSize = ceil(this->robotSize_(2)/(2*this->mapRes_));
+			// update occupancy info
+			int xInflateSize = ceil(this->robotSize_(0)/(2*this->mapRes_));
+			int yInflateSize = ceil(this->robotSize_(1)/(2*this->mapRes_));
+			int zInflateSize = ceil(this->robotSize_(2)/(2*this->mapRes_));
 
-			// Eigen::Vector3d currMapRangeMin (0.0, 0.0, 0.0);
-			// Eigen::Vector3d currMapRangeMax (0.0, 0.0, 0.0);
+			Eigen::Vector3d currMapRangeMin (0.0, 0.0, 0.0);
+			Eigen::Vector3d currMapRangeMax (0.0, 0.0, 0.0);
 
-			// const int  maxIndex = this->mapVoxelMax_(0) * this->mapVoxelMax_(1) * this->mapVoxelMax_(2);
-			// for (const auto& point: *cloud)
-			// {
-			// 	address = this->posToAddress(point.x, point.y, point.z);
-			// 	pointPos(0) = point.x; pointPos(1) = point.y; pointPos(2) = point.z;
-			// 	this->posToIndex(pointPos, pointIndex);
+			const int  maxIndex = this->mapVoxelMax_(0) * this->mapVoxelMax_(1) * this->mapVoxelMax_(2);
+			for (const auto& point: *cloud)
+			{
+				address = this->posToAddress(point.x, point.y, point.z);
+				pointPos(0) = point.x; pointPos(1) = point.y; pointPos(2) = point.z;
+				this->posToIndex(pointPos, pointIndex);
 
-			// 	this->occupancy_[address] = this->pMaxLog_;
-			// 	// update map range
-			// 	if (pointPos(0) < currMapRangeMin(0)){
-			// 		currMapRangeMin(0) = pointPos(0);
-			// 	}
+				this->occupancy_[address] = this->pMaxLog_;
+				// update map range
+				if (pointPos(0) < currMapRangeMin(0)){
+					currMapRangeMin(0) = pointPos(0);
+				}
 
-			// 	if (pointPos(0) > currMapRangeMax(0)){
-			// 		currMapRangeMax(0) = pointPos(0);
-			// 	}
+				if (pointPos(0) > currMapRangeMax(0)){
+					currMapRangeMax(0) = pointPos(0);
+				}
 
-			// 	if (pointPos(1) < currMapRangeMin(1)){
-			// 		currMapRangeMin(1) = pointPos(1);
-			// 	}
+				if (pointPos(1) < currMapRangeMin(1)){
+					currMapRangeMin(1) = pointPos(1);
+				}
 
-			// 	if (pointPos(1) > currMapRangeMax(1)){
-			// 		currMapRangeMax(1) = pointPos(1);
-			// 	}
+				if (pointPos(1) > currMapRangeMax(1)){
+					currMapRangeMax(1) = pointPos(1);
+				}
 
-			// 	if (pointPos(2) < currMapRangeMin(2)){
-			// 		currMapRangeMin(2) = pointPos(2);
-			// 	}
+				if (pointPos(2) < currMapRangeMin(2)){
+					currMapRangeMin(2) = pointPos(2);
+				}
 
-			// 	if (pointPos(2) > currMapRangeMax(2)){
-			// 		currMapRangeMax(2) = pointPos(2);
-			// 	}
+				if (pointPos(2) > currMapRangeMax(2)){
+					currMapRangeMax(2) = pointPos(2);
+				}
 
-			// 	for (int ix=-xInflateSize; ix<=xInflateSize; ++ix){
-			// 		for (int iy=-yInflateSize; iy<=yInflateSize; ++iy){
-			// 			for (int iz=-zInflateSize; iz<=zInflateSize; ++iz){
-			// 				inflateIndex(0) = pointIndex(0) + ix;
-			// 				inflateIndex(1) = pointIndex(1) + iy;
-			// 				inflateIndex(2) = pointIndex(2) + iz;
-			// 				inflateAddress = this->indexToAddress(inflateIndex);
-			// 				if ((inflateAddress < 0) or (inflateAddress > maxIndex)){
-			// 					continue; // those points are not in the reserved map
-			// 				} 
-			// 				this->occupancyInflated_[inflateAddress] = true;
-			// 			}
-			// 		}
-			// 	}
-			// }
-			// this->currMapRangeMin_ = currMapRangeMin;
-			// this->currMapRangeMax_ = currMapRangeMax;
+				for (int ix=-xInflateSize; ix<=xInflateSize; ++ix){
+					for (int iy=-yInflateSize; iy<=yInflateSize; ++iy){
+						for (int iz=-zInflateSize; iz<=zInflateSize; ++iz){
+							inflateIndex(0) = pointIndex(0) + ix;
+							inflateIndex(1) = pointIndex(1) + iy;
+							inflateIndex(2) = pointIndex(2) + iz;
+							inflateAddress = this->indexToAddress(inflateIndex);
+							if ((inflateAddress < 0) or (inflateAddress > maxIndex)){
+								continue; // those points are not in the reserved map
+							} 
+							this->occupancyInflated_[inflateAddress] = true;
+						}
+					}
+				}
+			}
+			this->currMapRangeMin_ = currMapRangeMin;
+			this->currMapRangeMax_ = currMapRangeMax;
 		}
 	}
 
