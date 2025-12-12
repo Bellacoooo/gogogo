@@ -7,6 +7,7 @@
 #include <queue>
 #include <unordered_map>
 #include <cmath>
+#include <functional>
 
 namespace globalPlanner
 {
@@ -24,22 +25,26 @@ public:
 private:
   struct Node
   {
-    int x{0}, y{0};
+    int x{0}, y{0}, z{0};
     double g{0.0}, h{0.0};
     int parent{-1};
     inline double f() const { return g + h; }
   };
 
-  bool posToIndex(const Eigen::Vector3d &pos, int &ix, int &iy) const;
-  Eigen::Vector3d indexToPos(int ix, int iy, double z) const;
-  bool isFree(int ix, int iy) const;
+  bool posToIndex(const Eigen::Vector3d &pos, int &ix, int &iy, int &iz) const;
+  Eigen::Vector3d indexToPos(int ix, int iy, int iz) const;
+  bool isFree(int ix, int iy, int iz) const;
+  inline int idx1d(int x, int y, int z) const
+  {
+    // use a hash combining x,y,z; assumes map size < 1e5 on each axis
+    return (z * 100000000) + (y * 100000) + x;
+  }
 
   ros::NodeHandle nh_;
   std::shared_ptr<mapManager::occMap> map_;
   geometry_msgs::Pose start_, goal_;
   double res_{0.1};
-  bool use8dir_{true};
-  double occThreshLog_{0.0};  // use inflated occupancy check instead
+  bool use26dir_{true};
 };
 
 }  // namespace globalPlanner
