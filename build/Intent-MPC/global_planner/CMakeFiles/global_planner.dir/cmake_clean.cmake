@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/global_planner.dir/include/global_planner/PRMKDTree.cpp.o.d"
   "CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o"
   "CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o.d"
+  "CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o"
+  "CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o.d"
   "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o"
   "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o.d"
 )

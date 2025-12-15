@@ -2090,12 +2090,16 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/dynamicPredictor.h \
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/utils.h \
  /opt/ros/noetic/include/std_msgs/Float32.h \
+ /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
+ /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \
+ /opt/ros/noetic/include/std_msgs/MultiArrayDimension.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/KDTree.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/BoundedPQueue.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h \
+ /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/polyTrajOccMap.h \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/utils.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \

@@ -1,8 +1,10 @@
-Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous_flight/mpcNavigation.cpp.o: \
- /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/mpcNavigation.cpp \
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o: \
+ /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/a_star_occ.cpp \
  /usr/include/stdc-predef.h \
- /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/mpcNavigation.h \
- /opt/ros/noetic/include/ros/package.h /usr/include/c++/9/string \
+ /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h \
+ /opt/ros/noetic/include/ros/ros.h /opt/ros/noetic/include/ros/time.h \
+ /opt/ros/noetic/include/ros/platform.h /usr/include/c++/9/stdlib.h \
+ /usr/include/c++/9/cstdlib \
  /usr/include/x86_64-linux-gnu/c++/9/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/os_defines.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -11,6 +13,45 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/cpu_defines.h \
+ /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
+ /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn.h \
+ /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+ /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
+ /usr/include/x86_64-linux-gnu/sys/types.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/timesize.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h \
+ /usr/include/x86_64-linux-gnu/bits/time64.h \
+ /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-intn.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/endianness.h \
+ /usr/include/x86_64-linux-gnu/bits/byteswap.h \
+ /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
+ /usr/include/x86_64-linux-gnu/sys/select.h \
+ /usr/include/x86_64-linux-gnu/bits/select.h \
+ /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
+ /usr/include/x86_64-linux-gnu/bits/select2.h \
+ /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
+ /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
+ /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
+ /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
+ /usr/include/x86_64-linux-gnu/bits/stdlib.h \
+ /usr/include/c++/9/bits/std_abs.h /usr/include/c++/9/string \
  /usr/include/c++/9/bits/stringfwd.h /usr/include/c++/9/bits/memoryfwd.h \
  /usr/include/c++/9/bits/char_traits.h \
  /usr/include/c++/9/bits/stl_algobase.h \
@@ -28,27 +69,15 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/c++/9/bits/ptr_traits.h /usr/include/c++/9/debug/debug.h \
  /usr/include/c++/9/bits/predefined_ops.h \
  /usr/include/c++/9/bits/postypes.h /usr/include/c++/9/cwchar \
- /usr/include/wchar.h \
- /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
- /usr/include/x86_64-linux-gnu/bits/floatn.h \
- /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
- /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
- /usr/lib/gcc/x86_64-linux-gnu/9/include/stdarg.h \
+ /usr/include/wchar.h /usr/lib/gcc/x86_64-linux-gnu/9/include/stdarg.h \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
- /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/wchar2.h /usr/include/c++/9/cstdint \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/types.h \
- /usr/include/x86_64-linux-gnu/bits/timesize.h \
- /usr/include/x86_64-linux-gnu/bits/typesizes.h \
- /usr/include/x86_64-linux-gnu/bits/time64.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/c++/9/bits/allocator.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/c++allocator.h \
@@ -63,8 +92,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/c++/9/clocale /usr/include/locale.h \
  /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/9/iosfwd \
  /usr/include/c++/9/cctype /usr/include/ctype.h \
- /usr/include/x86_64-linux-gnu/bits/endian.h \
- /usr/include/x86_64-linux-gnu/bits/endianness.h \
  /usr/include/c++/9/bits/ostream_insert.h \
  /usr/include/c++/9/bits/cxxabi_forced.h \
  /usr/include/c++/9/bits/stl_function.h \
@@ -76,43 +103,18 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/x86_64-linux-gnu/c++/9/bits/gthr.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/gthr-default.h \
  /usr/include/pthread.h /usr/include/sched.h \
- /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h \
  /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
  /usr/include/x86_64-linux-gnu/bits/cpu-set.h /usr/include/time.h \
  /usr/include/x86_64-linux-gnu/bits/time.h \
  /usr/include/x86_64-linux-gnu/bits/timex.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \
- /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
- /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
- /usr/include/x86_64-linux-gnu/bits/thread-shared-types.h \
- /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
- /usr/include/x86_64-linux-gnu/bits/struct_mutex.h \
- /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/atomic_word.h \
  /usr/include/c++/9/ext/alloc_traits.h \
  /usr/include/c++/9/bits/alloc_traits.h \
- /usr/include/c++/9/ext/string_conversions.h /usr/include/c++/9/cstdlib \
- /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
- /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
- /usr/include/x86_64-linux-gnu/sys/types.h /usr/include/endian.h \
- /usr/include/x86_64-linux-gnu/bits/byteswap.h \
- /usr/include/x86_64-linux-gnu/bits/uintn-identity.h \
- /usr/include/x86_64-linux-gnu/sys/select.h \
- /usr/include/x86_64-linux-gnu/bits/select.h \
- /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__sigset_t.h \
- /usr/include/x86_64-linux-gnu/bits/select2.h /usr/include/alloca.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
- /usr/include/x86_64-linux-gnu/bits/stdlib.h \
- /usr/include/c++/9/bits/std_abs.h /usr/include/c++/9/cstdio \
+ /usr/include/c++/9/ext/string_conversions.h /usr/include/c++/9/cstdio \
  /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
@@ -126,29 +128,15 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
  /usr/include/c++/9/bits/functional_hash.h \
- /usr/include/c++/9/bits/basic_string.tcc /usr/include/c++/9/utility \
- /usr/include/c++/9/bits/stl_relops.h /usr/include/c++/9/vector \
- /usr/include/c++/9/bits/stl_construct.h \
- /usr/include/c++/9/bits/stl_uninitialized.h \
- /usr/include/c++/9/bits/stl_vector.h \
- /usr/include/c++/9/bits/stl_bvector.h /usr/include/c++/9/bits/vector.tcc \
- /usr/include/c++/9/map /usr/include/c++/9/bits/stl_tree.h \
- /usr/include/c++/9/ext/aligned_buffer.h \
- /usr/include/c++/9/bits/stl_map.h /usr/include/c++/9/tuple \
- /usr/include/c++/9/array /usr/include/c++/9/stdexcept \
- /usr/include/c++/9/bits/uses_allocator.h \
- /usr/include/c++/9/bits/invoke.h /usr/include/c++/9/bits/stl_multimap.h \
- /usr/include/c++/9/bits/erase_if.h \
- /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/flightBase.h \
- /opt/ros/noetic/include/ros/ros.h /opt/ros/noetic/include/ros/time.h \
- /opt/ros/noetic/include/ros/platform.h /usr/include/c++/9/stdlib.h \
- /usr/include/c++/9/iostream /usr/include/c++/9/ostream \
- /usr/include/c++/9/ios /usr/include/c++/9/bits/ios_base.h \
+ /usr/include/c++/9/bits/basic_string.tcc /usr/include/c++/9/iostream \
+ /usr/include/c++/9/ostream /usr/include/c++/9/ios \
+ /usr/include/c++/9/bits/ios_base.h \
  /usr/include/c++/9/bits/locale_classes.h \
  /usr/include/c++/9/bits/locale_classes.tcc \
  /usr/include/c++/9/system_error \
  /usr/include/x86_64-linux-gnu/c++/9/bits/error_constants.h \
- /usr/include/c++/9/streambuf /usr/include/c++/9/bits/streambuf.tcc \
+ /usr/include/c++/9/stdexcept /usr/include/c++/9/streambuf \
+ /usr/include/c++/9/bits/streambuf.tcc \
  /usr/include/c++/9/bits/basic_ios.h \
  /usr/include/c++/9/bits/locale_facets.h /usr/include/c++/9/cwctype \
  /usr/include/wctype.h /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h \
@@ -210,9 +198,11 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/boost/config/workaround.hpp \
  /usr/include/boost/type_traits/is_integral.hpp \
  /usr/include/boost/type_traits/integral_constant.hpp \
- /usr/include/c++/9/algorithm /usr/include/c++/9/bits/stl_algo.h \
+ /usr/include/c++/9/algorithm /usr/include/c++/9/utility \
+ /usr/include/c++/9/bits/stl_relops.h /usr/include/c++/9/bits/stl_algo.h \
  /usr/include/c++/9/bits/algorithmfwd.h \
  /usr/include/c++/9/bits/stl_heap.h /usr/include/c++/9/bits/stl_tempbuf.h \
+ /usr/include/c++/9/bits/stl_construct.h \
  /usr/include/c++/9/bits/uniform_int_dist.h /usr/include/c++/9/limits \
  /usr/include/boost/config/no_tr1/cmath.hpp /usr/include/c++/9/cfloat \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/float.h \
@@ -225,10 +215,11 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/libintl.h /usr/include/c++/9/bits/codecvt.h \
  /usr/include/c++/9/bits/locale_facets_nonio.tcc \
  /usr/include/c++/9/bits/locale_conv.h \
- /usr/include/c++/9/bits/unique_ptr.h \
- /usr/include/c++/9/bits/quoted_string.h /usr/include/c++/9/sstream \
- /usr/include/c++/9/bits/sstream.tcc /usr/include/c++/9/cstring \
- /usr/include/string.h /usr/include/strings.h \
+ /usr/include/c++/9/bits/unique_ptr.h /usr/include/c++/9/tuple \
+ /usr/include/c++/9/array /usr/include/c++/9/bits/uses_allocator.h \
+ /usr/include/c++/9/bits/invoke.h /usr/include/c++/9/bits/quoted_string.h \
+ /usr/include/c++/9/sstream /usr/include/c++/9/bits/sstream.tcc \
+ /usr/include/c++/9/cstring /usr/include/string.h /usr/include/strings.h \
  /usr/include/x86_64-linux-gnu/bits/strings_fortified.h \
  /usr/include/x86_64-linux-gnu/bits/string_fortified.h \
  /usr/include/boost/config/no_tr1/complex.hpp /usr/include/c++/9/complex \
@@ -519,6 +510,9 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/boost/exception/exception.hpp \
  /usr/include/boost/current_function.hpp \
  /usr/include/boost/math/special_functions/math_fwd.hpp \
+ /usr/include/c++/9/vector /usr/include/c++/9/bits/stl_uninitialized.h \
+ /usr/include/c++/9/bits/stl_vector.h \
+ /usr/include/c++/9/bits/stl_bvector.h /usr/include/c++/9/bits/vector.tcc \
  /usr/include/boost/math/special_functions/detail/round_fwd.hpp \
  /usr/include/boost/math/tools/promotion.hpp \
  /usr/include/boost/type_traits/is_floating_point.hpp \
@@ -563,8 +557,12 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/x86_64-linux-gnu/sys/time.h \
  /opt/ros/noetic/include/ros/rate.h /opt/ros/noetic/include/ros/console.h \
  /opt/ros/noetic/include/ros/console_backend.h /usr/include/c++/9/cstdarg \
- /usr/include/log4cxx/level.h /usr/include/log4cxx/logstring.h \
- /usr/include/log4cxx/log4cxx.h /usr/include/log4cxx/helpers/transcoder.h \
+ /usr/include/c++/9/map /usr/include/c++/9/bits/stl_tree.h \
+ /usr/include/c++/9/ext/aligned_buffer.h \
+ /usr/include/c++/9/bits/stl_map.h /usr/include/c++/9/bits/stl_multimap.h \
+ /usr/include/c++/9/bits/erase_if.h /usr/include/log4cxx/level.h \
+ /usr/include/log4cxx/logstring.h /usr/include/log4cxx/log4cxx.h \
+ /usr/include/log4cxx/helpers/transcoder.h \
  /usr/include/log4cxx/helpers/objectimpl.h \
  /usr/include/log4cxx/helpers/object.h \
  /usr/include/log4cxx/helpers/class.h \
@@ -1106,54 +1104,16 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /opt/ros/noetic/include/ros/this_node.h \
  /opt/ros/noetic/include/ros/param.h /opt/ros/noetic/include/ros/topic.h \
  /opt/ros/noetic/include/ros/node_handle.h \
- /opt/ros/noetic/include/std_msgs/Empty.h \
- /opt/ros/noetic/include/ros/message_operations.h \
  /opt/ros/noetic/include/nav_msgs/Path.h \
+ /opt/ros/noetic/include/ros/message_operations.h \
  /opt/ros/noetic/include/std_msgs/Header.h \
  /opt/ros/noetic/include/geometry_msgs/PoseStamped.h \
  /opt/ros/noetic/include/geometry_msgs/Pose.h \
  /opt/ros/noetic/include/geometry_msgs/Point.h \
  /opt/ros/noetic/include/geometry_msgs/Quaternion.h \
- /opt/ros/noetic/include/nav_msgs/Odometry.h \
- /opt/ros/noetic/include/geometry_msgs/PoseWithCovariance.h \
- /opt/ros/noetic/include/geometry_msgs/TwistWithCovariance.h \
- /opt/ros/noetic/include/geometry_msgs/Twist.h \
- /opt/ros/noetic/include/geometry_msgs/Vector3.h \
- /opt/ros/noetic/include/geometry_msgs/TwistStamped.h \
- /opt/ros/noetic/include/gazebo_msgs/SetModelState.h \
- /opt/ros/noetic/include/gazebo_msgs/SetModelStateRequest.h \
- /opt/ros/noetic/include/gazebo_msgs/ModelState.h \
- /opt/ros/noetic/include/gazebo_msgs/SetModelStateResponse.h \
- /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/utils.h \
- /opt/ros/noetic/include/tf2/LinearMath/Quaternion.h \
- /opt/ros/noetic/include/tf2/LinearMath/Vector3.h \
- /opt/ros/noetic/include/tf2/LinearMath/Scalar.h \
- /opt/ros/noetic/include/tf2/LinearMath/MinMax.h \
- /opt/ros/noetic/include/tf2/LinearMath/QuadWord.h \
- /opt/ros/noetic/include/tf2_geometry_msgs/tf2_geometry_msgs.h \
- /opt/ros/noetic/include/tf2/convert.h \
- /opt/ros/noetic/include/tf2/transform_datatypes.h \
- /opt/ros/noetic/include/tf2/exceptions.h \
- /opt/ros/noetic/include/geometry_msgs/TransformStamped.h \
- /opt/ros/noetic/include/geometry_msgs/Transform.h \
- /opt/ros/noetic/include/tf2/impl/convert.h \
- /opt/ros/noetic/include/tf2/LinearMath/Transform.h \
- /opt/ros/noetic/include/tf2/LinearMath/Matrix3x3.h \
- /opt/ros/noetic/include/tf2/LinearMath/Quaternion.h \
- /opt/ros/noetic/include/geometry_msgs/PointStamped.h \
- /opt/ros/noetic/include/geometry_msgs/QuaternionStamped.h \
- /opt/ros/noetic/include/geometry_msgs/Vector3Stamped.h \
- /opt/ros/noetic/include/geometry_msgs/PoseWithCovarianceStamped.h \
- /opt/ros/noetic/include/geometry_msgs/Wrench.h \
- /opt/ros/noetic/include/geometry_msgs/WrenchStamped.h \
- /usr/include/kdl/frames.hpp /usr/include/kdl/utilities/kdl-config.h \
- /usr/include/kdl/utilities/utility.h \
- /usr/include/kdl/utilities/kdl-config.h /usr/include/kdl/frames.inl \
- /usr/include/c++/9/random /usr/include/c++/9/bits/random.h \
- /usr/include/x86_64-linux-gnu/c++/9/bits/opt_random.h \
- /usr/include/c++/9/bits/random.tcc /usr/include/c++/9/numeric \
- /usr/include/c++/9/bits/stl_numeric.h /usr/include/eigen3/Eigen/Dense \
- /usr/include/eigen3/Eigen/Core \
+ /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/occupancyMap.h \
+ /opt/ros/noetic/include/ros/package.h /usr/include/eigen3/Eigen/Eigen \
+ /usr/include/eigen3/Eigen/Dense /usr/include/eigen3/Eigen/Core \
  /usr/include/eigen3/Eigen/src/Core/util/DisableStupidWarnings.h \
  /usr/include/eigen3/Eigen/src/Core/util/Macros.h \
  /usr/include/eigen3/Eigen/src/Core/util/MKL_support.h \
@@ -1328,17 +1288,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/eigen3/Eigen/src/Eigenvalues/GeneralizedEigenSolver.h \
  /usr/include/eigen3/Eigen/src/Eigenvalues/RealQZ.h \
  /usr/include/eigen3/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
- /home/ff/intent-mpc/devel/include/tracking_controller/Target.h \
- /opt/ros/noetic/include/mavros_msgs/CommandBool.h \
- /opt/ros/noetic/include/mavros_msgs/CommandBoolRequest.h \
- /opt/ros/noetic/include/mavros_msgs/CommandBoolResponse.h \
- /opt/ros/noetic/include/mavros_msgs/SetMode.h \
- /opt/ros/noetic/include/mavros_msgs/SetModeRequest.h \
- /opt/ros/noetic/include/mavros_msgs/SetModeResponse.h \
- /opt/ros/noetic/include/mavros_msgs/State.h /usr/include/c++/9/thread \
- /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/dynamicMap.h \
- /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/occupancyMap.h \
- /usr/include/eigen3/Eigen/Eigen /usr/include/eigen3/Eigen/Dense \
  /usr/include/eigen3/Eigen/Sparse /usr/include/eigen3/Eigen/SparseCore \
  /usr/include/eigen3/Eigen/src/SparseCore/SparseUtil.h \
  /usr/include/eigen3/Eigen/src/SparseCore/SparseMatrixBase.h \
@@ -1456,6 +1405,11 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /usr/include/opencv4/opencv2/imgproc/types_c.h \
  /usr/include/opencv4/opencv2/core/core_c.h \
  /usr/include/opencv4/opencv2/core/types_c.h \
+ /opt/ros/noetic/include/nav_msgs/Odometry.h \
+ /opt/ros/noetic/include/geometry_msgs/PoseWithCovariance.h \
+ /opt/ros/noetic/include/geometry_msgs/TwistWithCovariance.h \
+ /opt/ros/noetic/include/geometry_msgs/Twist.h \
+ /opt/ros/noetic/include/geometry_msgs/Vector3.h \
  /opt/ros/noetic/include/sensor_msgs/PointCloud2.h \
  /opt/ros/noetic/include/sensor_msgs/PointField.h \
  /opt/ros/noetic/include/nav_msgs/OccupancyGrid.h \
@@ -1500,7 +1454,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /opt/ros/noetic/include/pcl_msgs/PolygonMesh.h \
  /usr/include/pcl-1.10/pcl/io/pcd_io.h \
  /usr/include/pcl-1.10/pcl/io/file_io.h \
- /usr/include/pcl-1.10/pcl/common/io.h \
+ /usr/include/pcl-1.10/pcl/common/io.h /usr/include/c++/9/numeric \
+ /usr/include/c++/9/bits/stl_numeric.h \
  /usr/include/pcl-1.10/pcl/pcl_base.h \
  /usr/include/pcl-1.10/pcl/common/impl/io.hpp \
  /usr/include/pcl-1.10/pcl/common/concatenate.h \
@@ -1952,190 +1907,20 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /home/ff/intent-mpc/devel/include/map_manager/RayCast.h \
  /home/ff/intent-mpc/devel/include/map_manager/RayCastRequest.h \
  /home/ff/intent-mpc/devel/include/map_manager/RayCastResponse.h \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/dynamicDetector.h \
- /opt/ros/noetic/include/visualization_msgs/MarkerArray.h \
- /opt/ros/noetic/include/visualization_msgs/Marker.h \
- /opt/ros/noetic/include/std_msgs/ColorRGBA.h \
- /opt/ros/noetic/include/vision_msgs/Detection2DArray.h \
- /opt/ros/noetic/include/vision_msgs/Detection2D.h \
- /opt/ros/noetic/include/vision_msgs/ObjectHypothesisWithPose.h \
- /opt/ros/noetic/include/vision_msgs/BoundingBox2D.h \
- /opt/ros/noetic/include/geometry_msgs/Pose2D.h \
- /opt/ros/noetic/include/image_transport/image_transport.h \
- /opt/ros/noetic/include/image_transport/publisher.h \
- /opt/ros/noetic/include/image_transport/single_subscriber_publisher.h \
- /opt/ros/noetic/include/image_transport/exports.h \
- /opt/ros/noetic/include/image_transport/exception.h \
- /opt/ros/noetic/include/image_transport/loader_fwds.h \
- /opt/ros/noetic/include/image_transport/subscriber.h \
- /opt/ros/noetic/include/image_transport/transport_hints.h \
- /opt/ros/noetic/include/image_transport/camera_publisher.h \
- /opt/ros/noetic/include/sensor_msgs/CameraInfo.h \
- /opt/ros/noetic/include/sensor_msgs/RegionOfInterest.h \
- /opt/ros/noetic/include/image_transport/camera_subscriber.h \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/dbscan.h \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/uvDetector.h \
- /usr/include/opencv4/opencv2/opencv.hpp \
- /usr/include/opencv4/opencv2/calib3d.hpp \
- /usr/include/opencv4/opencv2/features2d.hpp \
- /usr/include/opencv4/opencv2/flann/miniflann.hpp \
- /usr/include/opencv4/opencv2/flann/defines.h \
- /usr/include/opencv4/opencv2/flann/config.h \
- /usr/include/opencv4/opencv2/core/affine.hpp \
- /usr/include/opencv4/opencv2/dnn.hpp \
- /usr/include/opencv4/opencv2/dnn/dnn.hpp \
- /usr/include/opencv4/opencv2/core/async.hpp \
- /usr/include/opencv4/opencv2/dnn/version.hpp \
- /usr/include/opencv4/opencv2/dnn/dict.hpp \
- /usr/include/opencv4/opencv2/dnn/layer.hpp \
- /usr/include/opencv4/opencv2/dnn/dnn.inl.hpp \
- /usr/include/opencv4/opencv2/dnn/utils/inference_engine.hpp \
- /usr/include/opencv4/opencv2/dnn/dnn.hpp \
- /usr/include/opencv4/opencv2/flann.hpp \
- /usr/include/opencv4/opencv2/flann/flann_base.hpp \
- /usr/include/opencv4/opencv2/flann/general.h \
- /usr/include/opencv4/opencv2/flann/matrix.h \
- /usr/include/opencv4/opencv2/flann/params.h \
- /usr/include/opencv4/opencv2/flann/any.h \
- /usr/include/opencv4/opencv2/flann/defines.h \
- /usr/include/opencv4/opencv2/flann/saving.h \
- /usr/include/opencv4/opencv2/flann/nn_index.h \
- /usr/include/opencv4/opencv2/flann/result_set.h \
- /usr/include/opencv4/opencv2/flann/all_indices.h \
- /usr/include/opencv4/opencv2/flann/kdtree_index.h \
- /usr/include/opencv4/opencv2/flann/dynamic_bitset.h \
- /usr/include/opencv4/opencv2/flann/dist.h \
- /usr/include/opencv4/opencv2/flann/heap.h \
- /usr/include/opencv4/opencv2/flann/allocator.h \
- /usr/include/opencv4/opencv2/flann/random.h \
- /usr/include/opencv4/opencv2/flann/kdtree_single_index.h \
- /usr/include/opencv4/opencv2/flann/kmeans_index.h \
- /usr/include/opencv4/opencv2/flann/logger.h \
- /usr/include/opencv4/opencv2/flann/composite_index.h \
- /usr/include/opencv4/opencv2/flann/linear_index.h \
- /usr/include/opencv4/opencv2/flann/hierarchical_clustering_index.h \
- /usr/include/opencv4/opencv2/flann/lsh_index.h \
- /usr/include/opencv4/opencv2/flann/lsh_table.h \
+ /usr/include/c++/9/thread /usr/include/eigen3/Eigen/Dense \
  /usr/include/c++/9/unordered_map /usr/include/c++/9/bits/hashtable.h \
  /usr/include/c++/9/bits/hashtable_policy.h \
  /usr/include/c++/9/bits/unordered_map.h \
- /usr/include/opencv4/opencv2/flann/autotuned_index.h \
- /usr/include/opencv4/opencv2/flann/ground_truth.h \
- /usr/include/opencv4/opencv2/flann/index_testing.h \
- /usr/include/opencv4/opencv2/flann/timer.h \
- /usr/include/opencv4/opencv2/flann/sampling.h \
- /usr/include/opencv4/opencv2/highgui.hpp \
- /usr/include/opencv4/opencv2/imgcodecs.hpp \
- /usr/include/opencv4/opencv2/videoio.hpp \
- /usr/include/opencv4/opencv2/ml.hpp \
- /usr/include/opencv4/opencv2/ml/ml.inl.hpp \
- /usr/include/opencv4/opencv2/objdetect.hpp \
- /usr/include/opencv4/opencv2/objdetect/detection_based_tracker.hpp \
- /usr/include/opencv4/opencv2/photo.hpp \
- /usr/include/opencv4/opencv2/shape.hpp \
- /usr/include/opencv4/opencv2/shape/emdL1.hpp \
- /usr/include/opencv4/opencv2/shape/shape_transformer.hpp \
- /usr/include/opencv4/opencv2/shape/hist_cost.hpp \
- /usr/include/opencv4/opencv2/shape/shape_distance.hpp \
- /usr/include/opencv4/opencv2/stitching.hpp \
- /usr/include/opencv4/opencv2/stitching/warpers.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/warpers.hpp \
- /usr/include/opencv4/opencv2/core/cuda.hpp \
- /usr/include/opencv4/opencv2/core/cuda_types.hpp \
- /usr/include/opencv4/opencv2/core/cuda.inl.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/warpers_inl.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/warpers.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/matchers.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/motion_estimators.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/matchers.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/util.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/util_inl.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/camera.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/exposure_compensate.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/seam_finders.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/blenders.hpp \
- /usr/include/opencv4/opencv2/stitching/detail/camera.hpp \
- /usr/include/opencv4/opencv2/superres.hpp \
- /usr/include/opencv4/opencv2/superres/optical_flow.hpp \
- /usr/include/opencv4/opencv2/video.hpp \
- /usr/include/opencv4/opencv2/video/tracking.hpp \
- /usr/include/opencv4/opencv2/video/background_segm.hpp \
- /usr/include/opencv4/opencv2/videostab.hpp \
- /usr/include/opencv4/opencv2/videostab/stabilizer.hpp \
- /usr/include/opencv4/opencv2/videostab/global_motion.hpp \
- /usr/include/opencv4/opencv2/videostab/optical_flow.hpp \
- /usr/include/opencv4/opencv2/videostab/motion_core.hpp \
- /usr/include/opencv4/opencv2/videostab/outlier_rejection.hpp \
- /usr/include/opencv4/opencv2/videostab/motion_stabilizing.hpp \
- /usr/include/opencv4/opencv2/videostab/frame_source.hpp \
- /usr/include/opencv4/opencv2/videostab/log.hpp \
- /usr/include/opencv4/opencv2/videostab/inpainting.hpp \
- /usr/include/opencv4/opencv2/videostab/fast_marching.hpp \
- /usr/include/opencv4/opencv2/videostab/fast_marching_inl.hpp \
- /usr/include/opencv4/opencv2/videostab/deblurring.hpp \
- /usr/include/opencv4/opencv2/videostab/wobble_suppression.hpp \
- /usr/include/opencv4/opencv2/videostab/ring_buffer.hpp \
- /usr/include/opencv4/opencv2/viz.hpp \
- /usr/include/opencv4/opencv2/viz/types.hpp \
- /usr/include/opencv4/opencv2/viz/widgets.hpp \
- /usr/include/opencv4/opencv2/viz/viz3d.hpp \
- /usr/include/opencv4/opencv2/viz/vizcore.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/utils.h \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/kalmanFilter.h \
- /home/ff/intent-mpc/devel/include/onboard_detector/GetDynamicObstacles.h \
- /home/ff/intent-mpc/devel/include/onboard_detector/GetDynamicObstaclesRequest.h \
- /home/ff/intent-mpc/devel/include/onboard_detector/GetDynamicObstaclesResponse.h \
- /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/fakeDetector.h \
- /opt/ros/noetic/include/gazebo_msgs/ModelStates.h \
- /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/dynamicPredictor.h \
- /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/utils.h \
- /opt/ros/noetic/include/std_msgs/Float32.h \
- /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
- /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \
- /opt/ros/noetic/include/std_msgs/MultiArrayDimension.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/KDTree.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/BoundedPQueue.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/polyTrajOccMap.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/utils.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/piecewiseLinearTraj.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/polyTrajSolver.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/OsqpEigen.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Constants.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/osqp.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/types.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/glob_opts.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/osqp_configure.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/constants.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/util.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/cs.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/lin_alg.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Data.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/SparseMatrixHelper.hpp \
- /usr/include/eigen3/Eigen/Sparse \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/SparseMatrixHelper.tpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Debug.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Data.tpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Settings.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Solver.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Solver.tpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/auxil.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/../osqp/scaling.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/bsplineTraj.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/bspline.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/path_search/astarOcc.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/solver/lbfgs.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpcPlanner.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/clustering/obstacleClustering.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/clustering/DBSCAN.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/clustering/Kmeans.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_auxiliary_functions.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_common.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_qpoases_interface.hpp \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_solver_sfunction.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_qpoases_interface.hpp
+ /opt/ros/noetic/include/tf/transform_datatypes.h \
+ /opt/ros/noetic/include/geometry_msgs/PointStamped.h \
+ /opt/ros/noetic/include/geometry_msgs/Vector3Stamped.h \
+ /opt/ros/noetic/include/geometry_msgs/QuaternionStamped.h \
+ /opt/ros/noetic/include/geometry_msgs/TransformStamped.h \
+ /opt/ros/noetic/include/geometry_msgs/Transform.h \
+ /opt/ros/noetic/include/tf/LinearMath/Transform.h \
+ /opt/ros/noetic/include/tf/LinearMath/Matrix3x3.h \
+ /opt/ros/noetic/include/tf/LinearMath/Vector3.h \
+ /opt/ros/noetic/include/tf/LinearMath/Scalar.h \
+ /opt/ros/noetic/include/tf/LinearMath/MinMax.h \
+ /opt/ros/noetic/include/tf/LinearMath/Quaternion.h \
+ /opt/ros/noetic/include/tf/LinearMath/QuadWord.h

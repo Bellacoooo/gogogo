@@ -415,6 +415,30 @@ include/global_planner/dep.cpp.s:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.s
 .PHONY : include/global_planner/dep.cpp.s
 
+src/a_star_occ.o: src/a_star_occ.cpp.o
+.PHONY : src/a_star_occ.o
+
+# target to build an object file
+src/a_star_occ.cpp.o:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o
+.PHONY : src/a_star_occ.cpp.o
+
+src/a_star_occ.i: src/a_star_occ.cpp.i
+.PHONY : src/a_star_occ.i
+
+# target to preprocess a source file
+src/a_star_occ.cpp.i:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.i
+.PHONY : src/a_star_occ.cpp.i
+
+src/a_star_occ.s: src/a_star_occ.cpp.s
+.PHONY : src/a_star_occ.s
+
+# target to generate assembly for a file
+src/a_star_occ.cpp.s:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.s
+.PHONY : src/a_star_occ.cpp.s
+
 src/globalPlannerLib.o: src/globalPlannerLib.cpp.o
 .PHONY : src/globalPlannerLib.o
 
@@ -544,6 +568,9 @@ help:
 	@echo "... include/global_planner/dep.o"
 	@echo "... include/global_planner/dep.i"
 	@echo "... include/global_planner/dep.s"
+	@echo "... src/a_star_occ.o"
+	@echo "... src/a_star_occ.i"
+	@echo "... src/a_star_occ.s"
 	@echo "... src/globalPlannerLib.o"
 	@echo "... src/globalPlannerLib.i"
 	@echo "... src/globalPlannerLib.s"

@@ -1476,6 +1476,7 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/BoundedPQueue.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/KDTree.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \
+  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h \
@@ -1650,7 +1651,10 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /opt/ros/noetic/include/std_msgs/ColorRGBA.h \
   /opt/ros/noetic/include/std_msgs/Empty.h \
   /opt/ros/noetic/include/std_msgs/Float32.h \
+  /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
   /opt/ros/noetic/include/std_msgs/Header.h \
+  /opt/ros/noetic/include/std_msgs/MultiArrayDimension.h \
+  /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \
   /opt/ros/noetic/include/tf2/LinearMath/Matrix3x3.h \
   /opt/ros/noetic/include/tf2/LinearMath/MinMax.h \
   /opt/ros/noetic/include/tf2/LinearMath/QuadWord.h \
@@ -4459,6 +4463,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 
 /opt/ros/noetic/include/vision_msgs/Detection2DArray.h:
 
+/opt/ros/noetic/include/std_msgs/MultiArrayDimension.h:
+
 /opt/ros/noetic/include/std_msgs/Float32.h:
 
 /opt/ros/noetic/include/std_msgs/ColorRGBA.h:
@@ -6509,6 +6515,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 
 /usr/include/boost/mpl/aux_/numeric_op.hpp:
 
+/opt/ros/noetic/include/std_msgs/Float64MultiArray.h:
+
 /usr/include/boost/mpl/deref.hpp:
 
 /opt/ros/noetic/include/mavros_msgs/SetModeResponse.h:
@@ -6830,6 +6838,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 /usr/include/boost/predef/os/bsd/net.h:
 
 /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/flightBase.h:
+
+/opt/ros/noetic/include/std_msgs/MultiArrayLayout.h:
 
 /opt/ros/noetic/include/ros/spinner.h:
 
@@ -7720,6 +7730,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 /usr/include/boost/mpl/push_back.hpp:
 
 /usr/include/boost/preprocessor/repetition/repeat.hpp:
+
+/home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h:
 
 /usr/include/x86_64-linux-gnu/bits/wchar2.h:
 

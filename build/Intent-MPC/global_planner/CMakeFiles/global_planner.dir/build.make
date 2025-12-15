@@ -111,11 +111,26 @@ Intent-MPC/global_planner/CMakeFiles/global_planner.dir/include/global_planner/d
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.s"
 	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/dep.cpp -o CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.s
 
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/flags.make
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o: /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/a_star_occ.cpp
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o -MF CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o.d -o CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o -c /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/a_star_occ.cpp
+
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/global_planner.dir/src/a_star_occ.cpp.i"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/a_star_occ.cpp > CMakeFiles/global_planner.dir/src/a_star_occ.cpp.i
+
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/global_planner.dir/src/a_star_occ.cpp.s"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/a_star_occ.cpp -o CMakeFiles/global_planner.dir/src/a_star_occ.cpp.s
+
 # Object files for target global_planner
 global_planner_OBJECTS = \
 "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o" \
 "CMakeFiles/global_planner.dir/include/global_planner/PRMKDTree.cpp.o" \
-"CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o"
+"CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o" \
+"CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o"
 
 # External object files for target global_planner
 global_planner_EXTERNAL_OBJECTS =
@@ -123,6 +138,7 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/include/global_planner/PRMKDTree.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/liboctomap_ros.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/liboctomap.so
@@ -558,7 +574,7 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX shared library /home/ff/intent-mpc/devel/lib/libglobal_planner.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX shared library /home/ff/intent-mpc/devel/lib/libglobal_planner.so"
 	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/global_planner.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
