@@ -18,6 +18,7 @@
 #include <trajectory_planner/piecewiseLinearTraj.h>
 #include <trajectory_planner/bsplineTraj.h>
 #include <trajectory_planner/mpcPlanner.h>
+#include <mutex>
 
 namespace AutoFlight{
 
@@ -69,7 +70,14 @@ namespace AutoFlight{
 		bool globalPlanReady_ = false;
 		bool refTrajReady_ = false;
 		bool mpcFirstTime_ = false;
+		// realtime replanning params
+		bool enableRealtimeReplan_ = false;
+		double globalReplanInterval_ = 2.0;   // seconds
+		double pathDeviationThreshold_ = 0.5; // meters
+		ros::Time lastGlobalReplanTime_;
+
 		nav_msgs::Path rrtPathMsg_;
+		std::mutex rrtPathMutex_; // protect rrtPathMsg_ access across threads
 		nav_msgs::Path polyTrajMsg_;
 		nav_msgs::Path pwlTrajMsg_;
 		nav_msgs::Path mpcTrajMsg_;

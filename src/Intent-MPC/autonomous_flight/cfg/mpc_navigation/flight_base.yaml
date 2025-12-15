@@ -16,3 +16,8 @@ global_planner_type: "astar"  # "rrt" or "astar"
 predefined_goal_directory: "/cfg/mpc_navigation/ref_trajectory.txt"
 execute_path_times: 10 # how many times to repeat the trajectory 
 
+# Realtime replanning (A* / RRT)
+enable_realtime_replan: true      # 打开实时重规划
+global_replan_interval: 2.0       # 时间触发周期 (秒)
+path_deviation_threshold: 0.5     # 路径偏差触发阈值 (米)
+

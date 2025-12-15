@@ -129,7 +129,18 @@ namespace AutoFlight{
 		else{
 			cout << "[AutoFlight]: Execute path number of times is set to: " << this->repeatPathNum_ << "." << endl;
 		}	
-		
+
+		// realtime replanning parameters
+		if (not this->nh_.getParam("autonomous_flight/enable_realtime_replan", this->enableRealtimeReplan_)){
+			this->enableRealtimeReplan_ = false;
+		}
+		if (not this->nh_.getParam("autonomous_flight/global_replan_interval", this->globalReplanInterval_)){
+			this->globalReplanInterval_ = 2.0;
+		}
+		if (not this->nh_.getParam("autonomous_flight/path_deviation_threshold", this->pathDeviationThreshold_)){
+			this->pathDeviationThreshold_ = 0.5;
+		}
+		this->lastGlobalReplanTime_ = ros::Time::now();
 
 	}
 
@@ -263,7 +274,10 @@ namespace AutoFlight{
 								this->rrtPlanner_->makePlan(rrtPathMsgTemp);
 							}
 							if (rrtPathMsgTemp.poses.size() >= 2){
-								this->rrtPathMsg_ = rrtPathMsgTemp;
+								{
+									std::lock_guard<std::mutex> lock(this->rrtPathMutex_);
+									this->rrtPathMsg_ = rrtPathMsgTemp;
+								}
 							}
 							Eigen::Vector3d startVel (0, 0, 0);
 							Eigen::Vector3d startAcc (0, 0, 0);
@@ -419,6 +433,65 @@ namespace AutoFlight{
 			}
 		}
 		if (this->mpcTrajectoryReady_){
+			// realtime replan: time-based & deviation-based (only when using global planner)
+			if (this->enableRealtimeReplan_ && this->useGlobalPlanner_ && this->refTrajReady_){
+				ros::Time currTime = ros::Time::now();
+				double timeSinceLast = (currTime - this->lastGlobalReplanTime_).toSec();
+				bool timeTriggered = timeSinceLast >= this->globalReplanInterval_;
+
+				// compute min distance from current pos to path segments
+				bool deviationTriggered = false;
+				nav_msgs::Path pathCopy;
+				{
+					std::lock_guard<std::mutex> lock(this->rrtPathMutex_);
+					pathCopy = this->rrtPathMsg_;
+				}
+				if (pathCopy.poses.size() >= 2){
+					Eigen::Vector3d currPos(this->odom_.pose.pose.position.x,
+											this->odom_.pose.pose.position.y,
+											this->odom_.pose.pose.position.z);
+					double minDist = std::numeric_limits<double>::max();
+					for (size_t i=0; i+1<pathCopy.poses.size(); ++i){
+						Eigen::Vector3d p1(pathCopy.poses[i].pose.position.x,
+										   pathCopy.poses[i].pose.position.y,
+										   pathCopy.poses[i].pose.position.z);
+						Eigen::Vector3d p2(pathCopy.poses[i+1].pose.position.x,
+										   pathCopy.poses[i+1].pose.position.y,
+										   pathCopy.poses[i+1].pose.position.z);
+						Eigen::Vector3d v = p2 - p1;
+						Eigen::Vector3d w = currPos - p1;
+						double c1 = w.dot(v);
+						if (c1 <= 0){
+							minDist = std::min(minDist, (currPos - p1).norm());
+						}else{
+							double c2 = v.dot(v);
+							if (c2 <= c1){
+								minDist = std::min(minDist, (currPos - p2).norm());
+							}else{
+								double b = c1 / c2;
+								Eigen::Vector3d pb = p1 + b*v;
+								minDist = std::min(minDist, (currPos - pb).norm());
+							}
+						}
+					}
+					deviationTriggered = minDist > this->pathDeviationThreshold_;
+				}
+
+				if (timeTriggered || deviationTriggered){
+					this->mpcTrajectoryReady_ = false;
+					this->refTrajReady_ = false;
+					this->mpcReplan_ = true;
+					this->lastGlobalReplanTime_ = currTime;
+					if (timeTriggered){
+						cout << "[AutoFlight]: Time-based realtime replan (interval " << timeSinceLast << " s)." << endl;
+					}
+					if (deviationTriggered){
+						cout << "[AutoFlight]: Path deviation realtime replan." << endl;
+					}
+					return;
+				}
+			}
+
 			if (this->usePredefinedGoal_){
 				ros::Time currTime = ros::Time::now();
 				if (this->mpcHasCollision() or this->hasDynamicCollision()){ 
