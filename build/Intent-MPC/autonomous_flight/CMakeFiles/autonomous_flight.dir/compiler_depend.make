@@ -1458,6 +1458,9 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /usr/lib/gcc/x86_64-linux-gnu/9/include/xmmintrin.h
 
 Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous_flight/mpcNavigation.cpp.o: /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/include/autonomous_flight/mpcNavigation.cpp \
+  /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h \
+  /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h \
+  /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h \
   /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollision.h \
   /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionRequest.h \
   /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionResponse.h \
@@ -4605,6 +4608,10 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 
 /home/ff/intent-mpc/devel/include/map_manager/RayCastRequest.h:
 
+/home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h:
+
+/home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h:
+
 /usr/lib/gcc/x86_64-linux-gnu/9/include/xmmintrin.h:
 
 /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h:
@@ -5950,6 +5957,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 /opt/ros/noetic/include/tf2/LinearMath/Matrix3x3.h:
 
 /usr/include/boost/mpl/vector/vector30.hpp:
+
+/home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h:
 
 /usr/include/boost/mpl/list/aux_/begin_end.hpp:
 

@@ -496,16 +496,18 @@ namespace onboardDetector{
 		}
 	}
 
-	void fakeDetector::getDynamicObstaclesHist(std::vector<std::vector<Eigen::Vector3d>>& posHist, std::vector<std::vector<Eigen::Vector3d>>& velHist, std::vector<std::vector<Eigen::Vector3d>>& accHist, std::vector<std::vector<Eigen::Vector3d>>& sizeHist, const Eigen::Vector3d &robotSize){
+	void fakeDetector::getDynamicObstaclesHist(std::vector<std::vector<Eigen::Vector3d>>& posHist, std::vector<std::vector<Eigen::Vector3d>>& velHist, std::vector<std::vector<Eigen::Vector3d>>& accHist, std::vector<std::vector<Eigen::Vector3d>>& sizeHist, std::vector<int>& ids, const Eigen::Vector3d &robotSize){
 		posHist.clear();
         velHist.clear();
 		accHist.clear();
         sizeHist.clear();
+        ids.clear();
 
         if (this->obstacleHist_.size()){
             for (size_t i=0 ; i<this->obstacleHist_.size() ; ++i){
 				if (this->isObstacleInSensorRange(this->obstacleHist_[i][0],2*M_PI)){
 					std::vector<Eigen::Vector3d> obPosHist, obVelHist, obAccHist, obSizeHist;
+                    ids.push_back(static_cast<int>(this->obstacleHist_[i][0].id));
 					for (size_t j=0; j<this->obstacleHist_[i].size() ; ++j){
 						Eigen::Vector3d pos(this->obstacleHist_[i][j].x, this->obstacleHist_[i][j].y, this->obstacleHist_[i][j].z);
 						Eigen::Vector3d vel(this->obstacleHist_[i][j].Vx, this->obstacleHist_[i][j].Vy, 0);

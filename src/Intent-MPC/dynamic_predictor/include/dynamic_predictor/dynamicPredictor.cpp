@@ -16,10 +16,93 @@
 #include <unistd.h>  // 用于 access
 
 namespace dynamicPredictor{
+
+    // 内部工具函数：把一个 2D 高斯“盖章”到风险缓冲区上
+    static void stampGaussianToBuffer(
+        std::vector<double>& risk_buffer,
+        const nav_msgs::MapMetaData& info,
+        const Eigen::Vector2d& mu,
+        const Eigen::Matrix2d& Sigma,
+        double combined_weight
+    ){
+        const double res = info.resolution;
+        const unsigned int width  = info.width;
+        const unsigned int height = info.height;
+
+        if (width == 0 || height == 0 || res <= 0.0 || combined_weight <= 0.0) {
+            return;
+        }
+
+        if (risk_buffer.size() != static_cast<std::size_t>(width * height)) {
+            risk_buffer.assign(width * height, 0.0);
+        }
+
+        // 使用对角线近似标准差
+        double var_x = Sigma(0, 0);
+        double var_y = Sigma(1, 1);
+        if (var_x <= 1e-8) var_x = 1e-8;
+        if (var_y <= 1e-8) var_y = 1e-8;
+        double std_x = std::sqrt(var_x);
+        double std_y = std::sqrt(var_y);
+
+        const double k = 3.0; // 3σ 范围
+        double min_x_world = mu(0) - k * std_x;
+        double max_x_world = mu(0) + k * std_x;
+        double min_y_world = mu(1) - k * std_y;
+        double max_y_world = mu(1) + k * std_y;
+
+        // 地图原点（世界坐标）
+        double origin_x = info.origin.position.x;
+        double origin_y = info.origin.position.y;
+
+        auto worldToIndex = [&](double wx, double wy, int& ix, int& iy){
+            ix = static_cast<int>(std::floor((wx - origin_x) / res));
+            iy = static_cast<int>(std::floor((wy - origin_y) / res));
+        };
+
+        int min_ix, min_iy, max_ix, max_iy;
+        worldToIndex(min_x_world, min_y_world, min_ix, min_iy);
+        worldToIndex(max_x_world, max_y_world, max_ix, max_iy);
+
+        if (min_ix < 0) min_ix = 0;
+        if (min_iy < 0) min_iy = 0;
+        if (max_ix >= static_cast<int>(width))  max_ix = static_cast<int>(width)  - 1;
+        if (max_iy >= static_cast<int>(height)) max_iy = static_cast<int>(height) - 1;
+
+        if (min_ix > max_ix || min_iy > max_iy) {
+            return;
+        }
+
+        // 逆协方差矩阵
+        Eigen::Matrix2d Sigma_safe = Sigma;
+        Sigma_safe(0, 0) = std::max(Sigma_safe(0, 0), 1e-8);
+        Sigma_safe(1, 1) = std::max(Sigma_safe(1, 1), 1e-8);
+        Eigen::Matrix2d Sigma_inv = Sigma_safe.inverse();
+
+        for (int iy = min_iy; iy <= max_iy; ++iy) {
+            for (int ix = min_ix; ix <= max_ix; ++ix) {
+                double wx = origin_x + (static_cast<double>(ix) + 0.5) * res;
+                double wy = origin_y + (static_cast<double>(iy) + 0.5) * res;
+
+                Eigen::Vector2d n(wx, wy);
+                Eigen::Vector2d diff = n - mu;
+
+                double mah_dist_sq = diff.transpose() * Sigma_inv * diff;
+                double risk = std::exp(-0.5 * mah_dist_sq);
+                double weighted_risk = combined_weight * risk;
+
+                if (weighted_risk <= 0.0) continue;
+
+                std::size_t idx = static_cast<std::size_t>(iy) * width + static_cast<std::size_t>(ix);
+                risk_buffer[idx] += weighted_risk;
+            }
+        }
+    }
     predictor::predictor(const ros::NodeHandle& nh) : nh_(nh){
         this->ns_ = "dynamic_predictor";
         this->hint_ = "[predictor]";
         this->initParam();
+        this->initRiskMapParam();
         this->registerPub();
         this->registerCallback();
         
@@ -296,6 +379,8 @@ namespace dynamicPredictor{
         this->intentVisPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/intent_probability", 10);
         this->varPointsPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/var_points", 10);
         this->predBBoxPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/pred_bbox", 10);
+        this->predInfoPub_ = this->nh_.advertise<dynamic_predictor::PredictedObstacles>(this->ns_ + "/predicted_obstacles", 10);
+        this->riskMapPub_ = this->nh_.advertise<nav_msgs::OccupancyGrid>(this->ns_ + "/dynamic_risk_map", 1);
         this->sValuePub_ = this->nh_.advertise<std_msgs::Float32>(this->ns_ + "/current_s_value", 1);
         this->adaptiveMetricsPub_ = this->nh_.advertise<std_msgs::Float64MultiArray>(this->ns_ + "/adaptive_metrics", 10);
     }
@@ -314,6 +399,7 @@ namespace dynamicPredictor{
         this->publishVarPoints();
         this->publishPredBBox();
         this->publishAdaptiveMetrics(); // 发布自适应指标
+        this->publishRiskMap();         // 发布当前的动态风险地图（目前为空白，占位框架）
     }
 
     void predictor::predCB(const ros::TimerEvent&){    
@@ -324,10 +410,10 @@ namespace dynamicPredictor{
     void predictor::predict(){ 
         // get history
         if (this->useFakeDetector_ and this->detectorGTReady_ and this->mapReady_){
-            this->detectorGT_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->robotSize_);
+            this->detectorGT_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->obsIds_, this->robotSize_);
         }
         else if (not this->useFakeDetector_ and this->detectorReady_ and this->mapReady_){
-            this->detector_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->robotSize_);
+            this->detector_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->obsIds_, this->robotSize_);
         }
         if (this->posHist_.size()){
             // 原有的代码，我要加主意图的确定和耗时打印，就修改了这部分
@@ -359,6 +445,7 @@ namespace dynamicPredictor{
                     std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPointsTemp;
                     std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPredTemp;
                     std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
+                    std::vector<std::vector<std::vector<Eigen::Vector3d>>> varPredTemp;
 
                     // 新增：重置计时变量
                     mainIntentTime_ = std::chrono::duration<double, std::milli>::zero();
@@ -366,7 +453,7 @@ namespace dynamicPredictor{
                     genPointsTotalTime_ = std::chrono::duration<double, std::milli>::zero();
 
                     // 调用predTraj时传入主意图，用于内部计时
-                    this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp, mainIntents);
+                    this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp, varPredTemp, mainIntents);
 
                     // 新增：打印耗时统计
                     std::cout << "\n===== 轨迹生成耗时统计 =====" << std::endl;
@@ -379,7 +466,9 @@ namespace dynamicPredictor{
                     this->intentProb_ = intentProbTemp;
                     this->posPred_ = posPredTemp;
                     this->sizePred_ = sizePredTemp;
+                    this->varPred_ = varPredTemp;
                     this->allPredPoints_ = allPredPointsTemp;
+                    this->publishPredictedObstacles();
         
     }
         }
@@ -388,6 +477,8 @@ namespace dynamicPredictor{
             this->allPredPoints_.clear();
             this->posPred_.clear();
             this->sizePred_.clear();
+            this->varPred_.clear();
+            this->obsIds_.clear();
         }
 
         // 计算ADE、FDE
@@ -519,6 +610,48 @@ namespace dynamicPredictor{
             }
             intentProbTemp[i] = P;
             
+        }
+    }
+
+    void predictor::initRiskMapParam(){
+        // risk map resolution
+        if (!this->nh_.getParam(this->ns_ + "/risk_map_resolution", this->riskMapResolution_)){
+            this->riskMapResolution_ = 0.2;
+            std::cout << this->hint_ << ": No risk_map_resolution param. Use default: 0.2." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": risk_map_resolution set to: " << this->riskMapResolution_ << std::endl;
+        }
+
+        // risk map width (cells)
+        if (!this->nh_.getParam(this->ns_ + "/risk_map_width", this->riskMapWidth_)){
+            this->riskMapWidth_ = 100;
+            std::cout << this->hint_ << ": No risk_map_width param. Use default: 100." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": risk_map_width set to: " << this->riskMapWidth_ << std::endl;
+        }
+
+        // risk map height (cells)
+        if (!this->nh_.getParam(this->ns_ + "/risk_map_height", this->riskMapHeight_)){
+            this->riskMapHeight_ = 100;
+            std::cout << this->hint_ << ": No risk_map_height param. Use default: 100." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": risk_map_height set to: " << this->riskMapHeight_ << std::endl;
+        }
+
+        // origin offset relative to robot (meters)
+        // 若未显式设置，则自动让机器人位于风险图中心
+        double default_offset_x = -0.5 * this->riskMapWidth_  * this->riskMapResolution_;
+        double default_offset_y = -0.5 * this->riskMapHeight_ * this->riskMapResolution_;
+
+        if (!this->nh_.getParam(this->ns_ + "/risk_origin_offset_x", this->riskOriginOffsetX_)){
+            this->riskOriginOffsetX_ = default_offset_x;
+            std::cout << this->hint_ << ": No risk_origin_offset_x param. Use default(centered): "
+                      << this->riskOriginOffsetX_ << std::endl;
+        }
+        if (!this->nh_.getParam(this->ns_ + "/risk_origin_offset_y", this->riskOriginOffsetY_)){
+            this->riskOriginOffsetY_ = default_offset_y;
+            std::cout << this->hint_ << ": No risk_origin_offset_y param. Use default(centered): "
+                      << this->riskOriginOffsetY_ << std::endl;
         }
     }
 
@@ -675,6 +808,7 @@ namespace dynamicPredictor{
     void predictor::predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp,
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp,
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp,
+        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &varPredTemp,
         const std::vector<int>& mainIntents){     //这里输入的参数新加了一个主意图的参数
 
         // 清空并重置输出容器，确保不包含旧数据
@@ -682,6 +816,8 @@ namespace dynamicPredictor{
         posPredTemp.resize(this->posHist_.size());
         sizePredTemp.clear();
         sizePredTemp.resize(this->sizeHist_.size());
+        varPredTemp.clear();
+        varPredTemp.resize(this->sizeHist_.size());
         allPredPointsTemp.clear();
         allPredPointsTemp.resize(this->posHist_.size());
         
@@ -689,6 +825,7 @@ namespace dynamicPredictor{
         for (int i=0; i < int(this->posHist_.size()); i++){
             posPredTemp[i].resize(this->numIntent_);
             sizePredTemp[i].resize(this->numIntent_);
+            varPredTemp[i].resize(this->numIntent_);
             allPredPointsTemp[i].resize(this->numIntent_);
 
 
@@ -706,9 +843,11 @@ namespace dynamicPredictor{
                 this->genPoints(j, this->posHist_[i][0], this->velHist_[i][0], this->accHist_[i][0], this->sizeHist_[i][0], predPoints, predSize);
                 if (predPoints.size()){
                     std::vector<Eigen::Vector3d> predPos;
-                    this->genTraj(predPoints, predPos, predSize);
+                    std::vector<Eigen::Vector3d> varPred;
+                    this->genTraj(predPoints, predPos, predSize, varPred);
                     posPredTemp[i][j] = predPos;
                     sizePredTemp[i][j] = predSize;
+                    varPredTemp[i][j] = varPred;
                     allPredPointsTemp[i][j] = predPoints;
                 }
                 // 如果未生成预测点，则使用历史状态生成默认预测轨迹
@@ -717,16 +856,19 @@ namespace dynamicPredictor{
                     Eigen::Vector3d currVel = this->velHist_[i][0];
                     Eigen::Vector3d currPos = this->posHist_[i][0];
                     std::vector<Eigen::Vector3d> predPos;
+                    std::vector<Eigen::Vector3d> varPred;
                     // 计算速度的模长
                     double vel = sqrt(pow(currVel(0),2)+pow(currVel(1),2)); 
                     for (int i=0;i<this->numPred_+1;i++){
                         predPos.push_back(currPos);
                         predSize.push_back(size);
+                        varPred.push_back(Eigen::Vector3d::Zero());
                         size(0) += 2*min(vel,this->stopVel_)*this->dt_;
                         size(1) += 2*min(vel,this->stopVel_)*this->dt_;
                     }
                     posPredTemp[i][j] = predPos;
                     sizePredTemp[i][j] = predSize;
+                    varPredTemp[i][j] = varPred;
                 }
             }
         }
@@ -905,8 +1047,9 @@ namespace dynamicPredictor{
     }
 
 // 得到均值和方差
-    void predictor::genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize){
+    void predictor::genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize, std::vector<Eigen::Vector3d> &varPred){
         predPos.clear();
+        varPred.clear();
         for (int i=0;i<this->numPred_+1;i++){
             double meanx, meany;
             double variancex, variancey;
@@ -932,6 +1075,9 @@ namespace dynamicPredictor{
                 Eigen::Vector3d p;
                 p<<meanx, meany, predPoints[0][0](2);
                 predPos.push_back(p);
+                Eigen::Vector3d var;
+                var<<variancex, variancey, 0.0;
+                varPred.push_back(var);
                 predSize[i](0) += 2*sqrt(variancex)*this->zScore_; // confidence level under gaussian
                 predSize[i](1) += 2*sqrt(variancey)*this->zScore_;  //置信区间的计算
             }
@@ -1254,6 +1400,249 @@ namespace dynamicPredictor{
             }
         }
         this->predBBoxPub_.publish(predBBoxMsg);
+    }
+
+    void predictor::publishRiskMap(){
+        if (!this->mapReady_){
+            return;
+        }
+
+        Eigen::Vector3d robotPos;
+        this->map_->getPosition(robotPos);
+
+        nav_msgs::OccupancyGrid riskMsg;
+        riskMsg.header.frame_id = "map";
+        riskMsg.header.stamp = ros::Time::now();
+
+        riskMsg.info.resolution = this->riskMapResolution_;
+        riskMsg.info.width = this->riskMapWidth_;
+        riskMsg.info.height = this->riskMapHeight_;
+
+        // origin: anchor to robot, apply offset so robot is at a fixed relative location in the grid
+        riskMsg.info.origin.position.x = robotPos(0) + this->riskOriginOffsetX_;
+        riskMsg.info.origin.position.y = robotPos(1) + this->riskOriginOffsetY_;
+        riskMsg.info.origin.position.z = 0.0;
+
+        riskMsg.info.origin.orientation.w = 1.0;
+        riskMsg.info.origin.orientation.x = 0.0;
+        riskMsg.info.origin.orientation.y = 0.0;
+        riskMsg.info.origin.orientation.z = 0.0;
+
+        // a) 浮点风险缓冲区（累加所有障碍物、多模态、全时间步）
+        std::vector<double> float_risk_data(this->riskMapWidth_ * this->riskMapHeight_, 0.0);
+
+        // 参数：时间衰减因子 gamma
+        const double gamma = 0.98;
+
+        // 遍历当前的预测结果（仅对有预测的障碍物生效）- 蓝色框
+        for (std::size_t j = 0; j < this->posPred_.size(); ++j) {
+            if (j >= this->intentProb_.size()) continue;
+
+            const auto& intents = this->intentProb_[j];
+            if (intents.size() == 0) continue;
+
+            // 对每个意图模态 k
+            for (int k = 0; k < this->numIntent_ && k < intents.size(); ++k) {
+                double omega = intents(k);   // 该模态概率
+                if (omega <= 1e-4) continue; // 概率太小略过，减少计算
+
+                if (j >= this->posPred_.size()) continue;
+                if (k >= static_cast<int>(this->posPred_[j].size())) continue;
+
+                const auto& traj = this->posPred_[j][k];      // 该模态的均值轨迹
+                const auto* varPtr = (j < this->varPred_.size() && k < static_cast<int>(this->varPred_[j].size()))
+                                      ? &this->varPred_[j][k]
+                                      : nullptr;
+
+                // 遍历未来时间步 t
+                for (std::size_t t = 0; t < traj.size(); ++t) {
+                    const Eigen::Vector3d& p = traj[t];
+                    Eigen::Vector2d mu(p(0), p(1));
+
+                    Eigen::Matrix2d Sigma = Eigen::Matrix2d::Zero();
+                    if (varPtr && t < varPtr->size()) {
+                        // varPred 存的就是每个时间步 x/y 的方差
+                        double vx = std::max((*varPtr)[t](0), 1e-4);
+                        double vy = std::max((*varPtr)[t](1), 1e-4);
+                        Sigma(0, 0) = vx;
+                        Sigma(1, 1) = vy;
+                    } else {
+                        // 没有方差信息时给一个小的各向同性协方差
+                        double v = 0.2 * 0.2;
+                        Sigma(0, 0) = v;
+                        Sigma(1, 1) = v;
+                    }
+
+                    // 时间衰减：越远的时间步权重越小
+                    double time_decay = std::pow(gamma, static_cast<double>(t));
+                    double combined_weight = omega * time_decay;
+                    if (combined_weight <= 0.0) continue;
+
+                    stampGaussianToBuffer(
+                        float_risk_data,
+                        riskMsg.info,
+                        mu,
+                        Sigma,
+                        combined_weight
+                    );
+                }
+            }
+        }
+
+        // 新增：处理DBSCAN检测的原始框（红色框）- 用恒定速度模型做简单预测
+        if (this->detector_){
+            std::vector<onboardDetector::box3D> dbBoxes;
+            this->detector_->getDbScanBoxes(dbBoxes);
+            
+            // 预测时间步数（与蓝色框保持一致）
+            const int predSteps = static_cast<int>(3.0 / this->dt_); // 3秒预测
+            
+            for (const auto& box : dbBoxes){
+                // 检查这个红色框是否已经在蓝色框里（避免重复）
+                bool isAlreadyInBlue = false;
+                for (std::size_t j = 0; j < this->posHist_.size(); ++j){
+                    if (this->posHist_[j].empty()) continue;
+                    Eigen::Vector3d bluePos = this->posHist_[j][0];
+                    double dist = std::sqrt(std::pow(box.x - bluePos(0), 2) + 
+                                           std::pow(box.y - bluePos(1), 2));
+                    if (dist < 0.5){ // 如果距离很近，认为是同一个障碍物
+                        isAlreadyInBlue = true;
+                        break;
+                    }
+                }
+                if (isAlreadyInBlue) continue; // 跳过已经在蓝色框里的
+                
+                // 红色框的当前位置和速度
+                Eigen::Vector2d currPos(box.x, box.y);
+                Eigen::Vector2d currVel(box.Vx, box.Vy);
+                double velNorm = currVel.norm();
+                
+                // 如果速度太小，用固定大小的风险场；否则用恒定速度预测
+                if (velNorm < 0.1){
+                    // 静止或低速：直接用当前位置+固定大小的高斯分布
+                    Eigen::Matrix2d Sigma = Eigen::Matrix2d::Identity() * 0.5 * 0.5; // 0.5m标准差
+                    double weight = 0.5; // 红色框的权重（比蓝色框稍低，因为不确定性更大）
+                    stampGaussianToBuffer(
+                        float_risk_data,
+                        riskMsg.info,
+                        currPos,
+                        Sigma,
+                        weight
+                    );
+                } else {
+                    // 有速度：用恒定速度模型预测未来轨迹
+                    for (int t = 0; t < predSteps; ++t){
+                        double dt = this->dt_ * t;
+                        Eigen::Vector2d futurePos = currPos + currVel * dt;
+                        
+                        // 不确定性随时间增长（线性增长）
+                        double sigma_base = 0.3; // 基础标准差
+                        double sigma_growth = 0.1 * dt; // 每秒钟增长0.1m
+                        double sigma = std::max(sigma_base, sigma_base + sigma_growth);
+                        Eigen::Matrix2d Sigma = Eigen::Matrix2d::Identity() * sigma * sigma;
+                        
+                        // 时间衰减
+                        double time_decay = std::pow(gamma, static_cast<double>(t));
+                        double weight = 0.5 * time_decay; // 红色框的权重
+                        
+                        stampGaussianToBuffer(
+                            float_risk_data,
+                            riskMsg.info,
+                            futurePos,
+                            Sigma,
+                            weight
+                        );
+                    }
+                }
+            }
+        }
+
+        // b) 将浮点风险映射到 [0,100] 的 int8 OccupancyGrid
+        riskMsg.data.resize(this->riskMapWidth_ * this->riskMapHeight_);
+
+        double max_risk = 0.0;
+        for (double v : float_risk_data) {
+            if (v > max_risk) max_risk = v;
+        }
+
+        if (max_risk <= 1e-8) {
+            // 没有任何风险，直接全部设为 0
+            std::fill(riskMsg.data.begin(), riskMsg.data.end(), 0);
+        } else {
+            for (std::size_t i = 0; i < float_risk_data.size(); ++i) {
+                double norm = float_risk_data[i] / max_risk;   // 0~1
+                if (norm < 0.0) norm = 0.0;
+                if (norm > 1.0) norm = 1.0;
+                riskMsg.data[i] = static_cast<int8_t>(std::round(norm * 100.0));
+            }
+        }
+
+        this->riskMapPub_.publish(riskMsg);
+    }
+
+    void predictor::publishPredictedObstacles(){
+        if (this->posPred_.empty() || this->intentProb_.empty()){
+            return;
+        }
+        dynamic_predictor::PredictedObstacles msg;
+        msg.header.frame_id = "map";
+        msg.header.stamp = ros::Time::now();
+
+        for (size_t i = 0; i < this->posPred_.size(); ++i){
+            dynamic_predictor::PredictedObstacle ob;
+            ob.id = (i < this->obsIds_.size()) ? this->obsIds_[i] : static_cast<int>(i);
+
+            if (i < this->posHist_.size() && !this->posHist_[i].empty()){
+                ob.current_position.x = this->posHist_[i][0](0);
+                ob.current_position.y = this->posHist_[i][0](1);
+                ob.current_position.z = this->posHist_[i][0](2);
+            }
+            if (i < this->velHist_.size() && !this->velHist_[i].empty()){
+                ob.current_velocity.x = this->velHist_[i][0](0);
+                ob.current_velocity.y = this->velHist_[i][0](1);
+                ob.current_velocity.z = this->velHist_[i][0](2);
+            }
+
+            for (int m = 0; m < this->numIntent_ && m < static_cast<int>(this->posPred_[i].size()); ++m){
+                dynamic_predictor::PredictedTrajectory traj;
+                if (i < this->intentProb_.size() && this->intentProb_[i].size() > m){
+                    traj.probability = this->intentProb_[i](m);
+                } else {
+                    traj.probability = 0.0;
+                }
+
+                const std::vector<Eigen::Vector3d>& meanList = this->posPred_[i][m];
+                const std::vector<Eigen::Vector3d>* varListPtr = nullptr;
+                if (i < this->varPred_.size() && m < static_cast<int>(this->varPred_[i].size())){
+                    varListPtr = &this->varPred_[i][m];
+                }
+                for (size_t t = 0; t < meanList.size(); ++t){
+                    geometry_msgs::Point mean;
+                    mean.x = meanList[t](0);
+                    mean.y = meanList[t](1);
+                    mean.z = meanList[t](2);
+                    traj.mean.push_back(mean);
+
+                    geometry_msgs::Vector3 var;
+                    if (varListPtr && t < varListPtr->size()){
+                        var.x = (*varListPtr)[t](0);
+                        var.y = (*varListPtr)[t](1);
+                        var.z = (*varListPtr)[t](2);
+                    } else {
+                        var.x = var.y = var.z = 0.0;
+                    }
+                    traj.variance.push_back(var);
+                }
+
+                if (!traj.mean.empty()){
+                    ob.modes.push_back(traj);
+                }
+            }
+
+            msg.obstacles.push_back(ob);
+        }
+
+        this->predInfoPub_.publish(msg);
     }
 
     void predictor::publishAdaptiveMetrics(){

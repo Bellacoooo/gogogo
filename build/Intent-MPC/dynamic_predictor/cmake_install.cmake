@@ -43,7 +43,47 @@ if(NOT DEFINED CMAKE_OBJDUMP)
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dynamic_predictor/msg" TYPE FILE FILES
+    "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
+    "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
+    "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
+    )
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dynamic_predictor/cmake" TYPE FILE FILES "/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/catkin_generated/installspace/dynamic_predictor-msg-paths.cmake")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/include" TYPE DIRECTORY FILES "/home/ff/intent-mpc/devel/include/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/roseus/ros" TYPE DIRECTORY FILES "/home/ff/intent-mpc/devel/share/roseus/ros/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/common-lisp/ros" TYPE DIRECTORY FILES "/home/ff/intent-mpc/devel/share/common-lisp/ros/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/gennodejs/ros" TYPE DIRECTORY FILES "/home/ff/intent-mpc/devel/share/gennodejs/ros/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  execute_process(COMMAND "/usr/bin/python3" -m compileall "/home/ff/intent-mpc/devel/lib/python3/dist-packages/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python3/dist-packages" TYPE DIRECTORY FILES "/home/ff/intent-mpc/devel/lib/python3/dist-packages/dynamic_predictor")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig" TYPE FILE FILES "/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/catkin_generated/installspace/dynamic_predictor.pc")
+endif()
+
+if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dynamic_predictor/cmake" TYPE FILE FILES "/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/catkin_generated/installspace/dynamic_predictor-msg-extras.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)

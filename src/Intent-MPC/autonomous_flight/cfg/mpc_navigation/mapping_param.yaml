@@ -48,4 +48,7 @@ visualize_global_map: true
 verbose: false
 
 # prebuilt_map_directory: "No"
-prebuilt_map_directory: "/cfg/saved_map/demo_map.pcd"
+# 原论文的静态背景
+# prebuilt_map_directory: "/cfg/saved_map/demo_map.pcd"
+# 静态背景test
+prebuilt_map_directory: "/home/ff/intent-mpc/my_two_cylinders.pcd"

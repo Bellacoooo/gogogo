@@ -9,6 +9,8 @@ namespace mapManager{
 	occMap::occMap(){
 		this->ns_ = "occupancy_map";
 		this->hint_ = "[OccMap]";
+		// 确保位置在第一次使用前是一个合理的有限值
+		this->position_ = Eigen::Vector3d::Zero();
 	}
 
 	occMap::occMap(const ros::NodeHandle& nh) : nh_(nh){
@@ -344,9 +346,14 @@ namespace mapManager{
 			cout << this->hint_ << ": Not using prebuilt map." << endl;
 		}
 		else{
-			std::string autoFlightPkgPath = ros::package::getPath("autonomous_flight");
-			this->prebuiltMapDir_ = autoFlightPkgPath + this->prebuiltMapDir_;
-			cout << this->hint_ << ": the prebuilt map absolute dir is found: " << this->prebuiltMapDir_ << endl;
+			// 如果参数是绝对路径（以'/'开头），直接使用；否则认为是相对 autonomous_flight 包的路径
+			if (!this->prebuiltMapDir_.empty() && this->prebuiltMapDir_[0] == '/'){
+				cout << this->hint_ << ": using absolute prebuilt map: " << this->prebuiltMapDir_ << endl;
+			}else{
+				std::string autoFlightPkgPath = ros::package::getPath("autonomous_flight");
+				this->prebuiltMapDir_ = autoFlightPkgPath + this->prebuiltMapDir_;
+				cout << this->hint_ << ": the prebuilt map absolute dir is found: " << this->prebuiltMapDir_ << endl;
+			}
 		}
 
 		// local map size (visualization)
@@ -1120,7 +1127,7 @@ namespace mapManager{
 			// this->depthCloudPub_.publish(depthCloudMsg);
 			this->publishProjPoints();
 			this->publishMap();
-			// this->publishInflatedMap();
+			this->publishInflatedMap(); // enable inflated voxel map publishing
 			this->publish2DOccupancyGrid();
 			r.sleep();	
 		}
@@ -1400,5 +1407,9 @@ namespace mapManager{
 		mapMsg.info.origin.position.x = minRange(0);
 		mapMsg.info.origin.position.y = minRange(1);
 		this->map2DPub_.publish(mapMsg);		
+	}
+
+	void occMap::getPosition(Eigen::Vector3d &robotPos) const{
+		robotPos = this->position_;
 	}
 }

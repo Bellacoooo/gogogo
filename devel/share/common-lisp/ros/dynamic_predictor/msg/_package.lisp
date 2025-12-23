@@ -1,0 +1,11 @@
+(cl:defpackage dynamic_predictor-msg
+  (:use )
+  (:export
+   "<PREDICTEDOBSTACLE>"
+   "PREDICTEDOBSTACLE"
+   "<PREDICTEDOBSTACLES>"
+   "PREDICTEDOBSTACLES"
+   "<PREDICTEDTRAJECTORY>"
+   "PREDICTEDTRAJECTORY"
+  ))
+

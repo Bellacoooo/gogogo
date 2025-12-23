@@ -1,7 +1,7 @@
 # generated from catkin/cmake/template/pkg.context.pc.in
 CATKIN_PACKAGE_PREFIX = ""
-PROJECT_PKG_CONFIG_INCLUDE_DIRS = "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include".split(';') if "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include" != "" else []
-PROJECT_CATKIN_DEPENDS = "roscpp;rospy;std_msgs".replace(';', ' ')
+PROJECT_PKG_CONFIG_INCLUDE_DIRS = "/home/ff/intent-mpc/devel/include;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include".split(';') if "/home/ff/intent-mpc/devel/include;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include" != "" else []
+PROJECT_CATKIN_DEPENDS = "roscpp;rospy;std_msgs;geometry_msgs;message_runtime".replace(';', ' ')
 PKG_CONFIG_LIBRARIES_WITH_PREFIX = "-ldynamic_predictor".split(';') if "-ldynamic_predictor" != "" else []
 PROJECT_NAME = "dynamic_predictor"
 PROJECT_SPACE_DIR = "/home/ff/intent-mpc/devel"

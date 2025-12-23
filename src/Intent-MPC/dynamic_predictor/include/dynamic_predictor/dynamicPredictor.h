@@ -13,6 +13,8 @@
 #include <onboard_detector/fakeDetector.h>
 #include <map_manager/dynamicMap.h>
 #include <dynamic_predictor/utils.h>
+#include <dynamic_predictor/PredictedObstacles.h>
+#include <nav_msgs/OccupancyGrid.h>
 // 在dynamicPredictor.h开头的#include区域新增一行（如果没有）
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float64MultiArray.h>
@@ -36,6 +38,8 @@ namespace dynamicPredictor{
         ros::Publisher intentVisPub_;
         ros::Publisher varPointsPub_;
         ros::Publisher predBBoxPub_;
+        ros::Publisher predInfoPub_;
+        ros::Publisher riskMapPub_;
 
         ros::Publisher sValuePub_; // 新增：用于发布 s 值的 Publisher
         ros::Publisher adaptiveMetricsPub_; // 新增：用于发布 D_t 和 s_adaptive 的 Publisher
@@ -69,7 +73,16 @@ namespace dynamicPredictor{
         std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPoints_;
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPred_;
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePred_;
+        std::vector<std::vector<std::vector<Eigen::Vector3d>>> varPred_;
         std::vector<Eigen::VectorXd> intentProb_;
+        std::vector<int> obsIds_;
+
+        // risk map config
+        int riskMapWidth_;
+        int riskMapHeight_;
+        double riskMapResolution_;
+        double riskOriginOffsetX_;
+        double riskOriginOffsetY_;
 
 
         // 为了自适应新增的的
@@ -114,6 +127,7 @@ namespace dynamicPredictor{
         predictor(const ros::NodeHandle& nh);
 
         void initParam();
+        void initRiskMapParam();
         void registerPub();
         void registerCallback();  
 
@@ -127,10 +141,9 @@ namespace dynamicPredictor{
         // 添加了自适应的参数
         Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, 
                                    const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc, int obsIdx = 0);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
-        //    新增 mainIntents 主意图参数
-        void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp   , const std::vector<int>& mainIntents);
+        void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &varPredTemp, const std::vector<int>& mainIntents);
         void genPoints(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
-        void genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize);
+        void genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize, std::vector<Eigen::Vector3d> &varPred);
         void modelForward(const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
         void modelTurning(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
         void modelStop(const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
@@ -145,7 +158,9 @@ namespace dynamicPredictor{
         void publishPredTraj();
         void publishIntentVis();
         void publishPredBBox();
+        void publishPredictedObstacles();
         void publishAdaptiveMetrics(); // 新增：发布 D_t 和 s_adaptive
+        void publishRiskMap();
         
 
         // user function

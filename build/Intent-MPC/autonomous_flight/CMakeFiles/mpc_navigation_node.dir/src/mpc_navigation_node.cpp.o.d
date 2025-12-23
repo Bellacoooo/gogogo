@@ -2089,6 +2089,9 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
  /opt/ros/noetic/include/gazebo_msgs/ModelStates.h \
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/dynamicPredictor.h \
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/utils.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h \
  /opt/ros/noetic/include/std_msgs/Float32.h \
  /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
  /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \

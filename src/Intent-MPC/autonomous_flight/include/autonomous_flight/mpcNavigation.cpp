@@ -273,12 +273,27 @@ namespace AutoFlight{
 								this->rrtPlanner_->updateGoal(this->goal_.pose);
 								this->rrtPlanner_->makePlan(rrtPathMsgTemp);
 							}
-							if (rrtPathMsgTemp.poses.size() >= 2){
+
+							// 记录全局规划得到的路径长度，便于调试
+							ROS_INFO("[MPC] Global planner (%s) returned path with %zu poses.",
+							         this->globalPlannerType_.c_str(),
+							         rrtPathMsgTemp.poses.size());
+
+							// 若路径点过少（<2），认为本次全局规划失败，直接跳过多项式/MPC更新，防止后续崩溃
+							if (rrtPathMsgTemp.poses.size() < 2){
+								ROS_WARN("[MPC] Global planner path has less than 2 points. Skip polyTraj/MPC update this cycle.");
+								this->refTrajReady_ = false;
+								this->mpcFirstTime_ = true;
+								// 不更新 rrtPathMsg_，保留上一次的可视化路径
+							}
+							else{
+								// 更新可视化用的 RRT/A* 路径
 								{
 									std::lock_guard<std::mutex> lock(this->rrtPathMutex_);
 									this->rrtPathMsg_ = rrtPathMsgTemp;
 								}
-							}
+
+								// 只有在路径合法时，才进行 polyTraj 与 MPC 路径更新
 							Eigen::Vector3d startVel (0, 0, 0);
 							Eigen::Vector3d startAcc (0, 0, 0);
 							Eigen::Vector3d endVel (0, 0, 0);
@@ -296,6 +311,7 @@ namespace AutoFlight{
 							this->refTrajReady_ = true;
 							this->mpcFirstTime_ = true;
 							this->trackingStartTime_ = ros::Time::now();
+							}
 						}
 						else{
 							nav_msgs::Path waypoints, polyTrajTemp;

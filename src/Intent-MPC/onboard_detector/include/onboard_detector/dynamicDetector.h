@@ -266,7 +266,9 @@ namespace onboardDetector{
 									 std::vector<std::vector<Eigen::Vector3d>>& velHist, 
 									 std::vector<std::vector<Eigen::Vector3d>>& accHist, 
                                      std::vector<std::vector<Eigen::Vector3d>>& sizeHist,
+                                     std::vector<int>& ids,
                                      const Eigen::Vector3d &robotSize = Eigen::Vector3d(0.0,0.0,0.0));
+        void getDbScanBoxes(std::vector<onboardDetector::box3D>& dbBoxes); // 获取DBSCAN检测的原始框（红色框）
     };
 
 

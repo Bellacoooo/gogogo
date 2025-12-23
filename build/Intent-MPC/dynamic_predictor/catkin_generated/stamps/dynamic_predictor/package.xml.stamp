@@ -12,16 +12,21 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
   <build_depend>onboard_detector</build_depend>
   <build_depend>map_manager</build_depend>
   <build_export_depend>roscpp</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>onboard_detector</build_export_depend>
   <build_export_depend>map_manager</build_export_depend>
   <exec_depend>roscpp</exec_depend>
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
   <exec_depend>onboard_detector</exec_depend>
   <exec_depend>map_manager</exec_depend>
 

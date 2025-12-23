@@ -201,6 +201,7 @@ namespace mapManager{
 		void getCurrMapRange(Eigen::Vector3d& currRangeMin, Eigen::Vector3d& currRangeMax);
 		bool castRay(const Eigen::Vector3d& start, const Eigen::Vector3d& direction, Eigen::Vector3d& end, double maxLength=5.0, bool ignoreUnknown=true);
 		void getRobotSize(Eigen::Vector3d &robotSize);
+        void getPosition(Eigen::Vector3d &robotPos) const;
 
 		// Visualziation
 		void visCB(const ros::TimerEvent& );

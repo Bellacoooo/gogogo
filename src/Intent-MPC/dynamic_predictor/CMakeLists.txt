@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  geometry_msgs
+  message_generation
   onboard_detector
   map_manager
 )
@@ -50,11 +52,12 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  PredictedTrajectory.msg
+  PredictedObstacle.msg
+  PredictedObstacles.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -71,10 +74,11 @@ find_package(catkin REQUIRED COMPONENTS
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  geometry_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -108,7 +112,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES dynamic_predictor
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs geometry_msgs message_runtime
   DEPENDS system_lib
 )
 
@@ -132,7 +136,7 @@ add_library(${PROJECT_NAME}
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -155,9 +159,16 @@ add_executable(dynamic_predictor_fake_node src/dynamic_predictor_fake_node.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+add_dependencies(dynamic_predictor_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(dynamic_predictor_fake_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
 target_link_libraries(dynamic_predictor_node ${catkin_LIBRARIES} ${PROJECT_NAME})
 target_link_libraries(dynamic_predictor_fake_node ${catkin_LIBRARIES} ${PROJECT_NAME})
+
+## Simple test executable for Gaussian stamping on OccupancyGrid
+add_executable(risk_stamp_test src/risk_stamp_test.cpp)
+target_link_libraries(risk_stamp_test ${catkin_LIBRARIES})
 
 #############
 ## Install ##

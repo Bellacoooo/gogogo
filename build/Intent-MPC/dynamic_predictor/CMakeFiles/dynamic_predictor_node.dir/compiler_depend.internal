@@ -3,6 +3,9 @@
 
 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_node.dir/src/dynamic_predictor_node.cpp.o
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/src/dynamic_predictor_node.cpp
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollision.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionRequest.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionResponse.h

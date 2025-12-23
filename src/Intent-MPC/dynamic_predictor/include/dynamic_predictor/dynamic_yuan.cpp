@@ -163,10 +163,10 @@ namespace dynamicPredictor{
     void predictor::predict(){ 
         // get history
         if (this->useFakeDetector_ and this->detectorGTReady_ and this->mapReady_){
-            this->detectorGT_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->robotSize_);
+            this->detectorGT_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->obsIds_, this->robotSize_);
         }
         else if (not this->useFakeDetector_ and this->detectorReady_ and this->mapReady_){
-            this->detector_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->robotSize_);
+            this->detector_->getDynamicObstaclesHist(this->posHist_, this->velHist_, this->accHist_, this->sizeHist_, this->obsIds_, this->robotSize_);
         }
         if (this->posHist_.size()){
             if (this->posHist_[0].size()){
@@ -178,11 +178,13 @@ namespace dynamicPredictor{
                 std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> allPredPointsTemp;
                 std::vector<std::vector<std::vector<Eigen::Vector3d>>> posPredTemp;
                 std::vector<std::vector<std::vector<Eigen::Vector3d>>> sizePredTemp;
-                this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp);
+                std::vector<std::vector<std::vector<Eigen::Vector3d>>> varPredTemp;
+                this->predTraj(allPredPointsTemp, posPredTemp, sizePredTemp, varPredTemp);
 
                 this->intentProb_ = intentProbTemp;
                 this->posPred_ = posPredTemp;
                 this->sizePred_ = sizePredTemp;
+                this->varPred_ = varPredTemp;
                 this->allPredPoints_ = allPredPointsTemp;
             }
         }
@@ -191,6 +193,8 @@ namespace dynamicPredictor{
             this->allPredPoints_.clear();
             this->posPred_.clear();
             this->sizePred_.clear();
+            this->varPred_.clear();
+            this->obsIds_.clear();
         }
     }
 
@@ -282,12 +286,15 @@ namespace dynamicPredictor{
 
     void predictor::predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp,
         std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp,
-        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp){
+        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp,
+        std::vector<std::vector<std::vector<Eigen::Vector3d>>> &varPredTemp){
 
         posPredTemp.clear();
         posPredTemp.resize(this->posHist_.size());
         sizePredTemp.clear();
         sizePredTemp.resize(this->sizeHist_.size());
+        varPredTemp.clear();
+        varPredTemp.resize(this->sizeHist_.size());
         allPredPointsTemp.clear();
         allPredPointsTemp.resize(this->posHist_.size());
         
@@ -295,6 +302,7 @@ namespace dynamicPredictor{
         for (int i=0; i<int(this->posHist_.size()); i++){
             posPredTemp[i].resize(this->numIntent_);
             sizePredTemp[i].resize(this->numIntent_);
+            varPredTemp[i].resize(this->numIntent_);
             allPredPointsTemp[i].resize(this->numIntent_);
 
             // predict for each number of intent
@@ -304,9 +312,11 @@ namespace dynamicPredictor{
                 this->genPoints(j, this->posHist_[i][0], this->velHist_[i][0], this->accHist_[i][0], this->sizeHist_[i][0], predPoints, predSize);
                 if (predPoints.size()){
                     std::vector<Eigen::Vector3d> predPos;
-                    this->genTraj(predPoints, predPos, predSize);
+                    std::vector<Eigen::Vector3d> varPred;
+                    this->genTraj(predPoints, predPos, predSize, varPred);
                     posPredTemp[i][j] = predPos;
                     sizePredTemp[i][j] = predSize;
+                    varPredTemp[i][j] = varPred;
                     allPredPointsTemp[i][j] = predPoints;
                 }
                 else{
@@ -314,15 +324,18 @@ namespace dynamicPredictor{
                     Eigen::Vector3d currVel = this->velHist_[i][0];
                     Eigen::Vector3d currPos = this->posHist_[i][0];
                     std::vector<Eigen::Vector3d> predPos;
+                    std::vector<Eigen::Vector3d> varPred;
                     double vel = sqrt(pow(currVel(0),2)+pow(currVel(1),2)); 
                     for (int i=0;i<this->numPred_+1;i++){
                         predPos.push_back(currPos);
                         predSize.push_back(size);
+                        varPred.push_back(Eigen::Vector3d::Zero());
                         size(0) += 2*min(vel,this->stopVel_)*this->dt_;
                         size(1) += 2*min(vel,this->stopVel_)*this->dt_;
                     }
                     posPredTemp[i][j] = predPos;
                     sizePredTemp[i][j] = predSize;
+                    varPredTemp[i][j] = varPred;
                 }
             }
         }
@@ -500,8 +513,9 @@ namespace dynamicPredictor{
         predPoints.push_back(predPointTemp);
     }
 
-    void predictor::genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize){
+    void predictor::genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize, std::vector<Eigen::Vector3d> &varPred){
         predPos.clear();
+        varPred.clear();
         for (int i=0;i<this->numPred_+1;i++){
             double meanx, meany;
             double variancex, variancey;
@@ -527,6 +541,9 @@ namespace dynamicPredictor{
                 Eigen::Vector3d p;
                 p<<meanx, meany, predPoints[0][0](2);
                 predPos.push_back(p);
+                Eigen::Vector3d var;
+                var<<variancex, variancey, 0.0;
+                varPred.push_back(var);
                 predSize[i](0) += 2*sqrt(variancex)*this->zScore_; // confidence level under gaussian
                 predSize[i](1) += 2*sqrt(variancey)*this->zScore_;
             }

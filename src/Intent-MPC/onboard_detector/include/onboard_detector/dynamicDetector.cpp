@@ -2349,11 +2349,17 @@ namespace onboardDetector{
         }
     }
 
-    void dynamicDetector::getDynamicObstaclesHist(std::vector<std::vector<Eigen::Vector3d>>& posHist, std::vector<std::vector<Eigen::Vector3d>>& velHist, std::vector<std::vector<Eigen::Vector3d>>& accHist, std::vector<std::vector<Eigen::Vector3d>>& sizeHist, const Eigen::Vector3d &robotSize){
+    void dynamicDetector::getDbScanBoxes(std::vector<onboardDetector::box3D>& dbBoxes){
+        dbBoxes.clear();
+        dbBoxes = this->dbBBoxes_; // 直接返回DBSCAN检测的原始框（红色框）
+    }
+
+    void dynamicDetector::getDynamicObstaclesHist(std::vector<std::vector<Eigen::Vector3d>>& posHist, std::vector<std::vector<Eigen::Vector3d>>& velHist, std::vector<std::vector<Eigen::Vector3d>>& accHist, std::vector<std::vector<Eigen::Vector3d>>& sizeHist, std::vector<int>& ids, const Eigen::Vector3d &robotSize){
 		posHist.clear();
         velHist.clear();
         sizeHist.clear();
         accHist.clear();
+        ids.clear();
 
         if (this->boxHist_.size()){
             for (size_t i=0 ; i<this->boxHist_.size() ; ++i){
@@ -2374,6 +2380,7 @@ namespace onboardDetector{
                     }
                     if (findMatch){
                         std::vector<Eigen::Vector3d> obPosHist, obVelHist, obSizeHist, obAccHist;
+                        ids.push_back(static_cast<int>(this->boxHist_[i][0].id));
                         for (size_t j=0; j<this->boxHist_[i].size() ; ++j){
                             Eigen::Vector3d pos(this->boxHist_[i][j].x, this->boxHist_[i][j].y, this->boxHist_[i][j].z);
                             Eigen::Vector3d vel(this->boxHist_[i][j].Vx, this->boxHist_[i][j].Vy, 0);

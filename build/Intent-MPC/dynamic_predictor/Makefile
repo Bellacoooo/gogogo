@@ -172,6 +172,202 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/rule
+.PHONY : dynamic_predictor_generate_messages
+
+# fast build rule for target.
+dynamic_predictor_generate_messages/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages.dir/build
+.PHONY : dynamic_predictor_generate_messages/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/rule
+
+# Convenience name for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory: Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/rule
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedTrajectory
+
+# fast build rule for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedTrajectory.dir/build
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedTrajectory/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/rule
+
+# Convenience name for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedObstacle: Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/rule
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedObstacle
+
+# fast build rule for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedObstacle/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacle.dir/build
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedObstacle/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/rule
+
+# Convenience name for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedObstacles: Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/rule
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedObstacles
+
+# fast build rule for target.
+_dynamic_predictor_generate_messages_check_deps_PredictedObstacles/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/_dynamic_predictor_generate_messages_check_deps_PredictedObstacles.dir/build
+.PHONY : _dynamic_predictor_generate_messages_check_deps_PredictedObstacles/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages_cpp: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/rule
+.PHONY : dynamic_predictor_generate_messages_cpp
+
+# fast build rule for target.
+dynamic_predictor_generate_messages_cpp/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_cpp.dir/build
+.PHONY : dynamic_predictor_generate_messages_cpp/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_gencpp: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/rule
+.PHONY : dynamic_predictor_gencpp
+
+# fast build rule for target.
+dynamic_predictor_gencpp/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gencpp.dir/build
+.PHONY : dynamic_predictor_gencpp/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages_eus: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/rule
+.PHONY : dynamic_predictor_generate_messages_eus
+
+# fast build rule for target.
+dynamic_predictor_generate_messages_eus/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_eus.dir/build
+.PHONY : dynamic_predictor_generate_messages_eus/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_geneus: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/rule
+.PHONY : dynamic_predictor_geneus
+
+# fast build rule for target.
+dynamic_predictor_geneus/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_geneus.dir/build
+.PHONY : dynamic_predictor_geneus/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages_lisp: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/rule
+.PHONY : dynamic_predictor_generate_messages_lisp
+
+# fast build rule for target.
+dynamic_predictor_generate_messages_lisp/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_lisp.dir/build
+.PHONY : dynamic_predictor_generate_messages_lisp/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_genlisp: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/rule
+.PHONY : dynamic_predictor_genlisp
+
+# fast build rule for target.
+dynamic_predictor_genlisp/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genlisp.dir/build
+.PHONY : dynamic_predictor_genlisp/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages_nodejs: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/rule
+.PHONY : dynamic_predictor_generate_messages_nodejs
+
+# fast build rule for target.
+dynamic_predictor_generate_messages_nodejs/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_nodejs.dir/build
+.PHONY : dynamic_predictor_generate_messages_nodejs/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_gennodejs: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/rule
+.PHONY : dynamic_predictor_gennodejs
+
+# fast build rule for target.
+dynamic_predictor_gennodejs/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_gennodejs.dir/build
+.PHONY : dynamic_predictor_gennodejs/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_generate_messages_py: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/rule
+.PHONY : dynamic_predictor_generate_messages_py
+
+# fast build rule for target.
+dynamic_predictor_generate_messages_py/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_generate_messages_py.dir/build
+.PHONY : dynamic_predictor_generate_messages_py/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/rule
+
+# Convenience name for target.
+dynamic_predictor_genpy: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/rule
+.PHONY : dynamic_predictor_genpy
+
+# fast build rule for target.
+dynamic_predictor_genpy/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_genpy.dir/build
+.PHONY : dynamic_predictor_genpy/fast
+
+# Convenience name for target.
 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor.dir/rule:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor.dir/rule
 .PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor.dir/rule
@@ -212,6 +408,20 @@ dynamic_predictor_fake_node: Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_pre
 dynamic_predictor_fake_node/fast:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_fake_node.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_fake_node.dir/build
 .PHONY : dynamic_predictor_fake_node/fast
+
+# Convenience name for target.
+Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/rule
+.PHONY : Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/rule
+
+# Convenience name for target.
+risk_stamp_test: Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/rule
+.PHONY : risk_stamp_test
+
+# fast build rule for target.
+risk_stamp_test/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/build
+.PHONY : risk_stamp_test/fast
 
 include/dynamic_predictor/dynamicPredictor.o: include/dynamic_predictor/dynamicPredictor.cpp.o
 .PHONY : include/dynamic_predictor/dynamicPredictor.o
@@ -285,6 +495,30 @@ src/dynamic_predictor_node.cpp.s:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_node.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_node.dir/src/dynamic_predictor_node.cpp.s
 .PHONY : src/dynamic_predictor_node.cpp.s
 
+src/risk_stamp_test.o: src/risk_stamp_test.cpp.o
+.PHONY : src/risk_stamp_test.o
+
+# target to build an object file
+src/risk_stamp_test.cpp.o:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/src/risk_stamp_test.cpp.o
+.PHONY : src/risk_stamp_test.cpp.o
+
+src/risk_stamp_test.i: src/risk_stamp_test.cpp.i
+.PHONY : src/risk_stamp_test.i
+
+# target to preprocess a source file
+src/risk_stamp_test.cpp.i:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/src/risk_stamp_test.cpp.i
+.PHONY : src/risk_stamp_test.cpp.i
+
+src/risk_stamp_test.s: src/risk_stamp_test.cpp.s
+.PHONY : src/risk_stamp_test.s
+
+# target to generate assembly for a file
+src/risk_stamp_test.cpp.s:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/build.make Intent-MPC/dynamic_predictor/CMakeFiles/risk_stamp_test.dir/src/risk_stamp_test.cpp.s
+.PHONY : src/risk_stamp_test.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -298,9 +532,24 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedObstacle"
+	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedObstacles"
+	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedTrajectory"
+	@echo "... dynamic_predictor_gencpp"
+	@echo "... dynamic_predictor_generate_messages"
+	@echo "... dynamic_predictor_generate_messages_cpp"
+	@echo "... dynamic_predictor_generate_messages_eus"
+	@echo "... dynamic_predictor_generate_messages_lisp"
+	@echo "... dynamic_predictor_generate_messages_nodejs"
+	@echo "... dynamic_predictor_generate_messages_py"
+	@echo "... dynamic_predictor_geneus"
+	@echo "... dynamic_predictor_genlisp"
+	@echo "... dynamic_predictor_gennodejs"
+	@echo "... dynamic_predictor_genpy"
 	@echo "... dynamic_predictor"
 	@echo "... dynamic_predictor_fake_node"
 	@echo "... dynamic_predictor_node"
+	@echo "... risk_stamp_test"
 	@echo "... include/dynamic_predictor/dynamicPredictor.o"
 	@echo "... include/dynamic_predictor/dynamicPredictor.i"
 	@echo "... include/dynamic_predictor/dynamicPredictor.s"
@@ -310,6 +559,9 @@ help:
 	@echo "... src/dynamic_predictor_node.o"
 	@echo "... src/dynamic_predictor_node.i"
 	@echo "... src/dynamic_predictor_node.s"
+	@echo "... src/risk_stamp_test.o"
+	@echo "... src/risk_stamp_test.i"
+	@echo "... src/risk_stamp_test.s"
 .PHONY : help
 
 

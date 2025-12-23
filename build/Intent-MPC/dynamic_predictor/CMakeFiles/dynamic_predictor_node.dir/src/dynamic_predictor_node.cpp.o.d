@@ -2069,6 +2069,9 @@ Intent-MPC/dynamic_predictor/CMakeFiles/dynamic_predictor_node.dir/src/dynamic_p
  /home/ff/intent-mpc/devel/include/map_manager/RayCastRequest.h \
  /home/ff/intent-mpc/devel/include/map_manager/RayCastResponse.h \
  /home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/include/dynamic_predictor/utils.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h \
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h \
  /opt/ros/noetic/include/std_msgs/Float32.h \
  /opt/ros/noetic/include/std_msgs/Float64MultiArray.h \
  /opt/ros/noetic/include/std_msgs/MultiArrayLayout.h \

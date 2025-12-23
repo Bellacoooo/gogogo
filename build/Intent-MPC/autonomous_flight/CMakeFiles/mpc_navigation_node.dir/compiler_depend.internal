@@ -3,6 +3,9 @@
 
 Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigation_node.cpp.o
  /home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/src/mpc_navigation_node.cpp
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacle.h
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedObstacles.h
+ /home/ff/intent-mpc/devel/include/dynamic_predictor/PredictedTrajectory.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollision.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionRequest.h
  /home/ff/intent-mpc/devel/include/map_manager/CheckPosCollisionResponse.h
