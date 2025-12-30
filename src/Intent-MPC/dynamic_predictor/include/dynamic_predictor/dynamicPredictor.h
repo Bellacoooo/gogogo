@@ -40,6 +40,7 @@ namespace dynamicPredictor{
         ros::Publisher predBBoxPub_;
         ros::Publisher predInfoPub_;
         ros::Publisher riskMapPub_;
+        ros::Publisher riskHeightMapPub_;  // 新增：发布风险地图的高度信息
 
         ros::Publisher sValuePub_; // 新增：用于发布 s 值的 Publisher
         ros::Publisher adaptiveMetricsPub_; // 新增：用于发布 D_t 和 s_adaptive 的 Publisher

@@ -96,9 +96,16 @@ private:
   mutable std::mutex risk_map_mutex_;
   void riskMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
 
-  // 工具函数：查询某个世界坐标 (x,y) 在动态风险图上的风险值 [0,100]
+  // 高度地图（来自 dynamic_predictor/dynamic_risk_height_map）
+  ros::Subscriber risk_height_map_sub_;
+  nav_msgs::OccupancyGrid::ConstPtr latest_height_map_;
+  mutable std::mutex height_map_mutex_;
+  void riskHeightMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg);
+
+  // 工具函数：查询某个世界坐标 (x,y,z) 在动态风险图上的风险值 [0,100]
+  // 如果查询点高度 > 障碍物高度，返回 0
 public:
-  double getDynamicRisk(double world_x, double world_y) const;
+  double getDynamicRisk(double world_x, double world_y, double world_z = 0.0) const;
 };
 
 }  // namespace globalPlanner

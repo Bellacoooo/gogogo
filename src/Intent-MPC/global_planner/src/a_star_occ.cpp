@@ -30,6 +30,14 @@ AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
       &AStarOccMap::riskMapCallback,
       this);
   ROS_INFO("[A*] Subscribed to /dynamic_predictor/dynamic_risk_map for dynamic risk field.");
+  
+  // 订阅高度地图
+  risk_height_map_sub_ = nh_.subscribe(
+      "/dynamic_predictor/dynamic_risk_height_map",
+      1,
+      &AStarOccMap::riskHeightMapCallback,
+      this);
+  ROS_INFO("[A*] Subscribed to /dynamic_predictor/dynamic_risk_height_map for obstacle height information.");
 }
 
 void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
@@ -123,7 +131,8 @@ double AStarOccMap::calculateDynamicCost(const Eigen::Vector3d &pos) const
   }
 
   // 使用查询函数，从风险图中获取当前位置的风险值 [0,100]，再归一化
-  double occ = getDynamicRisk(pos.x(), pos.y());
+  // 传入高度信息，如果查询点高度 > 障碍物高度，返回 0
+  double occ = getDynamicRisk(pos.x(), pos.y(), pos.z());
   double cost = (occ > 0.0) ? occ / 100.0 : 0.0;
   // 提升小风险的惩罚强度，避免风险值过低时几乎不起作用
   if (cost > 0.0 && cost < 0.2)
@@ -149,7 +158,15 @@ void AStarOccMap::riskMapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg)
                     msg->info.width, msg->info.height);
 }
 
-double AStarOccMap::getDynamicRisk(double world_x, double world_y) const
+void AStarOccMap::riskHeightMapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg)
+{
+  std::lock_guard<std::mutex> lock(height_map_mutex_);
+  latest_height_map_ = msg;
+  ROS_INFO_THROTTLE(1.0, "[A*] Received new height map (w=%u,h=%u).",
+                    msg->info.width, msg->info.height);
+}
+
+double AStarOccMap::getDynamicRisk(double world_x, double world_y, double world_z) const
 {
   std::lock_guard<std::mutex> lock(risk_map_mutex_);
   if (!latest_risk_map_)
@@ -185,13 +202,31 @@ double AStarOccMap::getDynamicRisk(double world_x, double world_y) const
                     + static_cast<std::size_t>(grid_x);
   if (index >= latest_risk_map_->data.size())
   {
-    return 0.0;
+  return 0.0;
+  }
+
+  // 检查高度：如果查询点高度 > 障碍物高度，返回 0
+  {
+    std::lock_guard<std::mutex> height_lock(height_map_mutex_);
+    if (latest_height_map_ && index < latest_height_map_->data.size()) {
+      // 高度地图存储的是 0-100，表示 0-10 米（分辨率 0.1 米）
+      const double height_scale = 10.0;
+      int8_t height_val = latest_height_map_->data[index];
+      double obstacle_height = (static_cast<double>(height_val) / 100.0) * height_scale;
+      
+      // 如果查询点高度 > 障碍物高度，返回 0（无风险）
+      if (world_z > obstacle_height + 0.1) {  // 加 0.1m 容差
+        ROS_DEBUG_THROTTLE(2.0, "[A*] getDynamicRisk: query z=%.2f > obstacle height=%.2f, returning 0",
+                           world_z, obstacle_height);
+        return 0.0;
+      }
+    }
   }
 
   int8_t occ = latest_risk_map_->data[index];
   // 调试：在此打印一次 origin/res，避免多处查找
-  ROS_DEBUG_THROTTLE(1.0, "[A*] getDynamicRisk origin=(%.2f,%.2f) res=%.3f query=(%.2f,%.2f)->(%d,%d) occ=%.1f",
-                     ox, oy, res, world_x, world_y, grid_x, grid_y, static_cast<double>(occ));
+  ROS_DEBUG_THROTTLE(1.0, "[A*] getDynamicRisk origin=(%.2f,%.2f) res=%.3f query=(%.2f,%.2f,%.2f)->(%d,%d) occ=%.1f",
+                     ox, oy, res, world_x, world_y, world_z, grid_x, grid_y, static_cast<double>(occ));
   return static_cast<double>(occ);  // 直接返回 0~100
 }
 
@@ -213,14 +248,11 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   Eigen::Vector3d g_full(goal_.position.x, goal_.position.y, goal_.position.z);
   
   // 调试：打印起点风险值
-  double start_risk = getDynamicRisk(s.x(), s.y());
-  ROS_INFO_THROTTLE(1.0, "[A*] Risk at start (%.2f, %.2f) = %.1f, latest_risk_map_=%s",
-                    s.x(), s.y(), start_risk, 
+  double start_risk = getDynamicRisk(s.x(), s.y(), s.z());
+  ROS_INFO_THROTTLE(1.0, "[A*] Risk at start (%.2f, %.2f, %.2f) = %.1f, latest_risk_map_=%s",
+                    s.x(), s.y(), s.z(), start_risk, 
                     latest_risk_map_ ? "OK" : "NULL");
 
-  // 调试：查看起点处的动态风险值（来自 /dynamic_predictor/dynamic_risk_map）
-  ROS_INFO_THROTTLE(1.0, "[A*] Risk at start (%.2f, %.2f) = %.1f",
-                    s.x(), s.y(), getDynamicRisk(s.x(), s.y()));
 
   // 计算从当前起点指向全局终点的方向，并根据最大段长生成局部目标点
   const double max_segment = 10.0;  // 局部 A* 规划的最大直线距离（米）
@@ -293,7 +325,7 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
       g_target = indexToPos(gx, gy, gz);
     } else {
       ROS_ERROR("[A*] Cannot find free cell near goal within %.2f m radius. Aborting path planning.", search_radius);
-      return;
+    return;
     }
   }
 

@@ -17,13 +17,15 @@
 
 namespace dynamicPredictor{
 
-    // 内部工具函数：把一个 2D 高斯“盖章”到风险缓冲区上
+    // 内部工具函数：把一个 2D 高斯"盖章"到风险缓冲区上，同时更新高度地图
     static void stampGaussianToBuffer(
         std::vector<double>& risk_buffer,
+        std::vector<double>& height_map,  // 新增：高度地图，存储每个栅格的最大障碍物高度
         const nav_msgs::MapMetaData& info,
         const Eigen::Vector2d& mu,
         const Eigen::Matrix2d& Sigma,
-        double combined_weight
+        double combined_weight,
+        double obstacle_height = 0.0  // 新增：障碍物高度（z 尺寸）
     ){
         const double res = info.resolution;
         const unsigned int width  = info.width;
@@ -35,6 +37,10 @@ namespace dynamicPredictor{
 
         if (risk_buffer.size() != static_cast<std::size_t>(width * height)) {
             risk_buffer.assign(width * height, 0.0);
+        }
+        // 初始化高度地图（如果未初始化）
+        if (height_map.size() != static_cast<std::size_t>(width * height)) {
+            height_map.assign(width * height, 0.0);
         }
 
         // 使用对角线近似标准差
@@ -95,6 +101,10 @@ namespace dynamicPredictor{
 
                 std::size_t idx = static_cast<std::size_t>(iy) * width + static_cast<std::size_t>(ix);
                 risk_buffer[idx] += weighted_risk;
+                // 更新高度地图：取最大值（多个障碍物重叠时，取最高的）
+                if (obstacle_height > height_map[idx]) {
+                    height_map[idx] = obstacle_height;
+                }
             }
         }
     }
@@ -381,6 +391,7 @@ namespace dynamicPredictor{
         this->predBBoxPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/pred_bbox", 10);
         this->predInfoPub_ = this->nh_.advertise<dynamic_predictor::PredictedObstacles>(this->ns_ + "/predicted_obstacles", 10);
         this->riskMapPub_ = this->nh_.advertise<nav_msgs::OccupancyGrid>(this->ns_ + "/dynamic_risk_map", 1);
+        this->riskHeightMapPub_ = this->nh_.advertise<nav_msgs::OccupancyGrid>(this->ns_ + "/dynamic_risk_height_map", 1);
         this->sValuePub_ = this->nh_.advertise<std_msgs::Float32>(this->ns_ + "/current_s_value", 1);
         this->adaptiveMetricsPub_ = this->nh_.advertise<std_msgs::Float64MultiArray>(this->ns_ + "/adaptive_metrics", 10);
     }
@@ -1430,6 +1441,8 @@ namespace dynamicPredictor{
 
         // a) 浮点风险缓冲区（累加所有障碍物、多模态、全时间步）
         std::vector<double> float_risk_data(this->riskMapWidth_ * this->riskMapHeight_, 0.0);
+        // 高度地图：存储每个栅格的最大障碍物高度
+        std::vector<double> height_map(this->riskMapWidth_ * this->riskMapHeight_, 0.0);
 
         // 参数：时间衰减因子 gamma
         const double gamma = 0.98;
@@ -1453,6 +1466,14 @@ namespace dynamicPredictor{
                 const auto* varPtr = (j < this->varPred_.size() && k < static_cast<int>(this->varPred_[j].size()))
                                       ? &this->varPred_[j][k]
                                       : nullptr;
+                // 获取障碍物高度（z 尺寸），从 sizePred_ 或 sizeHist_ 获取
+                double obstacle_height = 0.0;
+                if (j < this->sizePred_.size() && k < static_cast<int>(this->sizePred_[j].size()) && 
+                    !this->sizePred_[j][k].empty()) {
+                    obstacle_height = this->sizePred_[j][k][0](2);  // z 尺寸（高度）
+                } else if (j < this->sizeHist_.size() && !this->sizeHist_[j].empty()) {
+                    obstacle_height = this->sizeHist_[j][0](2);  // 使用历史尺寸
+                }
 
                 // 遍历未来时间步 t
                 for (std::size_t t = 0; t < traj.size(); ++t) {
@@ -1480,10 +1501,12 @@ namespace dynamicPredictor{
 
                     stampGaussianToBuffer(
                         float_risk_data,
+                        height_map,
                         riskMsg.info,
                         mu,
                         Sigma,
-                        combined_weight
+                        combined_weight,
+                        obstacle_height
                     );
                 }
             }
@@ -1517,6 +1540,9 @@ namespace dynamicPredictor{
                 Eigen::Vector2d currVel(box.Vx, box.Vy);
                 double velNorm = currVel.norm();
                 
+                // 获取红色框的高度（从 box 结构获取，z_width 是高度）
+                double red_box_height = (box.z_width > 0.1) ? box.z_width : 1.5;  // 默认 1.5m
+                
                 // 如果速度太小，用固定大小的风险场；否则用恒定速度预测
                 if (velNorm < 0.1){
                     // 静止或低速：直接用当前位置+固定大小的高斯分布
@@ -1524,10 +1550,12 @@ namespace dynamicPredictor{
                     double weight = 0.5; // 红色框的权重（比蓝色框稍低，因为不确定性更大）
                     stampGaussianToBuffer(
                         float_risk_data,
+                        height_map,
                         riskMsg.info,
                         currPos,
                         Sigma,
-                        weight
+                        weight,
+                        red_box_height
                     );
                 } else {
                     // 有速度：用恒定速度模型预测未来轨迹
@@ -1547,10 +1575,12 @@ namespace dynamicPredictor{
                         
                         stampGaussianToBuffer(
                             float_risk_data,
+                            height_map,
                             riskMsg.info,
                             futurePos,
                             Sigma,
-                            weight
+                            weight,
+                            red_box_height
                         );
                     }
                 }
@@ -1578,6 +1608,24 @@ namespace dynamicPredictor{
         }
 
         this->riskMapPub_.publish(riskMsg);
+
+        // 发布高度地图（使用 OccupancyGrid 格式，但存储的是高度值，单位：米）
+        nav_msgs::OccupancyGrid heightMsg;
+        heightMsg.header = riskMsg.header;
+        heightMsg.info = riskMsg.info;
+        heightMsg.data.resize(this->riskMapWidth_ * this->riskMapHeight_);
+        
+        // 将高度值（米）转换为 int8（0-100 表示 0-10 米，分辨率 0.1 米）
+        const double height_scale = 10.0;  // 最大高度 10 米
+        for (std::size_t i = 0; i < height_map.size(); ++i) {
+            double h = height_map[i];
+            if (h < 0.0) h = 0.0;
+            if (h > height_scale) h = height_scale;
+            // 将高度映射到 0-100：h / height_scale * 100
+            heightMsg.data[i] = static_cast<int8_t>(std::round((h / height_scale) * 100.0));
+        }
+        
+        this->riskHeightMapPub_.publish(heightMsg);
     }
 
     void predictor::publishPredictedObstacles(){
