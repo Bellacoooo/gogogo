@@ -7,21 +7,22 @@ namespace globalPlanner
 
 AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
 {
-  nh_.param("astar/use_26_dir", use26dir_, use26dir_);
-  nh_.param("astar/avg_velocity", avg_velocity_, avg_velocity_);
-  nh_.param("astar/w1_dist", w1_dist_, w1_dist_);
-  nh_.param("astar/w2_static", w2_static_, w2_static_);
-  nh_.param("astar/w3_dynamic", w3_dynamic_, w3_dynamic_);
-  nh_.param("astar/local_range_xy", local_range_xy_, local_range_xy_);
+  // 注意：一定要给 param 一个确定的常量默认值，避免读取未初始化成员
+  nh_.param("astar/use_26_dir",    use26dir_,       true);
+  nh_.param("astar/avg_velocity",  avg_velocity_,   1.5);
+  nh_.param("astar/w1_dist",       w1_dist_,        1.0);
+  nh_.param("astar/w2_static",     w2_static_,      0.0);
+  nh_.param("astar/w3_dynamic",     w3_dynamic_,    0.0);
+  nh_.param("astar/local_range_xy", local_range_xy_, 12.0);
+
   // 注意：ROS 的 param 模板不支持 size_t，这里先读成 int 再赋值
-  int max_nodes_tmp = static_cast<int>(max_expanded_nodes_);
+  int max_nodes_tmp = 300000;
   nh_.param("astar/max_expanded_nodes", max_nodes_tmp, max_nodes_tmp);
-  if (max_nodes_tmp > 0)
-  {
-    max_expanded_nodes_ = static_cast<std::size_t>(max_nodes_tmp);
-  }
+  // 至少保证一个合理的下限，防止设置过小导致路径搜索很快就早停
+  max_expanded_nodes_ = static_cast<std::size_t>(std::max(1000, max_nodes_tmp));
+
   // A* 内部虚拟栅格分辨率（单位：米），若 <=0 则退化为使用占据地图分辨率
-  nh_.param("astar/grid_resolution", grid_res_param_, grid_res_param_);
+  nh_.param("astar/grid_resolution", grid_res_param_, 0.0);
 
   // 订阅动态风险地图（来自 dynamic_predictor）
   risk_map_sub_ = nh_.subscribe(
@@ -234,6 +235,14 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
 {
   ROS_INFO("[A*] makePlan() called. w1=%.2f, w2=%.2f, w3=%.2f", 
            w1_dist_, w2_static_, w3_dynamic_);
+  ROS_INFO("[A*] use26dir=%s, avg_velocity=%.2f, local_range_xy=%.2f, "
+           "grid_res=%.3f (param=%.3f), max_expanded_nodes=%zu",
+           use26dir_ ? "true" : "false",
+           avg_velocity_,
+           local_range_xy_,
+           grid_res_,
+           grid_res_param_,
+           max_expanded_nodes_);
   path.poses.clear();
   path.header.frame_id = "map";
   path.header.stamp = ros::Time::now();

@@ -137,6 +137,7 @@ namespace trajPlanner{
 		this->localCloudPub_ = this->nh_.advertise<sensor_msgs::PointCloud2>(this->ns_ + "/local_cloud", 10);
 		this->staticObstacleVisPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/static_obstacles", 10);
 		this->dynamicObstacleVisPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/dynamic_obstacles", 10);
+		this->ellipsoidObstacleVisPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>(this->ns_ + "/ellipsoid_obstacles", 10);
 		this->facingPub_ = this->nh_.advertise<visualization_msgs::Marker>(this->ns_ + "/clustering_facing", 10);
 	}
 
@@ -1235,6 +1236,7 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 		this->publishLocalCloud();
 		this->publishStaticObstacles();
 		this->publishDynamicObstacles();
+		this->publishEllipsoidObstacles();
 	}
 
 	void mpcPlanner::publishMPCTrajectory(){
@@ -1510,5 +1512,214 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 			}
 		    this->dynamicObstacleVisPub_.publish(lines);	
 		}	
+	}
+
+	void mpcPlanner::publishEllipsoidObstacles(){
+		// 发布 MPC 约束中实际使用的椭球障碍物可视化
+		// 注意：应该显示 MPC solver 中实际使用的约束，而不是预测轨迹
+		// MPC 实际使用的是 dynamicObstaclesPos_，在 updateObstacleParam 中转换为椭球约束
+		visualization_msgs::MarkerArray ellipsoidMsg;
+		
+		// 直接使用 dynamicObstaclesPos_，这是 MPC 实际使用的数据
+		// 注意：updatePredObstacles 中 dynamicObstaclesPos_ 只用了第一个意图的第一个时间步
+		// 而且整个 horizon 都是同一个位置（这是错误的，但可视化应该显示实际使用的数据）
+		if (this->dynamicObstaclesPos_.size() == 0){
+			// 即使没有数据，也发布空的 MarkerArray，确保 topic 活跃
+			visualization_msgs::Marker deleteAll;
+			deleteAll.header.frame_id = "map";
+			deleteAll.header.stamp = ros::Time::now();
+			deleteAll.ns = "mpc_ellipsoid_obstacles";
+			deleteAll.action = visualization_msgs::Marker::DELETEALL;
+			ellipsoidMsg.markers.push_back(deleteAll);
+			this->ellipsoidObstacleVisPub_.publish(ellipsoidMsg);
+			return;
+		}
+		
+		int markerId = 0;
+		
+		// 遍历每个障碍物，显示 MPC horizon 中每个时间步的椭球约束
+		// 注意：只显示 horizon 内的椭球，不要显示整个预测轨迹
+		for (int obIdx = 0; obIdx < int(this->dynamicObstaclesPos_.size()); ++obIdx){
+			if (this->dynamicObstaclesPos_[obIdx].size() == 0 || 
+			    this->dynamicObstaclesSize_[obIdx].size() == 0){
+				continue;
+			}
+			
+			// 只显示 horizon 内的椭球（MPC 实际使用的约束）
+			int horizon = std::min(this->horizon_, int(this->dynamicObstaclesPos_[obIdx].size()));
+			
+			// 每隔几个时间步绘制一次，避免过于密集
+			// 对于 horizon=20，如果 stepDivisor=5，则显示 4 个椭球
+			int stepDivisor = 5;  // 可以根据需要调整
+			int step = std::max(1, horizon / stepDivisor);
+			if (step == 0) step = 1;
+			
+			for (int t = 0; t < horizon; t += step){
+				Eigen::Vector3d pos = this->dynamicObstaclesPos_[obIdx][t];
+				Eigen::Vector3d size = this->dynamicObstaclesSize_[obIdx][t];
+				
+				// 椭球参数：半轴长度（加上安全距离，与 updateObstacleParam 中一致）
+				double a = size(0) / 2.0 + this->dynamicSafetyDist_;  // x 半轴
+				double b = size(1) / 2.0 + this->dynamicSafetyDist_;  // y 半轴
+				double c = size(2) / 2.0 + this->dynamicSafetyDist_;  // z 半轴
+				double yaw = 0.0;  // 动态障碍物 yaw = 0（与 updateObstacleParam 中一致）
+				
+				// 绘制椭球
+				visualization_msgs::Marker ellipsoid = createEllipsoidMarker(
+					markerId++, pos, a, b, c, yaw);
+				if (ellipsoid.points.size() >= 4){
+					ellipsoidMsg.markers.push_back(ellipsoid);
+				}
+			}
+		}
+		
+		// 如果没有 marker，至少发布一个 DELETEALL 来清除之前的显示
+		if (ellipsoidMsg.markers.size() == 0){
+			visualization_msgs::Marker deleteAll;
+			deleteAll.header.frame_id = "map";
+			deleteAll.header.stamp = ros::Time::now();
+			deleteAll.ns = "mpc_ellipsoid_obstacles";
+			deleteAll.action = visualization_msgs::Marker::DELETEALL;
+			ellipsoidMsg.markers.push_back(deleteAll);
+		}
+		
+		// 打印调试信息
+		if (ellipsoidMsg.markers.size() > 0 && ellipsoidMsg.markers[0].action != visualization_msgs::Marker::DELETEALL){
+			ROS_INFO_THROTTLE(2.0, "[MPC] Publishing %zu ellipsoid markers (dynamicObstaclesPos_ size=%zu)", 
+			                  ellipsoidMsg.markers.size(), this->dynamicObstaclesPos_.size());
+		}
+		this->ellipsoidObstacleVisPub_.publish(ellipsoidMsg);
+	}
+	
+	// 辅助函数：创建椭球 marker
+	visualization_msgs::Marker mpcPlanner::createEllipsoidMarker(
+		int markerId, const Eigen::Vector3d& pos, double a, double b, double c, double yaw){
+		
+		visualization_msgs::Marker ellipsoid;
+		ellipsoid.header.frame_id = "map";
+		ellipsoid.header.stamp = ros::Time::now();
+		ellipsoid.ns = "mpc_ellipsoid_obstacles";
+		ellipsoid.id = markerId;
+		ellipsoid.type = visualization_msgs::Marker::LINE_LIST;
+		ellipsoid.action = visualization_msgs::Marker::ADD;
+		ellipsoid.scale.x = 0.05;  // 线宽（稍微增大以便看清）
+		ellipsoid.color.r = 1.0;
+		ellipsoid.color.g = 0.5;
+		ellipsoid.color.b = 0.0;
+		ellipsoid.color.a = 0.8;  // 增加透明度
+		ellipsoid.lifetime = ros::Duration(0.5);
+		
+		// 绘制纬线圈（水平椭圆）
+		int numLatCircles = 6;  // 纬线圈数量
+		for (int i = 1; i < numLatCircles; ++i){  // 跳过顶部和底部
+			double theta = M_PI * i / numLatCircles;
+			
+			// 椭球纬线圈的半径
+			double r_x = a * std::sin(theta);
+			double r_y = b * std::sin(theta);
+			double z_val = c * std::cos(theta);
+			
+			int numPoints = 32;  // 每个椭圆的点数
+			std::vector<geometry_msgs::Point> circlePoints;
+			
+			for (int j = 0; j <= numPoints; ++j){
+				double phi = 2.0 * M_PI * j / numPoints;
+				
+				// 在椭球局部坐标系中的点
+				double x_local = r_x * std::cos(phi);
+				double y_local = r_y * std::sin(phi);
+				
+				// 应用 yaw 旋转
+				double x_rot = x_local * std::cos(yaw) - y_local * std::sin(yaw);
+				double y_rot = x_local * std::sin(yaw) + y_local * std::cos(yaw);
+				
+				// 转换到世界坐标系
+				geometry_msgs::Point p;
+				p.x = pos(0) + x_rot;
+				p.y = pos(1) + y_rot;
+				p.z = pos(2) + z_val;
+				
+				circlePoints.push_back(p);
+			}
+			
+			// 连接相邻点形成椭圆（LINE_LIST 需要成对的点）
+			for (size_t j = 0; j < circlePoints.size() - 1; ++j){
+				ellipsoid.points.push_back(circlePoints[j]);
+				ellipsoid.points.push_back(circlePoints[j + 1]);
+			}
+			// 闭合椭圆
+			if (circlePoints.size() > 1){
+				ellipsoid.points.push_back(circlePoints.back());
+				ellipsoid.points.push_back(circlePoints.front());
+			}
+		}
+		
+		// 绘制经线圈（垂直椭圆，通过椭球中心）
+		int numLonCircles = 8;  // 经线圈数量
+		for (int i = 0; i < numLonCircles; ++i){
+			double phi = 2.0 * M_PI * i / numLonCircles;
+			
+			int numPoints = 32;  // 每个椭圆的点数
+			std::vector<geometry_msgs::Point> circlePoints;
+			
+			for (int j = 0; j <= numPoints; ++j){
+				double theta = M_PI * j / numPoints;
+				
+				// 在椭球局部坐标系中的点
+				double x_local = a * std::sin(theta) * std::cos(phi);
+				double y_local = b * std::sin(theta) * std::sin(phi);
+				double z_local = c * std::cos(theta);
+				
+				// 应用 yaw 旋转
+				double x_rot = x_local * std::cos(yaw) - y_local * std::sin(yaw);
+				double y_rot = x_local * std::sin(yaw) + y_local * std::cos(yaw);
+				
+				// 转换到世界坐标系
+				geometry_msgs::Point p;
+				p.x = pos(0) + x_rot;
+				p.y = pos(1) + y_rot;
+				p.z = pos(2) + z_local;
+				
+				circlePoints.push_back(p);
+			}
+			
+			// 连接相邻点形成经线圈
+			for (size_t j = 0; j < circlePoints.size() - 1; ++j){
+				ellipsoid.points.push_back(circlePoints[j]);
+				ellipsoid.points.push_back(circlePoints[j + 1]);
+			}
+		}
+		
+		return ellipsoid;
+	}
+	
+	// 辅助函数：从轨迹添加椭球 markers
+	void mpcPlanner::addEllipsoidsFromTrajectory(visualization_msgs::MarkerArray& ellipsoidMsg, int& markerId,
+	                                             const std::vector<Eigen::Vector3d>& posTraj, 
+	                                             const std::vector<Eigen::Vector3d>& sizeTraj, 
+	                                             int stepDivisor){
+		if (posTraj.size() == 0 || sizeTraj.size() == 0) return;
+		
+		// 每隔几个时间步绘制一次，避免过于密集（增大除数让椭球更稀疏）
+		int step = std::max(1, int(posTraj.size()) / stepDivisor);
+		if (step == 0) step = 1;  // 确保至少为 1
+		
+		for (int t = 0; t < int(posTraj.size()); t += step){
+			Eigen::Vector3d pos = posTraj[t];
+			Eigen::Vector3d size = sizeTraj[t];
+			
+			// 椭球参数：半轴长度（加上安全距离）
+			double a = size(0) / 2.0 + this->dynamicSafetyDist_;  // x 半轴
+			double b = size(1) / 2.0 + this->dynamicSafetyDist_;  // y 半轴
+			double c = size(2) / 2.0 + this->dynamicSafetyDist_;  // z 半轴
+			double yaw = 0.0;  // 动态障碍物 yaw = 0
+			
+			// 绘制椭球
+			visualization_msgs::Marker ellipsoid = createEllipsoidMarker(
+				markerId++, pos, a, b, c, yaw);
+			if (ellipsoid.points.size() >= 4){
+				ellipsoidMsg.markers.push_back(ellipsoid);
+			}
+		}
 	}
 }

@@ -34,6 +34,7 @@ namespace trajPlanner{
 		ros::Publisher localCloudPub_;
 		ros::Publisher staticObstacleVisPub_;
 		ros::Publisher dynamicObstacleVisPub_;
+		ros::Publisher ellipsoidObstacleVisPub_;
 		ros::Publisher facingPub_;
 
 		ros::Timer visTimer_;
@@ -172,6 +173,12 @@ namespace trajPlanner{
 		void publishLocalCloud();
 		void publishStaticObstacles();
 		void publishDynamicObstacles();
+		void publishEllipsoidObstacles();
+		visualization_msgs::Marker createEllipsoidMarker(int markerId, const Eigen::Vector3d& pos, double a, double b, double c, double yaw);
+		void addEllipsoidsFromTrajectory(visualization_msgs::MarkerArray& ellipsoidMsg, int& markerId, 
+		                                const std::vector<Eigen::Vector3d>& posTraj, 
+		                                const std::vector<Eigen::Vector3d>& sizeTraj, 
+		                                int stepDivisor = 200);
 	};
 }
 #endif

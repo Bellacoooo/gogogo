@@ -83,7 +83,7 @@ private:
   // 局部重规划窗口尺寸（以当前起点为中心的 XY 范围，单位：米）
   double local_range_xy_{12.0};
   // 为防止在复杂环境中节点膨胀导致内存/时间问题，对单次搜索的最大展开节点数做上限
-  std::size_t max_expanded_nodes_{200000};
+  std::size_t max_expanded_nodes_{300000};
 
   // 动态风险相关
   std::vector<DynObstaclePred> dyn_preds_;

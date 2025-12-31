@@ -61,7 +61,7 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.450000047683716
+        Max Value: 1.9500000476837158
         Min Value: 0.05000000074505806
         Value: true
       Axis: Z
@@ -218,7 +218,7 @@ Visualization Manager:
       Marker Topic: /mpc_planner/dynamic_obstacles
       Name: Dynamic Obstacles
       Namespaces:
-        {}
+        mpc_dynamic_obstacles: true
       Queue Size: 100
       Value: true
     - Alpha: 1
@@ -347,6 +347,14 @@ Visualization Manager:
       Topic: /dynamic_predictor/dynamic_risk_map
       Unreliable: false
       Use Timestamp: false
+      Value: true
+    - Class: rviz/MarkerArray
+      Enabled: true
+      Marker Topic: /mpc_planner/ellipsoid_obstacles
+      Name: MarkerArray
+      Namespaces:
+        mpc_ellipsoid_obstacles: true
+      Queue Size: 100
       Value: true
   Enabled: true
   Global Options:
