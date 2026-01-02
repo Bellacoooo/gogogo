@@ -2,7 +2,6 @@ simulation: true
 use_fake_detector: true
 use_predictor: true      
 takeoff_height: 1.0 # m
-use_global_planner: false
 no_yaw_turning: false
 use_yaw_control: true
 desired_velocity: 1.5 # m/s
@@ -12,7 +11,7 @@ desired_angular_velocity: 0.5 # rad/s
 # MPC target parameters
 use_predefined_goal: false
 use_global_planner: true
-global_planner_type: "rrt"  # "rrt" or "astar"
+global_planner_type: "astar"  # "rrt" or "astar"
 predefined_goal_directory: "/cfg/mpc_navigation/ref_trajectory.txt"
 execute_path_times: 10 # how many times to repeat the trajectory 
 

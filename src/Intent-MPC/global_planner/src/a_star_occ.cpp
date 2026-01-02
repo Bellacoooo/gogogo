@@ -1,44 +1,27 @@
 #include <global_planner/a_star_occ.h>
 #include <tf/transform_datatypes.h>
 #include <algorithm>
+#include <limits>
 
 namespace globalPlanner
 {
 
 AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
 {
-  // 注意：一定要给 param 一个确定的常量默认值，避免读取未初始化成员
-  nh_.param("astar/use_26_dir",    use26dir_,       true);
-  nh_.param("astar/avg_velocity",  avg_velocity_,   1.5);
-  nh_.param("astar/w1_dist",       w1_dist_,        1.0);
-  nh_.param("astar/w2_static",     w2_static_,      0.0);
-  nh_.param("astar/w3_dynamic",     w3_dynamic_,    0.0);
-  nh_.param("astar/local_range_xy", local_range_xy_, 12.0);
-
-  // 注意：ROS 的 param 模板不支持 size_t，这里先读成 int 再赋值
+  nh_.param("astar/use_26_dir", use26dir_, false);  // 默认使用6邻域，更稳定
+  
   int max_nodes_tmp = 300000;
   nh_.param("astar/max_expanded_nodes", max_nodes_tmp, max_nodes_tmp);
-  // 至少保证一个合理的下限，防止设置过小导致路径搜索很快就早停
   max_expanded_nodes_ = static_cast<std::size_t>(std::max(1000, max_nodes_tmp));
 
-  // A* 内部虚拟栅格分辨率（单位：米），若 <=0 则退化为使用占据地图分辨率
-  nh_.param("astar/grid_resolution", grid_res_param_, 0.0);
-
-  // 订阅动态风险地图（来自 dynamic_predictor）
-  risk_map_sub_ = nh_.subscribe(
-      "/dynamic_predictor/dynamic_risk_map",
-      1,
-      &AStarOccMap::riskMapCallback,
-      this);
-  ROS_INFO("[A*] Subscribed to /dynamic_predictor/dynamic_risk_map for dynamic risk field.");
+  nh_.param("astar/grid_resolution", grid_res_param_, 0.5);
   
-  // 订阅高度地图
-  risk_height_map_sub_ = nh_.subscribe(
-      "/dynamic_predictor/dynamic_risk_height_map",
-      1,
-      &AStarOccMap::riskHeightMapCallback,
-      this);
-  ROS_INFO("[A*] Subscribed to /dynamic_predictor/dynamic_risk_height_map for obstacle height information.");
+  // 初始化A*专用路径发布器
+  pathPub_ = nh_.advertise<nav_msgs::Path>("astar/planned_path", 10);
+  
+  ROS_INFO("[A*] Simple 3D A* initialized (grid_res=%.2f m, use26dir=%s).", 
+           grid_res_param_, use26dir_ ? "true" : "false");
+  ROS_INFO("[A*] Raw path will be published to /astar/planned_path");
 }
 
 void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
@@ -47,7 +30,6 @@ void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
   if (map_)
   {
     res_ = map_->getRes();
-    // 若未指定单独的 A* 分辨率，则使用占据地图分辨率
     if (grid_res_param_ <= 1e-6)
     {
       grid_res_ = res_;
@@ -55,7 +37,6 @@ void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
     else
     {
       grid_res_ = grid_res_param_;
-      // 为避免“比真实地图还细”的情况，若用户设置过小则向上取占据地图分辨率
       if (grid_res_ < res_)
       {
         ROS_WARN("[A*] astar/grid_resolution=%.3f is finer than map resolution %.3f, clamp to map resolution.",
@@ -63,14 +44,26 @@ void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
         grid_res_ = res_;
       }
     }
-    ROS_INFO("[A*] Using grid resolution %.3f m (map res=%.3f m).", grid_res_, res_);
+    
+    // 获取地图原点偏移（必须与occupancyMap的posToIndex/indexToPos一致）
+    Eigen::Vector3d mapSizeMin, mapSizeMax;
+    map_->getMapRange(mapSizeMin, mapSizeMax);
+    map_origin_ = mapSizeMin;
+    
+    // 关键修复：A*必须使用和occupancyMap相同的分辨率mapRes_，而不是grid_res_param_
+    // 否则栅格索引会不匹配，导致地图查询错误
+    grid_res_ = res_;  // 强制使用地图分辨率，忽略grid_res_param_
+    
+    ROS_INFO("[A*] Using grid resolution %.3f m (map res=%.3f m, param=%.3f m).", 
+             grid_res_, res_, grid_res_param_);
+    ROS_INFO("[A*] Map origin offset: (%.3f, %.3f, %.3f)", 
+             map_origin_.x(), map_origin_.y(), map_origin_.z());
   }
 }
 
 void AStarOccMap::updateStart(const geometry_msgs::Pose &start)
 {
   start_ = start;
-  start_pos_ = Eigen::Vector3d(start.position.x, start.position.y, start.position.z);
 }
 
 void AStarOccMap::updateGoal(const geometry_msgs::Pose &goal)
@@ -81,227 +74,190 @@ void AStarOccMap::updateGoal(const geometry_msgs::Pose &goal)
 bool AStarOccMap::posToIndex(const Eigen::Vector3d &pos, int &ix, int &iy, int &iz) const
 {
   if (!map_) return false;
-  // 先用占据地图检查位置是否在地图内
+  if (grid_res_ <= 0) {
+    return false;
+  }
   if (!map_->isInMap(pos)) return false;
 
-  // 在 A* 内部使用独立的“虚拟粗栅格”坐标系
-  ix = static_cast<int>(std::floor(pos.x() / grid_res_));
-  iy = static_cast<int>(std::floor(pos.y() / grid_res_));
-  iz = static_cast<int>(std::floor(pos.z() / grid_res_));
+  // 必须考虑地图原点偏移，与occupancyMap的posToIndex一致
+  // occupancyMap: idx(0) = floor((pos(0) - mapSizeMin_(0)) / mapRes_)
+  ix = static_cast<int>(std::floor((pos.x() - map_origin_.x()) / grid_res_));
+  iy = static_cast<int>(std::floor((pos.y() - map_origin_.y()) / grid_res_));
+  iz = static_cast<int>(std::floor((pos.z() - map_origin_.z()) / grid_res_));
   return true;
 }
 
 Eigen::Vector3d AStarOccMap::indexToPos(int ix, int iy, int iz) const
 {
-  // 将虚拟粗栅格索引转换为世界坐标（使用格子中心点）
   Eigen::Vector3d pos;
-  pos.x() = (static_cast<double>(ix) + 0.5) * grid_res_;
-  pos.y() = (static_cast<double>(iy) + 0.5) * grid_res_;
-  pos.z() = (static_cast<double>(iz) + 0.5) * grid_res_;
+  if (grid_res_ <= 0) {
+    return Eigen::Vector3d::Zero();
+  }
+  // 必须考虑地图原点偏移，与occupancyMap的indexToPos一致
+  // occupancyMap: pos(0) = (idx(0) + 0.5) * mapRes_ + mapSizeMin_(0)
+  pos.x() = (static_cast<double>(ix) + 0.5) * grid_res_ + map_origin_.x();
+  pos.y() = (static_cast<double>(iy) + 0.5) * grid_res_ + map_origin_.y();
+  pos.z() = (static_cast<double>(iz) + 0.5) * grid_res_ + map_origin_.z();
   return pos;
 }
 
 bool AStarOccMap::isFree(int ix, int iy, int iz) const
 {
   if (!map_) return false;
+  if (grid_res_ <= 0) return false;
+  
+  // 将栅格索引转为世界坐标（格子中心）
   Eigen::Vector3d center = indexToPos(ix, iy, iz);
-  // 超出真实占据地图范围的粗格子视为不可通行
-  if (!map_->isInMap(center)) return false;
-  // 使用细分占据图+膨胀结果进行碰撞检测
-  return !map_->isInflatedOccupied(center);
+  
+  // 直接使用世界坐标查询地图，和MPC一样
+  if (!map_->isInMap(center)) {
+    ROS_DEBUG_THROTTLE(0.5, "[A*] isFree: grid=(%d,%d,%d) -> world=(%.3f,%.3f,%.3f) NOT IN MAP",
+                       ix, iy, iz, center.x(), center.y(), center.z());
+    return false;
+  }
+  bool occupied = map_->isInflatedOccupied(center);
+  if (occupied) {
+    ROS_DEBUG_THROTTLE(0.5, "[A*] isFree: grid=(%d,%d,%d) -> world=(%.3f,%.3f,%.3f) OCCUPIED",
+                       ix, iy, iz, center.x(), center.y(), center.z());
+  }
+  return !occupied;
 }
 
 void AStarOccMap::setDynamicPredictions(const std::vector<DynObstaclePred> &preds)
 {
-  dyn_preds_ = preds;
-}
-
-double AStarOccMap::estimateArrivalTime(const Eigen::Vector3d &pos) const
-{
-  double dist = (pos - start_pos_).norm();
-  if (avg_velocity_ < 1e-6) return std::numeric_limits<double>::infinity();
-  return dist / avg_velocity_;
+  // 不使用
 }
 
 double AStarOccMap::calculateDynamicCost(const Eigen::Vector3d &pos) const
 {
-  // 默认不使用动态风险时，直接返回 0
-  if (w3_dynamic_ <= 1e-6)
-  {
-    return 0.0;
-  }
-
-  // 使用查询函数，从风险图中获取当前位置的风险值 [0,100]，再归一化
-  // 传入高度信息，如果查询点高度 > 障碍物高度，返回 0
-  double occ = getDynamicRisk(pos.x(), pos.y(), pos.z());
-  double cost = (occ > 0.0) ? occ / 100.0 : 0.0;
-  // 提升小风险的惩罚强度，避免风险值过低时几乎不起作用
-  if (cost > 0.0 && cost < 0.2)
-  {
-    cost = 0.2; // 至少 0.2，再由 w3_dynamic_ 放大
-  }
-  
-  // 调试：打印所有非零风险采样，便于确认采样是否命中
-  if (occ > 0.0)
-  {
-    ROS_INFO_THROTTLE(0.5, "[A*] dyn sample at (%.2f,%.2f): occ=%.1f, cost=%.3f, w3*cost=%.3f",
-                      pos.x(), pos.y(), occ, cost, w3_dynamic_ * cost);
-  }
-  
-  return cost;
-}
-
-void AStarOccMap::riskMapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg)
-{
-  std::lock_guard<std::mutex> lock(risk_map_mutex_);
-  latest_risk_map_ = msg;
-  ROS_INFO_THROTTLE(1.0, "[A*] Received new dynamic risk map (w=%u,h=%u).",
-                    msg->info.width, msg->info.height);
-}
-
-void AStarOccMap::riskHeightMapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg)
-{
-  std::lock_guard<std::mutex> lock(height_map_mutex_);
-  latest_height_map_ = msg;
-  ROS_INFO_THROTTLE(1.0, "[A*] Received new height map (w=%u,h=%u).",
-                    msg->info.width, msg->info.height);
-}
-
-double AStarOccMap::getDynamicRisk(double world_x, double world_y, double world_z) const
-{
-  std::lock_guard<std::mutex> lock(risk_map_mutex_);
-  if (!latest_risk_map_)
-  {
-    ROS_WARN_THROTTLE(2.0, "[A*] getDynamicRisk: latest_risk_map_ is NULL!");
-    return 0.0;
-  }
-
-  const auto &info = latest_risk_map_->info;
-  const double res = info.resolution;
-  const int width  = static_cast<int>(info.width);
-  const int height = static_cast<int>(info.height);
-  if (width <= 0 || height <= 0 || res <= 0.0)
-  {
-    return 0.0;
-  }
-
-  const double ox = info.origin.position.x;
-  const double oy = info.origin.position.y;
-
-  // 使用 round 而非 floor，可减小半格偏移导致的取样失败
-  int grid_x = static_cast<int>(std::round((world_x - ox) / res));
-  int grid_y = static_cast<int>(std::round((world_y - oy) / res));
-
-  if (grid_x < 0 || grid_x >= width || grid_y < 0 || grid_y >= height)
-  {
-    ROS_DEBUG_THROTTLE(2.0, "[A*] getDynamicRisk: (%.2f,%.2f) out of map bounds [%d,%d]x[%d,%d], origin=(%.2f,%.2f)",
-                       world_x, world_y, 0, width-1, 0, height-1, ox, oy);
-    return 0.0;  // 地图外，认为无风险
-  }
-
-  std::size_t index = static_cast<std::size_t>(grid_y) * static_cast<std::size_t>(width)
-                    + static_cast<std::size_t>(grid_x);
-  if (index >= latest_risk_map_->data.size())
-  {
   return 0.0;
-  }
-
-  // 检查高度：如果查询点高度 > 障碍物高度，返回 0
-  {
-    std::lock_guard<std::mutex> height_lock(height_map_mutex_);
-    if (latest_height_map_ && index < latest_height_map_->data.size()) {
-      // 高度地图存储的是 0-100，表示 0-10 米（分辨率 0.1 米）
-      const double height_scale = 10.0;
-      int8_t height_val = latest_height_map_->data[index];
-      double obstacle_height = (static_cast<double>(height_val) / 100.0) * height_scale;
-      
-      // 如果查询点高度 > 障碍物高度，返回 0（无风险）
-      if (world_z > obstacle_height + 0.1) {  // 加 0.1m 容差
-        ROS_DEBUG_THROTTLE(2.0, "[A*] getDynamicRisk: query z=%.2f > obstacle height=%.2f, returning 0",
-                           world_z, obstacle_height);
-        return 0.0;
-      }
-    }
-  }
-
-  int8_t occ = latest_risk_map_->data[index];
-  // 调试：在此打印一次 origin/res，避免多处查找
-  ROS_DEBUG_THROTTLE(1.0, "[A*] getDynamicRisk origin=(%.2f,%.2f) res=%.3f query=(%.2f,%.2f,%.2f)->(%d,%d) occ=%.1f",
-                     ox, oy, res, world_x, world_y, world_z, grid_x, grid_y, static_cast<double>(occ));
-  return static_cast<double>(occ);  // 直接返回 0~100
 }
 
 void AStarOccMap::makePlan(nav_msgs::Path &path)
 {
-  ROS_INFO("[A*] makePlan() called. w1=%.2f, w2=%.2f, w3=%.2f", 
-           w1_dist_, w2_static_, w3_dynamic_);
-  ROS_INFO("[A*] use26dir=%s, avg_velocity=%.2f, local_range_xy=%.2f, "
-           "grid_res=%.3f (param=%.3f), max_expanded_nodes=%zu",
-           use26dir_ ? "true" : "false",
-           avg_velocity_,
-           local_range_xy_,
-           grid_res_,
-           grid_res_param_,
-           max_expanded_nodes_);
   path.poses.clear();
   path.header.frame_id = "map";
   path.header.stamp = ros::Time::now();
+  
   if (!map_)
   {
     ROS_WARN("[A*] map is null.");
     return;
   }
+  if (grid_res_ <= 0)
+  {
+    ROS_ERROR("[A*] grid_res_ is invalid (%.6f).", grid_res_);
+    return;
+  }
+  
+  ROS_INFO("[A*] makePlan: grid_res_=%.3f, grid_res_param_=%.3f, use26dir=%s", 
+           grid_res_, grid_res_param_, use26dir_ ? "true" : "false");
 
   int sx, sy, sz, gx, gy, gz;
   Eigen::Vector3d s(start_.position.x, start_.position.y, start_.position.z);
-  Eigen::Vector3d g_full(goal_.position.x, goal_.position.y, goal_.position.z);
+  Eigen::Vector3d g(goal_.position.x, goal_.position.y, goal_.position.z);
+
+  // 使用静态变量记录上次规划的参数，用于检测不一致
+  static Eigen::Vector3d last_start = Eigen::Vector3d::Zero();
+  static Eigen::Vector3d last_goal = Eigen::Vector3d::Zero();
+  static int plan_count = 0;
+  plan_count++;
   
-  // 调试：打印起点风险值
-  double start_risk = getDynamicRisk(s.x(), s.y(), s.z());
-  ROS_INFO_THROTTLE(1.0, "[A*] Risk at start (%.2f, %.2f, %.2f) = %.1f, latest_risk_map_=%s",
-                    s.x(), s.y(), s.z(), start_risk, 
-                    latest_risk_map_ ? "OK" : "NULL");
-
-
-  // 计算从当前起点指向全局终点的方向，并根据最大段长生成局部目标点
-  const double max_segment = 10.0;  // 局部 A* 规划的最大直线距离（米）
-  Eigen::Vector3d dir = g_full - s;
-  double dist_full = dir.norm();
-  Eigen::Vector3d g_target;
-  if (dist_full > max_segment && dist_full > 1e-6)
-  {
-    dir.normalize();
-    g_target = s + dir * max_segment;
-    ROS_INFO("[A*] Using local target (segment %.2f m of %.2f m).", max_segment, dist_full);
+  ROS_INFO("[A*] ========== START PLANNING #%d ==========", plan_count);
+  ROS_INFO("[A*] Planning from start=(%.3f,%.3f,%.3f) to goal=(%.3f,%.3f,%.3f)",
+           s.x(), s.y(), s.z(), g.x(), g.y(), g.z());
+  ROS_INFO("[A*] grid_res_=%.3f, use26dir_=%s, map_origin=(%.3f,%.3f,%.3f)", 
+           grid_res_, use26dir_ ? "true" : "false", 
+           map_origin_.x(), map_origin_.y(), map_origin_.z());
+  
+  // 检查起点和终点是否与上次相同
+  if (plan_count > 1) {
+    double start_diff = (s - last_start).norm();
+    double goal_diff = (g - last_goal).norm();
+    if (start_diff < 0.01 && goal_diff < 0.01) {
+      ROS_WARN("[A*] WARNING: Same start/goal as last planning! start_diff=%.6f, goal_diff=%.6f",
+               start_diff, goal_diff);
+    } else {
+      ROS_INFO("[A*] Start/goal changed: start_diff=%.6f, goal_diff=%.6f", start_diff, goal_diff);
+    }
   }
-  else
-  {
-    g_target = g_full;
-    ROS_INFO("[A*] Using full goal (distance %.2f m).", dist_full);
-  }
+  last_start = s;
+  last_goal = g;
 
-  if (!posToIndex(s, sx, sy, sz) || !posToIndex(g_target, gx, gy, gz))
+  if (!posToIndex(s, sx, sy, sz) || !posToIndex(g, gx, gy, gz))
   {
     ROS_WARN("[A*] start or goal out of map. start=(%.2f,%.2f,%.2f) goal=(%.2f,%.2f,%.2f)",
-             s.x(), s.y(), s.z(), g_target.x(), g_target.y(), g_target.z());
+             s.x(), s.y(), s.z(), g.x(), g.y(), g.z());
     return;
   }
+  
+  Eigen::Vector3d s_check = indexToPos(sx, sy, sz);
+  Eigen::Vector3d g_check = indexToPos(gx, gy, gz);
+  ROS_INFO("[A*] Grid indices: start=(%d,%d,%d) goal=(%d,%d,%d)", sx, sy, sz, gx, gy, gz);
+  ROS_INFO("[A*] Converted back: start=(%.3f,%.3f,%.3f) goal=(%.3f,%.3f,%.3f)",
+           s_check.x(), s_check.y(), s_check.z(), g_check.x(), g_check.y(), g_check.z());
+  
+  // 检查起点到终点的直线路径是否被阻挡
+  double straight_dist = (g - s).norm();
+  int num_checks = std::max(10, static_cast<int>(straight_dist / (grid_res_ * 0.5)));
+  int blocked_count = 0;
+  int not_in_map_count = 0;
+  ROS_INFO("[A*] Checking straight line path (%d points, dist=%.3f m)...", num_checks, straight_dist);
+  for (int i = 0; i <= num_checks; ++i) {
+    double t = static_cast<double>(i) / num_checks;
+    Eigen::Vector3d check_pos = s + t * (g - s);
+    
+    // 直接使用世界坐标查询地图（和MPC一样）
+    if (!map_->isInMap(check_pos)) {
+      not_in_map_count++;
+      if (i == 0 || i == num_checks) {
+        ROS_WARN("[A*] Straight line point at t=%.3f, pos=(%.3f,%.3f,%.3f) NOT IN MAP",
+                 t, check_pos.x(), check_pos.y(), check_pos.z());
+      }
+      continue;
+    }
+    
+    // 直接查询地图，不经过栅格转换
+    if (map_->isInflatedOccupied(check_pos)) {
+      ROS_WARN("[A*] Straight line BLOCKED at t=%.3f, pos=(%.3f,%.3f,%.3f)",
+               t, check_pos.x(), check_pos.y(), check_pos.z());
+      blocked_count++;
+    }
+    
+    // 同时检查栅格转换后的查询
+    int cx, cy, cz;
+    if (posToIndex(check_pos, cx, cy, cz)) {
+      Eigen::Vector3d grid_center = indexToPos(cx, cy, cz);
+      bool grid_free = isFree(cx, cy, cz);
+      bool direct_free = !map_->isInflatedOccupied(check_pos);
+      if (grid_free != direct_free) {
+        ROS_ERROR("[A*] MISMATCH at t=%.3f: direct_free=%s, grid_free=%s, pos=(%.3f,%.3f,%.3f), grid=(%d,%d,%d), grid_center=(%.3f,%.3f,%.3f)",
+                  t, direct_free ? "true" : "false", grid_free ? "true" : "false",
+                  check_pos.x(), check_pos.y(), check_pos.z(), cx, cy, cz,
+                  grid_center.x(), grid_center.y(), grid_center.z());
+      }
+    }
+  }
+  ROS_INFO("[A*] Straight line check: %d/%d blocked, %d not_in_map, %d free",
+           blocked_count, num_checks + 1, not_in_map_count, num_checks + 1 - blocked_count - not_in_map_count);
+  
+  if (blocked_count == 0 && straight_dist > 0.1) {
+    ROS_WARN("[A*] WARNING: Straight line is FREE but A* may still plan a detour! This indicates a bug.");
+  }
+  
   if (!isFree(gx, gy, gz))
   {
-    ROS_WARN("[A*] goal in obstacle at index (%d,%d,%d). Trying to find nearest free cell...", gx, gy, gz);
-    // 尝试在目标点周围寻找最近的可通行位置（BFS搜索，最多搜索 radius 米范围）
-    const double search_radius = 2.0; // 搜索半径（米）
+    ROS_WARN("[A*] goal in obstacle. Trying to find nearest free cell...");
+    const double search_radius = 2.0;
     const int max_search_cells = static_cast<int>(std::ceil(search_radius / grid_res_));
     bool found_free = false;
     int best_gx = gx, best_gy = gy, best_gz = gz;
     double min_dist = std::numeric_limits<double>::max();
     
-    // 从目标点开始，逐层向外搜索（BFS）
     for (int r = 1; r <= max_search_cells && !found_free; ++r) {
       for (int dx = -r; dx <= r && !found_free; ++dx) {
         for (int dy = -r; dy <= r && !found_free; ++dy) {
           for (int dz = -r; dz <= r; ++dz) {
-            // 只检查在当前"层"的边界上的点（L∞范数等于r，即max(|dx|,|dy|,|dz|)==r）
             int max_abs = std::max({std::abs(dx), std::abs(dy), std::abs(dz)});
             if (max_abs != r) continue;
             
@@ -316,7 +272,7 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
                 best_gx = nx;
                 best_gy = ny;
                 best_gz = nz;
-                found_free = true; // 找到第一个可通行点就停止（最近的就是第一个）
+                found_free = true;
               }
             }
           }
@@ -325,158 +281,351 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
     }
     
     if (found_free) {
-      ROS_INFO("[A*] Adjusted goal from (%d,%d,%d) to nearest free cell (%d,%d,%d), distance %.2f m.",
-               gx, gy, gz, best_gx, best_gy, best_gz, min_dist);
       gx = best_gx;
       gy = best_gy;
       gz = best_gz;
-      // 更新 g_target 的世界坐标
-      g_target = indexToPos(gx, gy, gz);
     } else {
-      ROS_ERROR("[A*] Cannot find free cell near goal within %.2f m radius. Aborting path planning.", search_radius);
-    return;
+      ROS_ERROR("[A*] Cannot find free cell near goal.");
+      return;
     }
   }
 
-  // 启发函数：与 g 中的距离代价保持同一尺度（米 × w1_dist_），乘 1.001 打破平局，避免偏曼哈顿
-  auto heuristic = [&](int x, int y, int z) {
+  // 简化的启发函数：只使用欧几里得距离，tie-breaking由优先队列处理
+  // 移除cross-product项，因为它可能导致数值不稳定和路径不一致
+  auto heuristic = [&](int x, int y, int z) -> double {
     double dx = static_cast<double>(x - gx);
     double dy = static_cast<double>(y - gy);
     double dz = static_cast<double>(z - gz);
-    double dist_m = std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
-    return w1_dist_ * dist_m * 1.001;
+    return std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
   };
 
-  std::vector<Node> closed;
-  auto cmp = [](const std::pair<double, int> &a, const std::pair<double, int> &b) { return a.first > b.first; };
-  std::priority_queue<std::pair<double, int>, std::vector<std::pair<double, int>>, decltype(cmp)> open(cmp);
+  // 使用map存储节点信息，key是idx1d
+  std::unordered_map<long long, Node> all_nodes;
+  std::unordered_set<long long> closed_set;
   std::unordered_map<long long, double> gscore;
-  std::unordered_map<long long, double> gdist; // 纯距离累计
+  
+  // 优先队列：pair<f值, node_key>
+  // 强化的tie-breaking：确保完全确定性，避免路径抖动
+  auto cmp = [&](const std::pair<double, long long> &a, const std::pair<double, long long> &b) {
+    // 首先比较f值
+    if (std::abs(a.first - b.first) > 1e-9) {
+      return a.first > b.first;  // f值小的优先
+    }
+    
+    // f值相同时，使用g-max策略（偏好更接近起点的节点，即直线路径）
+    double g_a = gscore.count(a.second) ? gscore[a.second] : 0.0;
+    double g_b = gscore.count(b.second) ? gscore[b.second] : 0.0;
+    if (std::abs(g_a - g_b) > 1e-9) {
+      return g_a < g_b;  // g值大的优先（更接近起点，更接近直线）
+    }
+    
+    // g值也相同时，使用节点坐标作为最后的tie-breaker（确保完全确定性）
+    if (all_nodes.count(a.second) && all_nodes.count(b.second)) {
+      const Node &na = all_nodes[a.second];
+      const Node &nb = all_nodes[b.second];
+      // 按字典序比较坐标，确保完全确定性
+      if (na.x != nb.x) return na.x > nb.x;
+      if (na.y != nb.y) return na.y > nb.y;
+      return na.z > nb.z;
+    }
+    
+    // 如果节点不存在，使用key作为最后的tie-breaker
+    return a.second > b.second;
+  };
+  std::priority_queue<std::pair<double, long long>, 
+                      std::vector<std::pair<double, long long>>, 
+                      decltype(cmp)> open(cmp);
 
-  Node startNode{sx, sy, sz, 0.0, heuristic(sx, sy, sz), -1};
-  closed.push_back(startNode);
-  open.push({startNode.f(), 0});
-  gscore[idx1d(sx, sy, sz)] = 0.0;
-  gdist[idx1d(sx, sy, sz)] = 0.0;
+  // 6邻域
+  const int dx6[6] = {1, -1, 0, 0, 0, 0};
+  const int dy6[6] = {0, 0, 1, -1, 0, 0};
+  const int dz6[6] = {0, 0, 0, 0, 1, -1};
+  
+  // 26邻域（简化版，确保没有重复）
+  const int dx26[26] = {1,1,1, 1,1,1, 1,1,1,  0,0,0, 0,0,0, 0,0,  -1,-1,-1, -1,-1,-1, -1,-1,-1};
+  const int dy26[26] = {1,1,1, 0,0,0, -1,-1,-1,  1,1,1, 0,0,0, -1,-1,  1,1,1, 0,0,0, -1,-1,-1};
+  const int dz26[26] = {1,0,-1, 1,0,-1, 1,0,-1,  1,0,-1, 1,-1, 1,0,-1,  1,0,-1, 1,0,-1, 1,0,-1};
 
-  // 基于起点构造局部重规划窗口（以起点为中心，local_range_xy_ 米的正方形区域）
-  const int half_range_xy_cells = static_cast<int>(std::ceil(0.5 * local_range_xy_ / grid_res_));
-  const int xmin_win = sx - half_range_xy_cells;
-  const int xmax_win = sx + half_range_xy_cells;
-  const int ymin_win = sy - half_range_xy_cells;
-  const int ymax_win = sy + half_range_xy_cells;
-  ROS_INFO("[A*] Local window (soft constraint): x[%d,%d], y[%d,%d], start_idx=(%d,%d,%d), goal_idx=(%d,%d,%d).",
-           xmin_win, xmax_win, ymin_win, ymax_win, sx, sy, sz, gx, gy, gz);
+  const int *dx = use26dir_ ? dx26 : dx6;
+  const int *dy = use26dir_ ? dy26 : dy6;
+  const int *dz = use26dir_ ? dz26 : dz6;
+  const int neigh = use26dir_ ? 26 : 6;
 
-  // 26邻域（含6/18/26），或仅6邻域
-  // 26-neighborhood (exclude 0,0,0)
-  // 26-neighborhood (6 faces + 12 edges + 8 corners), excluding (0,0,0)
-  const int dx26[26] = {  1, 1, 1,  1, 1, 1,  1, 1, 1,
-                          0, 0, 0,  0, 0, 0,  0, 0,
-                         -1,-1,-1, -1,-1,-1, -1,-1,-1 };
-  const int dy26[26] = {  1, 1, 1,  0, 0, 0, -1,-1,-1,
-                          1, 1, 1,  0, 0, 0, -1,-1,
-                          1, 1, 1,  0, 0, 0, -1,-1,-1 };
-  const int dz26[26] = {  1, 0,-1,  1, 0,-1,  1, 0,-1,
-                          1, 0,-1,  1,-1, 1,  0,-1,
-                          1, 0,-1,  1, 0,-1,  1, 0,-1 };
-  const int dx6[6]   = {1,-1,0,0,0,0};
-  const int dy6[6]   = {0,0,1,-1,0,0};
-  const int dz6[6]   = {0,0,0,0,1,-1};
+  // 初始化起点
+  long long start_key = idx1d(sx, sy, sz);
+  double start_h = heuristic(sx, sy, sz);
+  Node startNode{sx, sy, sz, 0.0, start_h, -1};
+  all_nodes[start_key] = startNode;
+  gscore[start_key] = 0.0;
+  open.push({startNode.f(), start_key});
+  
+  ROS_INFO("[A*] Start node: grid=(%d,%d,%d), g=0.0, h=%.3f, f=%.3f",
+           sx, sy, sz, start_h, startNode.f());
+  ROS_INFO("[A*] Goal node: grid=(%d,%d,%d), expected h=%.3f",
+           gx, gy, gz, heuristic(gx, gy, gz));
 
   bool found = false;
-  int goalIdx = -1;
+  long long goal_key = -1;
   std::size_t expanded_nodes = 0;
+  std::size_t tie_break_count = 0;
 
   while (!open.empty())
   {
-    int curIdx = open.top().second;
+    long long cur_key = open.top().second;
+    double cur_f = open.top().first;
     open.pop();
-    const Node &cur = closed[curIdx];
+    
+    if (closed_set.count(cur_key)) {
+      ROS_DEBUG_THROTTLE(0.1, "[A*] Node %lld already in closed_set, skipping", cur_key);
+      continue;
+    }
+    closed_set.insert(cur_key);
+    
+    if (!all_nodes.count(cur_key)) {
+      ROS_WARN_THROTTLE(1.0, "[A*] Node not found in all_nodes: %lld", cur_key);
+      continue;
+    }
+    
+    Node &cur = all_nodes[cur_key];
+    
+    // 每1000个节点打印一次进度
+    if (expanded_nodes % 1000 == 0 && expanded_nodes > 0) {
+      double dist_to_goal = std::sqrt((cur.x-gx)*(cur.x-gx) + (cur.y-gy)*(cur.y-gy) + (cur.z-gz)*(cur.z-gz)) * grid_res_;
+      ROS_INFO("[A*] Progress: expanded=%zu, current=(%d,%d,%d), dist_to_goal=%.3f, f=%.3f",
+               expanded_nodes, cur.x, cur.y, cur.z, dist_to_goal, cur_f);
+    }
+    
     if (cur.x == gx && cur.y == gy && cur.z == gz)
     {
       found = true;
-      goalIdx = curIdx;
+      goal_key = cur_key;
+      ROS_INFO("[A*] Goal reached! Expanded %zu nodes, tie-breaks=%zu", expanded_nodes, tie_break_count);
       break;
     }
 
-    const int *dx = use26dir_ ? dx26 : dx6;
-    const int *dy = use26dir_ ? dy26 : dy6;
-    const int *dz = use26dir_ ? dz26 : dz6;
-    int neigh = use26dir_ ? 26 : 6;
     for (int k = 0; k < neigh; ++k)
     {
       int nx = cur.x + dx[k];
       int ny = cur.y + dy[k];
       int nz = cur.z + dz[k];
 
-      if (!isFree(nx, ny, nz)) continue;
-      // 在虚拟粗栅格中，一步的物理距离与 grid_res_ 成正比
-      double step = std::sqrt(dx[k]*dx[k] + dy[k]*dy[k] + dz[k]*dz[k]) * grid_res_;
-      // 计算代价分解
-      Eigen::Vector3d nbPos = indexToPos(nx, ny, nz);
-      double cost_dist = step;
-      double cost_static = 0.0; // 预留：若加入距离场，可在此填写
-      double cost_dynamic = calculateDynamicCost(nbPos);
-      double move_cost = w1_dist_ * cost_dist + w2_static_ * cost_static + w3_dynamic_ * cost_dynamic;
+      // 检查坐标范围，防止溢出
+      if (nx < -99999 || nx > 99999 || ny < -99999 || ny > 99999 || nz < -99999 || nz > 99999) {
+        continue;
+      }
 
-      double tentative = cur.g + move_cost;
-      double tentative_dist = gdist[idx1d(cur.x, cur.y, cur.z)] + step;
+      if (!isFree(nx, ny, nz)) {
+        ROS_DEBUG_THROTTLE(0.1, "[A*] Neighbor (%d,%d,%d) from (%d,%d,%d) is not free",
+                           nx, ny, nz, cur.x, cur.y, cur.z);
+        continue;
+      }
+      
+      double step = std::sqrt(dx[k]*dx[k] + dy[k]*dy[k] + dz[k]*dz[k]) * grid_res_;
+      double tentative_g = cur.g + step;
+      
       long long h = idx1d(nx, ny, nz);
-      if (!gscore.count(h) || tentative < gscore[h])
+      
+      if (closed_set.count(h)) continue;
+      
+      bool is_new = !gscore.count(h);
+      bool is_better = is_new || tentative_g < gscore[h];
+      
+      if (is_better)
       {
-        gscore[h] = tentative;
-        gdist[h] = tentative_dist;
-        Node nb{nx, ny, nz, tentative, heuristic(nx, ny, nz), curIdx};
-        int newIdx = closed.size();
-        closed.push_back(nb);
-        open.push({nb.f(), newIdx});
+        double old_g = is_new ? std::numeric_limits<double>::max() : gscore[h];
+        gscore[h] = tentative_g;
+        double h_val = heuristic(nx, ny, nz);
+        double new_f = tentative_g + h_val;
+        
+        // 检查是否是tie-breaking情况
+        if (!is_new && std::abs(new_f - (old_g + h_val)) < 1e-9) {
+          tie_break_count++;
+        }
+        
+        Node nb{nx, ny, nz, tentative_g, h_val, cur_key};
+        all_nodes[h] = nb;
+        open.push({new_f, h});
+        
+        // 打印前几个扩展的节点，用于调试
+        if (expanded_nodes < 10) {
+          ROS_INFO("[A*] Expand [%zu]: (%d,%d,%d) -> (%d,%d,%d), g=%.3f->%.3f, h=%.3f, f=%.3f",
+                   expanded_nodes, cur.x, cur.y, cur.z, nx, ny, nz, cur.g, tentative_g, h_val, new_f);
+        }
+        
+        // 检查是否是tie-breaking情况（f值相同但g值不同）
+        if (!is_new) {
+          double old_h = heuristic(nx, ny, nz);
+          double old_f = old_g + old_h;
+          if (std::abs(new_f - old_f) < 1e-9 && std::abs(tentative_g - old_g) > 1e-9) {
+            tie_break_count++;
+            if (tie_break_count <= 10) {
+              ROS_INFO("[A*] Tie-break #%zu: node=(%d,%d,%d), old_g=%.6f, new_g=%.6f, f=%.6f",
+                       tie_break_count, nx, ny, nz, old_g, tentative_g, new_f);
+            }
+          }
+        }
       }
     }
 
     ++expanded_nodes;
-    // 安全上限：避免在复杂环境中无限膨胀导致崩溃
     if (expanded_nodes >= max_expanded_nodes_)
     {
-      ROS_ERROR("[A*] Reached max_expanded_nodes_=%zu, aborting search to avoid overload.", max_expanded_nodes_);
+      ROS_ERROR("[A*] Reached max_expanded_nodes_=%zu.", max_expanded_nodes_);
       break;
-    }
-    if (expanded_nodes % 50000 == 0)
-    {
-      ROS_INFO("[A*] Expanded %zu nodes so far...", expanded_nodes);
     }
   }
 
   if (!found)
   {
-    ROS_WARN("[A*] no path found within local window. Expanded %zu nodes.", expanded_nodes);
+    ROS_WARN("[A*] No path found. Expanded %zu nodes.", expanded_nodes);
     return;
   }
 
-  ROS_INFO("[A*] Search finished. Expanded %zu nodes.", expanded_nodes);
-
+  // 重建路径
   std::vector<geometry_msgs::PoseStamped> poses;
-  int trace = goalIdx;
-  while (trace >= 0)
+  long long trace = goal_key;
+  std::unordered_set<long long> visited;
+  int max_path_length = 100000;
+  int path_count = 0;
+  
+  while (trace >= 0 && path_count < max_path_length)
   {
-    const Node &n = closed[trace];
+    if (visited.count(trace)) {
+      ROS_ERROR("[A*] Cycle detected in path.");
+      break;
+    }
+    visited.insert(trace);
+    
+    if (!all_nodes.count(trace)) {
+      ROS_ERROR("[A*] Node not found in path reconstruction: %lld", trace);
+      break;
+    }
+    
+    const Node &n = all_nodes[trace];
     Eigen::Vector3d wp = indexToPos(n.x, n.y, n.z);
     geometry_msgs::PoseStamped ps;
-    // 使用 goal 的 frame，如果为空则使用 "map"
     ps.header.frame_id = "map";
+    ps.header.stamp = ros::Time::now();
     ps.pose.position.x = wp(0);
     ps.pose.position.y = wp(1);
     ps.pose.position.z = wp(2);
     ps.pose.orientation = tf::createQuaternionMsgFromYaw(0.0);
     poses.push_back(ps);
     trace = n.parent;
+    path_count++;
   }
   std::reverse(poses.begin(), poses.end());
 
+  // 注意：A*输出原始折线路径，不做平滑处理
+  // 平滑由后续的polyTraj处理
   path.header.stamp = ros::Time::now();
   path.header.frame_id = "map";
   path.poses = poses;
+  
+  // 发布A*原始路径到专用话题
+  pathPub_.publish(path);
+  ROS_INFO("[A*] Published raw path (%zu waypoints) to /astar/planned_path", poses.size());
+  
+  ROS_INFO("[A*] Path found! Expanded %zu nodes, path has %zu waypoints.", expanded_nodes, poses.size());
+  
+  // 打印完整路径，用于调试路径形状
+  ROS_INFO("[A*] ========== FINAL PATH (%zu waypoints) ==========", poses.size());
+  if (poses.size() > 0) {
+    // 打印所有路径点（如果不超过30个），否则打印前15个和后15个
+    size_t print_limit = 30;
+    if (poses.size() <= print_limit) {
+      for (size_t i = 0; i < poses.size(); ++i) {
+        ROS_INFO("[A*]   [%zu] (%.3f, %.3f, %.3f)", i,
+                 poses[i].pose.position.x, poses[i].pose.position.y, poses[i].pose.position.z);
+      }
+    } else {
+      ROS_INFO("[A*] Path too long, printing first 15 and last 15:");
+      for (size_t i = 0; i < 15; ++i) {
+        ROS_INFO("[A*]   [%zu] (%.3f, %.3f, %.3f)", i,
+                 poses[i].pose.position.x, poses[i].pose.position.y, poses[i].pose.position.z);
+      }
+      ROS_INFO("[A*]   ... (%zu points) ...", poses.size() - 30);
+      for (size_t i = poses.size() - 15; i < poses.size(); ++i) {
+        ROS_INFO("[A*]   [%zu] (%.3f, %.3f, %.3f)", i,
+                 poses[i].pose.position.x, poses[i].pose.position.y, poses[i].pose.position.z);
+      }
+    }
+    
+    // 计算路径的转向角度，检测S形路径
+    if (poses.size() >= 3) {
+      int left_turns = 0, right_turns = 0;
+      double max_curvature = 0.0;
+      for (size_t i = 1; i < poses.size() - 1; ++i) {
+        Eigen::Vector3d v1(poses[i].pose.position.x - poses[i-1].pose.position.x,
+                           poses[i].pose.position.y - poses[i-1].pose.position.y,
+                           0);
+        Eigen::Vector3d v2(poses[i+1].pose.position.x - poses[i].pose.position.x,
+                           poses[i+1].pose.position.y - poses[i].pose.position.y,
+                           0);
+        if (v1.norm() > 1e-6 && v2.norm() > 1e-6) {
+          double cross_z = v1.x() * v2.y() - v1.y() * v2.x();
+          double curvature = std::abs(cross_z) / (v1.norm() * v2.norm());
+          max_curvature = std::max(max_curvature, curvature);
+          if (cross_z > 0.1) left_turns++;
+          else if (cross_z < -0.1) right_turns++;
+        }
+      }
+      ROS_INFO("[A*] Path curvature: %d left turns, %d right turns, max_curvature=%.6f (S-shape indicator)", 
+               left_turns, right_turns, max_curvature);
+      
+      // 如果路径有明显的S形（左右转向交替），发出警告
+      if (left_turns > 2 && right_turns > 2) {
+        ROS_WARN("[A*] WARNING: Path has S-shape pattern! This suggests tie-breaking instability or map query issues.");
+      }
+    }
+    
+    // 使用静态变量记录上次路径，用于检测路径不一致
+    static std::vector<Eigen::Vector3d> last_path;
+    static int path_check_count = 0;
+    path_check_count++;
+    
+    std::vector<Eigen::Vector3d> current_path;
+    for (const auto &p : poses) {
+      current_path.push_back(Eigen::Vector3d(p.pose.position.x, p.pose.position.y, p.pose.position.z));
+    }
+    
+    if (path_check_count > 1 && last_path.size() == current_path.size()) {
+      double path_diff = 0.0;
+      for (size_t i = 0; i < current_path.size(); ++i) {
+        path_diff += (current_path[i] - last_path[i]).norm();
+      }
+      path_diff /= current_path.size();
+      if (path_diff > 0.1) {
+        ROS_ERROR("[A*] ERROR: Path inconsistency detected! Average point difference=%.6f m", path_diff);
+        ROS_ERROR("[A*] This indicates non-deterministic behavior. Check tie-breaking and map queries.");
+      } else {
+        ROS_INFO("[A*] Path consistency check: average point difference=%.6f m (OK)", path_diff);
+      }
+    }
+    last_path = current_path;
+  }
+  ROS_INFO("[A*] =================================================");
+  
+  // 检查路径质量：计算路径总长度
+  if (poses.size() > 1) {
+    double path_length = 0.0;
+    for (size_t i = 1; i < poses.size(); ++i) {
+      double dx = poses[i].pose.position.x - poses[i-1].pose.position.x;
+      double dy = poses[i].pose.position.y - poses[i-1].pose.position.y;
+      double dz = poses[i].pose.position.z - poses[i-1].pose.position.z;
+      path_length += std::sqrt(dx*dx + dy*dy + dz*dz);
+    }
+    double straight_dist = std::sqrt(
+      (poses.back().pose.position.x - poses[0].pose.position.x) * 
+      (poses.back().pose.position.x - poses[0].pose.position.x) +
+      (poses.back().pose.position.y - poses[0].pose.position.y) * 
+      (poses.back().pose.position.y - poses[0].pose.position.y) +
+      (poses.back().pose.position.z - poses[0].pose.position.z) * 
+      (poses.back().pose.position.z - poses[0].pose.position.z)
+    );
+    ROS_INFO_THROTTLE(1.0, "[A*] Path quality: length=%.3f m, straight=%.3f m, ratio=%.3f",
+                      path_length, straight_dist, path_length / (straight_dist + 1e-6));
+  }
 }
 
 }  // namespace globalPlanner
-

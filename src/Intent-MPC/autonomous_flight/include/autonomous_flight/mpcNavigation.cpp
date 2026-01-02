@@ -264,9 +264,11 @@ namespace AutoFlight{
 						if (this->useGlobalPlanner_){
 							nav_msgs::Path rrtPathMsgTemp;
 							if (this->globalPlannerType_ == "astar" && this->aStarPlanner_){
+								ROS_INFO("[MPC] ========== USING A* PLANNER ==========");
 								this->aStarPlanner_->updateStart(this->odom_.pose.pose);
 								this->aStarPlanner_->updateGoal(this->goal_.pose);
 								this->aStarPlanner_->makePlan(rrtPathMsgTemp);
+								ROS_INFO("[MPC] A* returned %zu waypoints (RAW, before smoothing)", rrtPathMsgTemp.poses.size());
 							}
 							else if (this->rrtPlanner_){
 								this->rrtPlanner_->updateStart(this->odom_.pose.pose);
@@ -275,7 +277,7 @@ namespace AutoFlight{
 							}
 
 							// 记录全局规划得到的路径长度，便于调试
-							ROS_INFO("[MPC] Global planner (%s) returned path with %zu poses.",
+							ROS_INFO("[MPC] Global planner (%s) returned path with %zu poses (RAW A* output).",
 							         this->globalPlannerType_.c_str(),
 							         rrtPathMsgTemp.poses.size());
 
@@ -300,12 +302,14 @@ namespace AutoFlight{
 							Eigen::Vector3d endAcc (0, 0, 0);
 							std::vector<Eigen::Vector3d> startEndConditions {startVel, startAcc, endVel, endAcc};
 
+							ROS_INFO("[MPC] A* raw path will be smoothed by polyTraj (polynomial trajectory planner)");
 							this->polyTraj_->updatePath(rrtPathMsgTemp, startEndConditions);
 							this->polyTraj_->makePlan(this->polyTrajMsg_); // include corridor constraint		
 							
 							
 							double dt = 0.1;
 							nav_msgs::Path mpcInputTraj = this->polyTraj_->getTrajectory(dt);
+							ROS_INFO("[MPC] After polyTraj smoothing: %zu waypoints (smooth trajectory)", mpcInputTraj.poses.size());
 							this->mpc_->updatePath(mpcInputTraj,dt);
 							this->inputTrajMsg_ = mpcInputTraj;
 							this->refTrajReady_ = true;
