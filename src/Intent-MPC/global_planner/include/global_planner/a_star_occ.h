@@ -4,6 +4,7 @@
 #include <nav_msgs/Path.h>
 #include <geometry_msgs/Pose.h>
 #include <map_manager/occupancyMap.h>
+#include <global_planner/risk_map_2d.h>
 #include <Eigen/Dense>
 #include <queue>
 #include <unordered_map>
@@ -11,6 +12,8 @@
 #include <cmath>
 #include <vector>
 #include <limits>
+#include <memory>
+#include <mutex>
 
 namespace globalPlanner
 {
@@ -39,6 +42,20 @@ public:
   void setDynamicPredictions(const std::vector<DynObstaclePred> &preds);
   double calculateDynamicCost(const Eigen::Vector3d &pos) const;
 
+  /**
+   * @brief 设置风险地图（用于风险感知路径规划）
+   * @param risk_map 风险地图指针（可以为 nullptr，表示不使用风险地图）
+   */
+  void setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map);
+
+  /**
+   * @brief 设置动态障碍物方框（用于硬约束避障）
+   * @param obstacles_pos 障碍物位置列表
+   * @param obstacles_size 障碍物尺寸列表
+   */
+  void setDynamicObstacleBoxes(const std::vector<Eigen::Vector3d>& obstacles_pos,
+                                const std::vector<Eigen::Vector3d>& obstacles_size);
+
   void makePlan(nav_msgs::Path &path);
 
 private:
@@ -55,11 +72,21 @@ private:
   bool isFree(int ix, int iy, int iz) const;
   
   // 使用 64 位索引避免在较大地图尺寸下发生整型溢出
+  // 改进：使用更安全的哈希方法，避免溢出
   inline long long idx1d(int x, int y, int z) const
   {
-    return (static_cast<long long>(z) * 100000000LL) +
-           (static_cast<long long>(y) * 100000LL) +
-           static_cast<long long>(x);
+    // 使用质数哈希，避免溢出
+    // 限制坐标范围在合理范围内（±100000）
+    const long long PRIME1 = 73856093LL;
+    const long long PRIME2 = 19349663LL;
+    const long long PRIME3 = 83492791LL;
+    
+    // 将坐标转换为无符号，然后使用质数哈希
+    long long xl = static_cast<long long>(x);
+    long long yl = static_cast<long long>(y);
+    long long zl = static_cast<long long>(z);
+    
+    return (xl * PRIME1) ^ (yl * PRIME2) ^ (zl * PRIME3);
   }
 
   ros::NodeHandle nh_;
@@ -81,6 +108,27 @@ private:
   
   // 最大展开节点数
   std::size_t max_expanded_nodes_{300000};
+  
+  // 风险地图相关
+  std::shared_ptr<RiskMap2D> risk_map_;  // 风险地图指针
+  double w_risk_{0.0};                    // 风险代价权重
+  double k_risk_{1.0};                    // 风险转换系数
+  double z_gate_{2.0};                    // 高度门限（米）
+  
+  // 动态障碍物方框硬约束
+  struct DynamicObstacleBox {
+    Eigen::Vector3d center;  // 障碍物中心位置
+    Eigen::Vector3d size;    // 障碍物尺寸 (x_width, y_width, z_width)
+  };
+  mutable std::vector<DynamicObstacleBox> dynamic_obstacle_boxes_;  // 动态障碍物方框列表
+  mutable std::mutex dynamic_obstacles_mutex_;  // 保护动态障碍物列表的互斥锁（mutable允许在const函数中使用）
+  
+  /**
+   * @brief 检查点是否与动态障碍物方框碰撞
+   * @param pos 要检查的世界坐标点
+   * @return true if collides with any obstacle box
+   */
+  bool checkDynamicObstacleCollision(const Eigen::Vector3d& pos) const;
 };
 
 }  // namespace globalPlanner

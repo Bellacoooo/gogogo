@@ -132,10 +132,10 @@ namespace AutoFlight{
 
 		// realtime replanning parameters
 		if (not this->nh_.getParam("autonomous_flight/enable_realtime_replan", this->enableRealtimeReplan_)){
-			this->enableRealtimeReplan_ = false;
+			this->enableRealtimeReplan_ = true;  // 默认启用实时重规划
 		}
 		if (not this->nh_.getParam("autonomous_flight/global_replan_interval", this->globalReplanInterval_)){
-			this->globalReplanInterval_ = 2.0;
+			this->globalReplanInterval_ = 0.5;  // 降低到0.5秒，提高重规划频率
 		}
 		if (not this->nh_.getParam("autonomous_flight/path_deviation_threshold", this->pathDeviationThreshold_)){
 			this->pathDeviationThreshold_ = 0.5;
@@ -164,10 +164,14 @@ namespace AutoFlight{
 			}
 		}
 
-		// initialize rrt planner
+		// initialize global planner (rrt / astar / sipp)
 		if (this->globalPlannerType_ == "astar"){
 			this->aStarPlanner_.reset(new globalPlanner::AStarOccMap (this->nh_));
 			this->aStarPlanner_->setMap(this->map_);
+		}
+		else if (this->globalPlannerType_ == "sipp"){
+			this->sippPlanner_.reset(new globalPlanner::SippOccMap (this->nh_));
+			this->sippPlanner_->setMap(this->map_);
 		}
 		else{ // rrt by default
 			this->rrtPlanner_.reset(new globalPlanner::rrtOccMap<3> (this->nh_));
@@ -196,6 +200,13 @@ namespace AutoFlight{
 		this->mpcTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/mpc_trajectory", 10);
 		this->inputTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/input_trajectory", 10);
 		this->goalPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("mpcNavigation/goal", 10);
+		
+		// 订阅风险地图
+		this->riskMapSub_ = this->nh_.subscribe("dynamic_predictor/dynamic_risk_map", 1, 
+		                                         &mpcNavigation::riskMapCB, this);
+		
+		// 初始化风险地图对象
+		this->riskMap2D_.reset(new globalPlanner::RiskMap2D());
 	}
 
 	void mpcNavigation::registerCallback(){
@@ -264,11 +275,99 @@ namespace AutoFlight{
 						if (this->useGlobalPlanner_){
 							nav_msgs::Path rrtPathMsgTemp;
 							if (this->globalPlannerType_ == "astar" && this->aStarPlanner_){
-								ROS_INFO("[MPC] ========== USING A* PLANNER ==========");
+								ROS_WARN("[MPC-A*-CALL] ========== USING A* PLANNER ==========");
+								ROS_WARN("[MPC-A*-CALL] Before updateStart: odom=(%.3f,%.3f,%.3f)", 
+								         this->odom_.pose.pose.position.x, this->odom_.pose.pose.position.y, this->odom_.pose.pose.position.z);
+								try {
 								this->aStarPlanner_->updateStart(this->odom_.pose.pose);
+									ROS_WARN("[MPC-A*-CALL] updateStart completed");
+								} catch (const std::exception& e) {
+									ROS_ERROR("[MPC-A*-CALL] Exception in updateStart: %s", e.what());
+									throw;
+								}
+								ROS_WARN("[MPC-A*-CALL] Before updateGoal: goal=(%.3f,%.3f,%.3f)", 
+								         this->goal_.pose.position.x, this->goal_.pose.position.y, this->goal_.pose.position.z);
+								try {
 								this->aStarPlanner_->updateGoal(this->goal_.pose);
-								this->aStarPlanner_->makePlan(rrtPathMsgTemp);
+									ROS_WARN("[MPC-A*-CALL] updateGoal completed");
+								} catch (const std::exception& e) {
+									ROS_ERROR("[MPC-A*-CALL] Exception in updateGoal: %s", e.what());
+									throw;
+								}
+								// 设置风险地图（如果已更新）
+								if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
+									ROS_WARN("[MPC-A*-CALL] Setting risk map before makePlan");
+									try {
+										this->aStarPlanner_->setRiskMap(this->riskMap2D_);
+										ROS_WARN("[MPC-A*-CALL] setRiskMap completed");
+									} catch (const std::exception& e) {
+										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap: %s", e.what());
+										throw;
+									}
+								} else {
+									ROS_WARN("[MPC-A*-CALL] Risk map not set: riskMap2D_=%p, isValid()=%s", 
+									         this->riskMap2D_.get(), 
+									         (this->riskMap2D_ && this->riskMap2D_->isValid()) ? "true" : "false");
+								}
+								
+								// 设置动态障碍物方框（硬约束）
+								std::vector<Eigen::Vector3d> obstaclesPos, obstaclesVel, obstaclesSize;
+								Eigen::Vector3d robotSize;
+								try {
+									this->map_->getRobotSize(robotSize);
+									this->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize, robotSize);
+									if (!obstaclesPos.empty() && obstaclesPos.size() == obstaclesSize.size()) {
+										ROS_WARN("[MPC-A*-CALL] Setting %zu dynamic obstacle boxes", obstaclesPos.size());
+										try {
+											this->aStarPlanner_->setDynamicObstacleBoxes(obstaclesPos, obstaclesSize);
+											ROS_WARN("[MPC-A*-CALL] setDynamicObstacleBoxes completed");
+										} catch (const std::exception& e) {
+											ROS_ERROR("[MPC-A*-CALL] Exception in setDynamicObstacleBoxes: %s", e.what());
+											// 继续执行，不抛出异常
+										} catch (...) {
+											ROS_ERROR("[MPC-A*-CALL] Unknown exception in setDynamicObstacleBoxes");
+											// 继续执行，不抛出异常
+										}
+									} else {
+										ROS_WARN("[MPC-A*-CALL] No dynamic obstacles or size mismatch (pos=%zu, size=%zu)",
+										         obstaclesPos.size(), obstaclesSize.size());
+									}
+								} catch (const std::exception& e) {
+									ROS_ERROR("[MPC-A*-CALL] Exception in getDynamicObstacles: %s", e.what());
+									// 继续执行，不抛出异常
+								} catch (...) {
+									ROS_ERROR("[MPC-A*-CALL] Unknown exception in getDynamicObstacles");
+									// 继续执行，不抛出异常
+								}
+								ROS_WARN("[MPC-A*-CALL] Before makePlan call");
+								try {
+									this->aStarPlanner_->makePlan(rrtPathMsgTemp);
+									ROS_WARN("[MPC-A*-CALL] makePlan completed, returned %zu waypoints", rrtPathMsgTemp.poses.size());
+									
+									// 检查路径是否有效
+									if (rrtPathMsgTemp.poses.empty()) {
+										ROS_ERROR("[MPC-A*-CALL] A* returned empty path! This may cause issues.");
+										// 不抛出异常，继续执行，让系统尝试其他方法
+									}
+								} catch (const std::exception& e) {
+									ROS_ERROR("[MPC-A*-CALL] Exception in makePlan: %s", e.what());
+									ROS_ERROR("[MPC-A*-CALL] Continuing without throwing to prevent crash...");
+									// 不抛出异常，避免整个系统崩溃
+									rrtPathMsgTemp.poses.clear();  // 清空路径，让系统知道规划失败
+								} catch (...) {
+									ROS_ERROR("[MPC-A*-CALL] Unknown exception in makePlan");
+									ROS_ERROR("[MPC-A*-CALL] Continuing without throwing to prevent crash...");
+									// 不抛出异常，避免整个系统崩溃
+									rrtPathMsgTemp.poses.clear();  // 清空路径，让系统知道规划失败
+								}
 								ROS_INFO("[MPC] A* returned %zu waypoints (RAW, before smoothing)", rrtPathMsgTemp.poses.size());
+							}
+							else if (this->globalPlannerType_ == "sipp" && this->sippPlanner_){
+								ROS_INFO("[MPC] ========== USING SIPP PLANNER ==========");
+								this->sippPlanner_->updateStart(this->odom_.pose.pose);
+								this->sippPlanner_->updateGoal(this->goal_.pose);
+								this->sippPlanner_->makePlan(rrtPathMsgTemp);
+								ROS_INFO("[MPC] SIPP returned %zu waypoints (RAW, before smoothing)", rrtPathMsgTemp.poses.size());
 							}
 							else if (this->rrtPlanner_){
 								this->rrtPlanner_->updateStart(this->odom_.pose.pose);
@@ -690,7 +789,8 @@ namespace AutoFlight{
 		std::vector<onboardDetector::box3D> obstacles;
 		std::vector<std::pair<Eigen::Vector3d, Eigen::Vector3d>> freeRegions;
 		this->detector_->getObstacles(obstacles);
-		double fov = 1.57;
+		// 正常相机FOV：75度 (约1.31弧度)，介于60-90度之间
+		double fov = 75.0 * M_PI / 180.0;  // 约1.30899694
 		for (onboardDetector::box3D ob: obstacles){
 			if (this->detector_->isObstacleInSensorRange(ob, fov)){
 				Eigen::Vector3d lowerBound (ob.x-ob.x_width/2-0.3, ob.y-ob.y_width/2-0.3, ob.z-ob.z_width/2-0.3);
@@ -822,7 +922,10 @@ namespace AutoFlight{
 
 	void mpcNavigation::getDynamicObstacles(std::vector<Eigen::Vector3d>& obstaclesPos, std::vector<Eigen::Vector3d>& obstaclesVel, std::vector<Eigen::Vector3d>& obstaclesSize, const Eigen::Vector3d &robotSize){
 		std::vector<onboardDetector::box3D> obstacles;
-		this->detector_->getObstaclesInSensorRange(2*PI_const, obstacles, robotSize);
+		if (this->useFakeDetector_){
+		// 正常相机FOV：75度 (约1.31弧度)，只获取视野内的障碍物
+		double camera_fov = 75.0 * M_PI / 180.0;  // 约1.30899694
+		this->detector_->getObstaclesInSensorRange(camera_fov, obstacles, robotSize);
 		for (onboardDetector::box3D ob : obstacles){
 			Eigen::Vector3d pos (ob.x, ob.y, ob.z);
 			Eigen::Vector3d vel (ob.Vx, ob.Vy, 0.0);
@@ -830,6 +933,10 @@ namespace AutoFlight{
 			obstaclesPos.push_back(pos);
 			obstaclesVel.push_back(vel);
 			obstaclesSize.push_back(size);
+			}
+		}
+		else{ 
+			this->map_->getDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
 		}
 	}
 
@@ -866,5 +973,42 @@ namespace AutoFlight{
 			msg.markers = pointVec;	
 			this->goalPub_.publish(msg);
 		}
+	}
+
+	void mpcNavigation::riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg){
+		ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
+		         this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
+		
+		if (this->riskMap2D_) {
+			ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
+			try {
+				this->riskMap2D_->updateFromMsg(*msg);
+				ROS_WARN("[MPC-RISK-CB] updateFromMsg completed");
+			} catch (const std::exception& e) {
+				ROS_ERROR("[MPC-RISK-CB] Exception in updateFromMsg: %s", e.what());
+				return;
+			} catch (...) {
+				ROS_ERROR("[MPC-RISK-CB] Unknown exception in updateFromMsg");
+				return;
+			}
+			
+			// 如果 A* 规划器已初始化，立即更新风险地图
+			if (this->aStarPlanner_) {
+				ROS_WARN("[MPC-RISK-CB] Calling aStarPlanner_->setRiskMap...");
+				try {
+					this->aStarPlanner_->setRiskMap(this->riskMap2D_);
+					ROS_WARN("[MPC-RISK-CB] setRiskMap completed");
+				} catch (const std::exception& e) {
+					ROS_ERROR("[MPC-RISK-CB] Exception in setRiskMap: %s", e.what());
+				} catch (...) {
+					ROS_ERROR("[MPC-RISK-CB] Unknown exception in setRiskMap");
+				}
+			} else {
+				ROS_WARN("[MPC-RISK-CB] aStarPlanner_ is NULL, skipping setRiskMap");
+			}
+		} else {
+			ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
+		}
+		ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
 	}
 }

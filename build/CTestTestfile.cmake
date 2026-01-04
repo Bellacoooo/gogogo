@@ -5,9 +5,8 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("gtest")
-subdirs("Intent-MPC/remote_control")
+subdirs("sipp_vendor")
 subdirs("Intent-MPC/tracking_controller")
-subdirs("Intent-MPC/uav_simulator")
 subdirs("Intent-MPC/onboard_detector")
 subdirs("Intent-MPC/map_manager")
 subdirs("Intent-MPC/dynamic_predictor")

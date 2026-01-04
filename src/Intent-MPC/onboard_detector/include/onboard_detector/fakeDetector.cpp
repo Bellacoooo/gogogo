@@ -417,8 +417,10 @@ namespace onboardDetector{
 		if (this->obstacleHist_.size() != 0){
 			visualization_msgs::MarkerArray trajMsg;
 			int countMarker = 0;
+		// 正常相机FOV：75度 (约1.31弧度)，只可视化视野内的轨迹
+		double camera_fov_vis = 75.0 * M_PI / 180.0;  // 约1.30899694
 			for (size_t i=0; i<this->obstacleHist_.size(); ++i){
-				if (this->isObstacleInSensorRange(this->obstacleHist_[i][0],2*M_PI)){
+			if (this->isObstacleInSensorRange(this->obstacleHist_[i][0], camera_fov_vis)){
 					visualization_msgs::Marker traj;
 					traj.header.frame_id = "map";
 					traj.header.stamp = ros::Time::now();
@@ -504,8 +506,10 @@ namespace onboardDetector{
         ids.clear();
 
         if (this->obstacleHist_.size()){
+            // 正常相机FOV：75度 (约1.31弧度)，只预测视野内的障碍物
+            double camera_fov = 75.0 * M_PI / 180.0;  // 约1.30899694
             for (size_t i=0 ; i<this->obstacleHist_.size() ; ++i){
-				if (this->isObstacleInSensorRange(this->obstacleHist_[i][0],2*M_PI)){
+				if (this->isObstacleInSensorRange(this->obstacleHist_[i][0], camera_fov)){
 					std::vector<Eigen::Vector3d> obPosHist, obVelHist, obAccHist, obSizeHist;
                     ids.push_back(static_cast<int>(this->obstacleHist_[i][0].id));
 					for (size_t j=0; j<this->obstacleHist_[i].size() ; ++j){

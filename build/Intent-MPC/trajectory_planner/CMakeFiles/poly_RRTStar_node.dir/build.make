@@ -302,6 +302,7 @@ poly_RRTStar_node_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.2.0
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
+/home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /home/ff/intent-mpc/devel/lib/libdynamic_predictor.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /home/ff/intent-mpc/devel/lib/libmap_manager.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/poly_RRTStar_node: /usr/lib/x86_64-linux-gnu/libpcl_apps.so

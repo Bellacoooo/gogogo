@@ -62,8 +62,9 @@
   <!-- A*前瞻性场景 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_A_star.world" /> -->
   <!-- 前后左右 -->
-  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_front_back_left_right.world" />
-
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_front_back_left_right.world" /> -->
+  <!-- keepsome -->
+ <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_keep_some.world" />
   
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test2.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_mill19_1.world" /> -->

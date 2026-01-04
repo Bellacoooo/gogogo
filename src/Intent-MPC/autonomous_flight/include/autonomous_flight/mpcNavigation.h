@@ -14,6 +14,9 @@
 #include <dynamic_predictor/dynamicPredictor.h>
 #include <global_planner/rrtOccMap.h>
 #include <global_planner/a_star_occ.h>
+#include <global_planner/sipp_occ_map.h>
+#include <global_planner/risk_map_2d.h>
+#include <nav_msgs/OccupancyGrid.h>
 #include <trajectory_planner/polyTrajOccMap.h>
 #include <trajectory_planner/piecewiseLinearTraj.h>
 #include <trajectory_planner/bsplineTraj.h>
@@ -25,10 +28,12 @@ namespace AutoFlight{
 	class mpcNavigation : public flightBase{
 	private:
 		std::shared_ptr<mapManager::dynamicMap> map_;
-		std::shared_ptr<onboardDetector::fakeDetector> detector_;
+		std::shared_ptr<onboardDetector::fakeDetector> detector_;  // only used when useFakeDetector_=true
 		std::shared_ptr<dynamicPredictor::predictor> predictor_;
 		std::shared_ptr<globalPlanner::rrtOccMap<3>> rrtPlanner_;
 		std::shared_ptr<globalPlanner::AStarOccMap> aStarPlanner_;
+		std::shared_ptr<globalPlanner::SippOccMap> sippPlanner_;
+		std::shared_ptr<globalPlanner::RiskMap2D> riskMap2D_;  // 风险地图
 		std::shared_ptr<trajPlanner::polyTrajOccMap> polyTraj_;
 		std::shared_ptr<trajPlanner::pwlTraj> pwlTraj_;
 		std::shared_ptr<trajPlanner::mpcPlanner> mpc_;
@@ -44,6 +49,8 @@ namespace AutoFlight{
 		ros::Publisher mpcTrajPub_;
 		ros::Publisher inputTrajPub_;
 		ros::Publisher goalPub_;
+		
+		ros::Subscriber riskMapSub_;  // 订阅风险地图
 
 		std::thread mpcWorker_;
 
@@ -51,7 +58,7 @@ namespace AutoFlight{
 		bool useFakeDetector_;
 		bool usePredictor_;
 		bool useGlobalPlanner_;
-		std::string globalPlannerType_ = "rrt"; // rrt / astar
+		std::string globalPlannerType_ = "rrt"; // rrt / astar / sipp
 		bool noYawTurning_;
 		bool useYawControl_;
 		bool usePredefinedGoal_;
@@ -99,6 +106,7 @@ namespace AutoFlight{
 		void initModules();
 		void registerPub();
 		void registerCallback();
+		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调
 
 		void mpcCB();
 		void staticPlannerCB(const ros::TimerEvent&);

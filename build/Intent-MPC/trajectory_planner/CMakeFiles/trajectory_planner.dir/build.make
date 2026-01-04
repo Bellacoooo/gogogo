@@ -501,6 +501,7 @@ trajectory_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /opt/ros/noetic/lib/libmessage_filters.so
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /opt/ros/noetic/lib/libtf2.so
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /home/ff/intent-mpc/devel/lib/libglobal_planner.so
+/home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_common.so
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_kdtree.so
 /home/ff/intent-mpc/devel/lib/libtrajectory_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_octree.so

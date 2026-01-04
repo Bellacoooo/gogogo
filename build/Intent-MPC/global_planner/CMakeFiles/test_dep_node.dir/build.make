@@ -554,6 +554,7 @@ test_dep_node_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
+/home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libopencv_stitching.so.4.2.0
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libopencv_aruco.so.4.2.0
 /home/ff/intent-mpc/devel/lib/global_planner/test_dep_node: /usr/lib/x86_64-linux-gnu/libopencv_bgsegm.so.4.2.0

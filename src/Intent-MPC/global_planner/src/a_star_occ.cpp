@@ -2,6 +2,7 @@
 #include <tf/transform_datatypes.h>
 #include <algorithm>
 #include <limits>
+#include <mutex>
 
 namespace globalPlanner
 {
@@ -16,11 +17,18 @@ AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
 
   nh_.param("astar/grid_resolution", grid_res_param_, 0.5);
   
+  // 风险地图参数
+  nh_.param("astar/w_risk", w_risk_, 0.0);
+  nh_.param("astar/k_risk", k_risk_, 1.0);
+  nh_.param("astar/z_gate", z_gate_, 2.0);
+  
   // 初始化A*专用路径发布器
   pathPub_ = nh_.advertise<nav_msgs::Path>("astar/planned_path", 10);
   
   ROS_INFO("[A*] Simple 3D A* initialized (grid_res=%.2f m, use26dir=%s).", 
            grid_res_param_, use26dir_ ? "true" : "false");
+  ROS_INFO("[A*] Risk map params: w_risk=%.1f, k_risk=%.1f, z_gate=%.2f", 
+           w_risk_, k_risk_, z_gate_);
   ROS_INFO("[A*] Raw path will be published to /astar/planned_path");
 }
 
@@ -71,6 +79,58 @@ void AStarOccMap::updateGoal(const geometry_msgs::Pose &goal)
   goal_ = goal;
 }
 
+void AStarOccMap::setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map)
+{
+  risk_map_ = risk_map;
+  ROS_WARN("[A*-RISK-DEBUG] setRiskMap called: risk_map_=%p, w_risk_=%.3f, k_risk_=%.3f, z_gate_=%.3f",
+           risk_map_.get(), w_risk_, k_risk_, z_gate_);
+  
+  if (risk_map_)
+  {
+    bool is_valid = risk_map_->isValid();
+    ROS_WARN("[A*-RISK-DEBUG] risk_map_ pointer exists, isValid()=%s", is_valid ? "true" : "false");
+    
+    if (is_valid)
+    {
+      double res = risk_map_->getResolution();
+      Eigen::Vector2i size = risk_map_->getSize();
+      Eigen::Vector2d origin = risk_map_->getOrigin();
+      ROS_WARN("[A*-RISK-DEBUG] Risk map valid: resolution=%.3f, size=(%d,%d), origin=(%.2f,%.2f)",
+               res, size(0), size(1), origin(0), origin(1));
+      
+      // 检查数据是否非空
+      // 注意：这里不能直接访问 data_，但可以通过查询几个点来验证
+      // 使用 try-catch 保护，防止 queryBilinear 内部出现问题
+      try {
+        double test_val = risk_map_->queryBilinear(origin(0), origin(1));
+        ROS_WARN("[A*-RISK-DEBUG] Test query at origin: queryBilinear(%.2f,%.2f)=%.6f",
+                 origin(0), origin(1), test_val);
+      } catch (const std::exception& e) {
+        ROS_ERROR("[A*-RISK-DEBUG] Exception in test queryBilinear: %s", e.what());
+      } catch (...) {
+        ROS_ERROR("[A*-RISK-DEBUG] Unknown exception in test queryBilinear");
+      }
+    }
+    else
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk map pointer exists but isValid()=false");
+    }
+  }
+  else
+  {
+    ROS_WARN("[A*-RISK-DEBUG] Risk map pointer is NULL");
+  }
+  
+  if (w_risk_ > 0.0)
+  {
+    ROS_WARN("[A*-RISK-DEBUG] w_risk_ > 0, risk cost will be used if risk_map_ is valid");
+  }
+  else
+  {
+    ROS_WARN("[A*-RISK-DEBUG] w_risk_ = 0, risk cost will NOT be used");
+  }
+}
+
 bool AStarOccMap::posToIndex(const Eigen::Vector3d &pos, int &ix, int &iy, int &iz) const
 {
   if (!map_) return false;
@@ -106,6 +166,15 @@ bool AStarOccMap::isFree(int ix, int iy, int iz) const
   if (!map_) return false;
   if (grid_res_ <= 0) return false;
   
+  // 先检查坐标范围，防止溢出
+  const int MAX_COORD = 100000;
+  const int MIN_COORD = -100000;
+  if (ix < MIN_COORD || ix > MAX_COORD || 
+      iy < MIN_COORD || iy > MAX_COORD || 
+      iz < MIN_COORD || iz > MAX_COORD) {
+    return false;
+  }
+  
   // 将栅格索引转为世界坐标（格子中心）
   Eigen::Vector3d center = indexToPos(ix, iy, iz);
   
@@ -115,12 +184,28 @@ bool AStarOccMap::isFree(int ix, int iy, int iz) const
                        ix, iy, iz, center.x(), center.y(), center.z());
     return false;
   }
-  bool occupied = map_->isInflatedOccupied(center);
-  if (occupied) {
-    ROS_DEBUG_THROTTLE(0.5, "[A*] isFree: grid=(%d,%d,%d) -> world=(%.3f,%.3f,%.3f) OCCUPIED",
-                       ix, iy, iz, center.x(), center.y(), center.z());
+  
+  // 使用 try-catch 保护，防止地图查询时崩溃
+  try {
+    bool occupied = map_->isInflatedOccupied(center);
+    if (occupied) {
+      ROS_DEBUG_THROTTLE(0.5, "[A*] isFree: grid=(%d,%d,%d) -> world=(%.3f,%.3f,%.3f) OCCUPIED",
+                         ix, iy, iz, center.x(), center.y(), center.z());
+      return false;
+    }
+    
+    // 检查动态障碍物方框硬约束
+    if (checkDynamicObstacleCollision(center)) {
+      ROS_DEBUG_THROTTLE(0.5, "[A*] isFree: grid=(%d,%d,%d) -> world=(%.3f,%.3f,%.3f) COLLIDES WITH DYNAMIC OBSTACLE",
+                         ix, iy, iz, center.x(), center.y(), center.z());
+      return false;
+    }
+    
+    return true;
+  } catch (const std::exception& e) {
+    ROS_WARN_THROTTLE(1.0, "[A*] Exception in isFree: %s, grid=(%d,%d,%d)", e.what(), ix, iy, iz);
+    return false;
   }
-  return !occupied;
 }
 
 void AStarOccMap::setDynamicPredictions(const std::vector<DynObstaclePred> &preds)
@@ -131,6 +216,48 @@ void AStarOccMap::setDynamicPredictions(const std::vector<DynObstaclePred> &pred
 double AStarOccMap::calculateDynamicCost(const Eigen::Vector3d &pos) const
 {
   return 0.0;
+}
+
+void AStarOccMap::setDynamicObstacleBoxes(const std::vector<Eigen::Vector3d>& obstacles_pos,
+                                           const std::vector<Eigen::Vector3d>& obstacles_size)
+{
+  std::lock_guard<std::mutex> lock(dynamic_obstacles_mutex_);
+  dynamic_obstacle_boxes_.clear();
+  
+  if (obstacles_pos.size() != obstacles_size.size()) {
+    ROS_WARN("[A*] setDynamicObstacleBoxes: obstacles_pos.size()=%zu != obstacles_size.size()=%zu",
+             obstacles_pos.size(), obstacles_size.size());
+    return;
+  }
+  
+  for (size_t i = 0; i < obstacles_pos.size(); ++i) {
+    DynamicObstacleBox box;
+    box.center = obstacles_pos[i];
+    box.size = obstacles_size[i];
+    dynamic_obstacle_boxes_.push_back(box);
+  }
+  
+  ROS_WARN("[A*] setDynamicObstacleBoxes: set %zu obstacle boxes", dynamic_obstacle_boxes_.size());
+}
+
+bool AStarOccMap::checkDynamicObstacleCollision(const Eigen::Vector3d& pos) const
+{
+  std::lock_guard<std::mutex> lock(dynamic_obstacles_mutex_);
+  
+  for (const auto& box : dynamic_obstacle_boxes_) {
+    // 计算障碍物方框的边界
+    Eigen::Vector3d lower_bound = box.center - box.size / 2.0;
+    Eigen::Vector3d upper_bound = box.center + box.size / 2.0;
+    
+    // 检查点是否在方框内
+    if (pos(0) >= lower_bound(0) && pos(0) <= upper_bound(0) &&
+        pos(1) >= lower_bound(1) && pos(1) <= upper_bound(1) &&
+        pos(2) >= lower_bound(2) && pos(2) <= upper_bound(2)) {
+      return true;  // 碰撞
+    }
+  }
+  
+  return false;  // 无碰撞
 }
 
 void AStarOccMap::makePlan(nav_msgs::Path &path)
@@ -188,6 +315,17 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   {
     ROS_WARN("[A*] start or goal out of map. start=(%.2f,%.2f,%.2f) goal=(%.2f,%.2f,%.2f)",
              s.x(), s.y(), s.z(), g.x(), g.y(), g.z());
+    return;
+  }
+  
+  // 检查起点和终点的坐标范围，防止溢出
+  const int MAX_COORD = 100000;
+  const int MIN_COORD = -100000;
+  if (sx < MIN_COORD || sx > MAX_COORD || sy < MIN_COORD || sy > MAX_COORD || sz < MIN_COORD || sz > MAX_COORD ||
+      gx < MIN_COORD || gx > MAX_COORD || gy < MIN_COORD || gy > MAX_COORD || gz < MIN_COORD || gz > MAX_COORD) {
+    ROS_ERROR("[A*] Start or goal coordinates out of safe range! start=(%d,%d,%d) goal=(%d,%d,%d)",
+              sx, sy, sz, gx, gy, gz);
+    ROS_ERROR("[A*] Distance too large for A* planning. Consider using RRT or increasing map resolution.");
     return;
   }
   
@@ -368,7 +506,7 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   long long goal_key = -1;
   std::size_t expanded_nodes = 0;
   std::size_t tie_break_count = 0;
-
+  
   while (!open.empty())
   {
     long long cur_key = open.top().second;
@@ -409,8 +547,23 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
       int ny = cur.y + dy[k];
       int nz = cur.z + dz[k];
 
-      // 检查坐标范围，防止溢出
-      if (nx < -99999 || nx > 99999 || ny < -99999 || ny > 99999 || nz < -99999 || nz > 99999) {
+      // 检查坐标范围，防止溢出和越界
+      // 使用更严格的限制，避免 idx1d 溢出
+      const int MAX_COORD = 100000;
+      const int MIN_COORD = -100000;
+      if (nx < MIN_COORD || nx > MAX_COORD || 
+          ny < MIN_COORD || ny > MAX_COORD || 
+          nz < MIN_COORD || nz > MAX_COORD) {
+        ROS_DEBUG_THROTTLE(0.5, "[A*] Neighbor (%d,%d,%d) out of range, skipping",
+                           nx, ny, nz);
+        continue;
+      }
+
+      // 先检查是否在地图范围内，再检查是否自由
+      Eigen::Vector3d neighbor_pos = indexToPos(nx, ny, nz);
+      if (!map_->isInMap(neighbor_pos)) {
+        ROS_DEBUG_THROTTLE(0.5, "[A*] Neighbor (%d,%d,%d) -> (%.3f,%.3f,%.3f) not in map",
+                           nx, ny, nz, neighbor_pos.x(), neighbor_pos.y(), neighbor_pos.z());
         continue;
       }
 
@@ -421,7 +574,101 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
       }
       
       double step = std::sqrt(dx[k]*dx[k] + dy[k]*dy[k] + dz[k]*dz[k]) * grid_res_;
-      double tentative_g = cur.g + step;
+      
+      // Step4-B: 计算风险代价
+      double risk_cost = 0.0;
+      if (w_risk_ > 0.0 && risk_map_)
+      {
+        // 双重检查：在调用前再次检查有效性（防止并发修改）
+        if (risk_map_->isValid())
+        {
+          // 获取邻居节点的世界坐标
+          Eigen::Vector3d neighbor_world = indexToPos(nx, ny, nz);
+          double wx = neighbor_world(0);
+          double wy = neighbor_world(1);
+          double wz = neighbor_world(2);
+          
+          // 查询2D风险值（双线性插值）
+          double p2d = risk_map_->queryBilinear(wx, wy);
+          
+          // 根据 z_gate 门限提升到3D风险
+          double p3d = liftRiskGated(p2d, wz, z_gate_);
+          
+          // 转换为代价（使用二次方公式：cost = k * risk * risk）
+          double risk_cost_raw = riskToCostLog(p3d, k_risk_);
+          risk_cost = w_risk_ * risk_cost_raw;
+          
+          // 统计信息：记录高风险节点
+          static int high_risk_count = 0;
+          if (p3d > 0.1) {  // 风险值大于0.1
+            high_risk_count++;
+            if (high_risk_count <= 10) {  // 只打印前10个高风险节点
+              ROS_WARN("[A*-RISK-HIGH] ⚠️  High risk node: nb(%d,%d,%d) -> world(%.3f,%.3f,%.3f), "
+                       "p2d=%.4f, p3d=%.4f, risk_cost=%.4f (w_risk=%.1f)",
+                       nx, ny, nz, wx, wy, wz, p2d, p3d, risk_cost, w_risk_);
+            }
+          }
+          
+          // Step4-A: 打印前20次扩展的风险值（用于验证）
+          if (expanded_nodes < 20)
+          {
+            ROS_WARN("[A*-RISK] nb(%d,%d,%d) -> world(%.3f,%.3f,%.3f), p2d=%.6f, p3d=%.6f, risk_cost_raw=%.6f, risk_cost=%.6f",
+                     nx, ny, nz, wx, wy, wz, p2d, p3d, risk_cost_raw, risk_cost);
+            
+            // 详细的双线性插值调试信息（前5次）
+            if (expanded_nodes < 5)
+            {
+              // 手动计算栅格坐标用于调试
+              double res = risk_map_->getResolution();
+              Eigen::Vector2d origin = risk_map_->getOrigin();
+              double gx = (wx - origin(0)) / res;
+              double gy = (wy - origin(1)) / res;
+              int x0 = static_cast<int>(std::floor(gx));
+              int y0 = static_cast<int>(std::floor(gy));
+              int x1 = x0 + 1;
+              int y1 = y0 + 1;
+              double fx = gx - static_cast<double>(x0);
+              double fy = gy - static_cast<double>(y0);
+              
+              ROS_WARN("[A*-RISK-BILINEAR] world(%.3f,%.3f) -> grid(%.3f,%.3f), "
+                       "corners: (%d,%d),(%d,%d),(%d,%d),(%d,%d), "
+                       "fractions: fx=%.3f, fy=%.3f, result=%.6f",
+                       wx, wy, gx, gy,
+                       x0, y0, x1, y0, x0, y1, x1, y1,
+                       fx, fy, p2d);
+            }
+          }
+        }
+        else
+        {
+          // 风险地图无效时的调试信息（前5次）
+          if (expanded_nodes < 5)
+          {
+            ROS_WARN("[A*-RISK-DEBUG] ⚠️  Risk map invalid during expansion! expanded_nodes=%zu, neighbor=(%d,%d,%d)",
+                     expanded_nodes, nx, ny, nz);
+          }
+        }
+      }
+      else
+      {
+        // 风险地图未设置或 w_risk_=0 时的调试信息（只打印一次）
+        static bool warned_once = false;
+        if (!warned_once && expanded_nodes == 0)
+        {
+          ROS_ERROR("[A*-RISK-DEBUG] ❌ Risk cost NOT used: w_risk_=%.3f, risk_map_=%p",
+                   w_risk_, risk_map_.get());
+          if (w_risk_ <= 0.0) {
+            ROS_ERROR("[A*-RISK-DEBUG] ❌ w_risk_ is 0! Please set astar/w_risk > 0 in config file!");
+          }
+          if (!risk_map_) {
+            ROS_ERROR("[A*-RISK-DEBUG] ❌ risk_map_ is NULL! Risk map not set!");
+          }
+          warned_once = true;
+        }
+      }
+      
+      // 总代价 = 移动代价 + 风险代价
+      double tentative_g = cur.g + step + risk_cost;
       
       long long h = idx1d(nx, ny, nz);
       
@@ -470,11 +717,18 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
     ++expanded_nodes;
     if (expanded_nodes >= max_expanded_nodes_)
     {
-      ROS_ERROR("[A*] Reached max_expanded_nodes_=%zu.", max_expanded_nodes_);
+      ROS_ERROR("[A*] Reached max_expanded_nodes_=%zu. Path may be too long or complex.", max_expanded_nodes_);
+      ROS_ERROR("[A*] Consider: 1) Increasing max_expanded_nodes, 2) Using RRT for long distances, 3) Increasing grid resolution");
       break;
     }
+    
+    // 额外的安全检查：如果扩展节点数过多，可能是死循环或路径过长
+    if (expanded_nodes > 100000 && expanded_nodes % 10000 == 0) {
+      ROS_WARN("[A*] Large number of expanded nodes: %zu. This may indicate a very long path or planning difficulty.",
+               expanded_nodes);
+    }
   }
-
+  
   if (!found)
   {
     ROS_WARN("[A*] No path found. Expanded %zu nodes.", expanded_nodes);
@@ -521,6 +775,105 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   path.header.stamp = ros::Time::now();
   path.header.frame_id = "map";
   path.poses = poses;
+  
+  // Step4-B: 计算并打印路径的风险统计
+  ROS_WARN("[A*-RISK-DEBUG] Path statistics: w_risk_=%.3f, risk_map_=%p, poses.size()=%zu",
+           w_risk_, risk_map_.get(), poses.size());
+  
+  if (w_risk_ > 0.0 && risk_map_ && !poses.empty())
+  {
+    ROS_WARN("[A*-RISK-DEBUG] Checking risk_map_->isValid()...");
+    // 双重检查：在调用前再次检查有效性（防止并发修改）
+    if (risk_map_->isValid())
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk map is valid, computing path statistics...");
+      double mean_risk = 0.0;
+      double max_risk = 0.0;
+      int valid_points = 0;
+      int zero_risk_points = 0;
+      int out_of_map_points = 0;
+      
+      // 获取风险地图参数用于调试
+      double res = risk_map_->getResolution();
+      Eigen::Vector2d origin = risk_map_->getOrigin();
+      Eigen::Vector2i size = risk_map_->getSize();
+      ROS_WARN("[A*-RISK-DEBUG] Risk map params: resolution=%.3f, size=(%d,%d), origin=(%.2f,%.2f)",
+               res, size(0), size(1), origin(0), origin(1));
+      
+      for (size_t i = 0; i < poses.size(); ++i)
+      {
+        const auto& pose = poses[i];
+        double wx = pose.pose.position.x;
+        double wy = pose.pose.position.y;
+        double wz = pose.pose.position.z;
+        
+        // 检查坐标是否在地图范围内
+        double gx = (wx - origin(0)) / res;
+        double gy = (wy - origin(1)) / res;
+        bool in_map = (gx >= 0 && gx < size(0) && gy >= 0 && gy < size(1));
+        
+        if (!in_map)
+        {
+          out_of_map_points++;
+          if (i < 3 || i >= poses.size() - 3)
+          {
+            ROS_WARN("[A*-RISK-DEBUG] Path point %zu out of map: world(%.3f,%.3f,%.3f) -> grid(%.3f,%.3f)",
+                     i, wx, wy, wz, gx, gy);
+          }
+          continue;
+        }
+        
+        double p2d = risk_map_->queryBilinear(wx, wy);
+        double p3d = liftRiskGated(p2d, wz, z_gate_);
+        
+        // 打印前3个和后3个点的详细信息
+        if (i < 3 || i >= poses.size() - 3)
+        {
+          ROS_WARN("[A*-RISK-DEBUG] Path point %zu: world(%.3f,%.3f,%.3f) -> grid(%.3f,%.3f), "
+                   "p2d=%.6f, p3d=%.6f, z_gate=%.2f",
+                   i, wx, wy, wz, gx, gy, p2d, p3d, z_gate_);
+        }
+        
+        mean_risk += p3d;
+        if (p3d > max_risk) max_risk = p3d;
+        if (p3d < 1e-6) zero_risk_points++;
+        valid_points++;
+      }
+      
+      if (valid_points > 0)
+      {
+        mean_risk /= valid_points;
+        ROS_WARN("[A*-RISK] path_len=%zu mean_risk=%.6f max_risk=%.6f w_risk=%.1f k_risk=%.1f z_gate=%.2f",
+                 poses.size(), mean_risk, max_risk, w_risk_, k_risk_, z_gate_);
+        ROS_WARN("[A*-RISK-DEBUG] Path stats details: valid_points=%d, zero_risk_points=%d, out_of_map_points=%d",
+                 valid_points, zero_risk_points, out_of_map_points);
+      }
+      else
+      {
+        ROS_WARN("[A*-RISK-DEBUG] No valid points for risk calculation! out_of_map_points=%d",
+                 out_of_map_points);
+      }
+    }
+    else
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk map is INVALID during path statistics calculation!");
+    }
+  }
+  else
+  {
+    if (w_risk_ <= 0.0)
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk cost not used: w_risk_=%.3f <= 0", w_risk_);
+    }
+    if (!risk_map_)
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk cost not used: risk_map_ is NULL");
+    }
+    if (poses.empty())
+    {
+      ROS_WARN("[A*-RISK-DEBUG] Risk cost not used: poses is empty");
+    }
+  }
   
   // 发布A*原始路径到专用话题
   pathPub_.publish(path);

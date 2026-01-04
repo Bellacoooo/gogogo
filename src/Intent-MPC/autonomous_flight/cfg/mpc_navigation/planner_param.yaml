@@ -15,6 +15,9 @@ astar/w1_dist: 1.0              # 距离代价权重
 astar/w2_static: 0.0            # 静态距离场权重（当前未接入距离场，先置0）
 astar/w3_dynamic: 50.0          # 动态风险权重（需调用 setDynamicPredictions 才生效），调大以明显避开高风险区域
 astar/grid_resolution: 0.1    # A* 内部虚拟栅格分辨率（米），应 >= mapping_param.yaml 中的 map_resolution
+astar/w_risk: 50.0              # 风险代价权重（0.0=不使用风险，>0=使用风险，建议10-50，值越大避障越强）
+astar/k_risk: 1.0                # 风险转换系数（用于 riskToCostLog）
+astar/z_gate: 2.0                # 高度门限（米），高于此高度的风险为0
 
 poly_traj/polynomial_degree: 7
 poly_traj/differential_degree: 4

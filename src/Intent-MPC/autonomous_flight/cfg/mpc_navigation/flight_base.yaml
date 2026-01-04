@@ -11,7 +11,7 @@ desired_angular_velocity: 0.5 # rad/s
 # MPC target parameters
 use_predefined_goal: false
 use_global_planner: true
-global_planner_type: "astar"  # "rrt" or "astar"
+global_planner_type: "astar"  # "rrt" or "astar" or "sipp"
 predefined_goal_directory: "/cfg/mpc_navigation/ref_trajectory.txt"
 execute_path_times: 10 # how many times to repeat the trajectory 
 

@@ -1,0 +1,8 @@
+prefix=/home/ff/intent-mpc/devel
+
+Name: sipp_vendor
+Description: Description of sipp_vendor
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib -lsipp
+Requires: 

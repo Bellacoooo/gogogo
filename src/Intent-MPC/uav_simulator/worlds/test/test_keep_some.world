@@ -1,0 +1,263 @@
+
+            <sdf version='1.7'>
+            <world name='default'>
+                <light name='sun' type='directional'>
+                <cast_shadows>1</cast_shadows>
+                <pose>0 0 10 0 -0 0</pose>
+                <diffuse>0.8 0.8 0.8 1</diffuse>
+                <specular>0.2 0.2 0.2 1</specular>
+                <attenuation>
+                    <range>1000</range>
+                    <constant>0.9</constant>
+                    <linear>0.01</linear>
+                    <quadratic>0.001</quadratic>
+                </attenuation>
+                <direction>-0.5 0.1 -0.9</direction>
+                <spot>
+                    <inner_angle>0</inner_angle>
+                    <outer_angle>0</outer_angle>
+                    <falloff>0</falloff>
+                </spot>
+                </light>
+                 
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                            <model name='dynamic_cylinder_17_0.3_0.3_1.3'>
+                            <static>true</static>
+                            <pose>-3.169738067111009 -1.0435226096962715 0.6373566915163664 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <cylinder>
+                                            <radius>0.16591764718500285</radius>
+                                            <length>1.2747133830327328</length>
+                                        </cylinder>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>0</loop>
+                                <velocity>0.41820538017409825</velocity>
+                                <path>
+                                <waypoint>-3.169738067111009 -1.0435226096962715 0.6373566915163664</waypoint>
+                                <waypoint>11.291848646303464 -8.797453638105504 0.6373566915163664</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                            <model name='dynamic_box_25_0.2_0.1_1.8'>
+                            <static>true</static>
+                            <pose>-3.8483754275391657 3.311245073776824 0.936758422335512 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <box>
+                                            <size>0.22287350235366285 0.1135711635407551 1.7527602639025108</size> <!-- Width, Depth, Height -->
+                                        </box>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>0</loop>
+                                <velocity>0.4151268145721963</velocity>
+                                <path>
+                                <waypoint>-3.8483754275391657 3.311245073776824 0.936758422335512</waypoint>
+                                <waypoint>-2.7401287261792397 0.7576253338175647 0.9408939853084214</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+                            <model name='dynamic_box_26_0.2_0.2_1.3'>
+                            <static>true</static>
+                            <pose>0.7001824731037587 1.0273552500675258 0.7339143772698361 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <box>
+                                            <size>0.15670275645860687 0.15261575605931693 1.325017997524895</size> <!-- Width, Depth, Height -->
+                                        </box>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>0</loop>
+                                <velocity>0.49261877804238546</velocity>
+                                <path>
+                                <waypoint>0.7001824731037587 1.0273552500675258 0.7339143772698361</waypoint>
+                                <waypoint>0.39734258638070585 -8.80617623558001 0.7398544659146388</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+            </world>
+            </sdf>
+            

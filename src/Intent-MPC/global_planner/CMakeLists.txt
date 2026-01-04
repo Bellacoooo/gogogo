@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   octomap_ros
   map_manager
+  sipp_vendor
 )
 find_package(OpenCV REQUIRED)
 
@@ -110,7 +111,7 @@ find_package(OpenCV REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES global_planner
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs sipp_vendor
   #DEPENDS system_lib
 )
 
@@ -166,9 +167,9 @@ add_executable(test_dep_node src/test_dep_node.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS})
-# library 增加 A* 源
-target_sources(${PROJECT_NAME} PRIVATE src/a_star_occ.cpp)
+target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS} sipp)
+# library 增加 A*、SIPP 和风险地图源
+target_sources(${PROJECT_NAME} PRIVATE src/a_star_occ.cpp src/sipp_occ_map.cpp src/risk_map_2d.cpp)
 # target_link_libraries(test_kdtree ${catkin_LIBRARIES})
 # target_link_libraries(test_prm_kdtree ${catkin_LIBRARIES} ${PROJECT_NAME} ${OpenCV_LIBS})
 # target_link_libraries(test_blob_detection ${catkin_LIBRARIES})

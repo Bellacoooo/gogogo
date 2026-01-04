@@ -320,6 +320,7 @@ time_optimizer_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
+/home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /opt/ros/noetic/lib/liboctomap_ros.so
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /opt/ros/noetic/lib/liboctomap.so
 /home/ff/intent-mpc/devel/lib/libtime_optimizer.so: /opt/ros/noetic/lib/liboctomath.so

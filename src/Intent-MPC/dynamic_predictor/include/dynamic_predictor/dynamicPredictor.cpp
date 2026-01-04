@@ -686,8 +686,8 @@ namespace dynamicPredictor{
             theta = theta + 2*M_PI;
         }
         
-        // 表示当前速度的模长
-        double r = sqrt(pow(currVel(0), 2) + pow(currVel(1), 2));   
+        // 表示当前速度的模长（未使用，注释掉以避免警告）
+        // double r = sqrt(pow(currVel(0), 2) + pow(currVel(1), 2));   
 
     // 3. 新增：计算自适应权重所需指标（根据你的扩展逻辑）
         // 3. 计算自适应权重所需指标
@@ -1447,166 +1447,223 @@ namespace dynamicPredictor{
         // 参数：时间衰减因子 gamma
         const double gamma = 0.98;
 
-        // 遍历当前的预测结果（仅对有预测的障碍物生效）- 蓝色框
-        for (std::size_t j = 0; j < this->posPred_.size(); ++j) {
-            if (j >= this->intentProb_.size()) continue;
-
-            const auto& intents = this->intentProb_[j];
-            if (intents.size() == 0) continue;
-
-            // 对每个意图模态 k
-            for (int k = 0; k < this->numIntent_ && k < intents.size(); ++k) {
-                double omega = intents(k);   // 该模态概率
-                if (omega <= 1e-4) continue; // 概率太小略过，减少计算
-
-                if (j >= this->posPred_.size()) continue;
-                if (k >= static_cast<int>(this->posPred_[j].size())) continue;
-
-                const auto& traj = this->posPred_[j][k];      // 该模态的均值轨迹
-                const auto* varPtr = (j < this->varPred_.size() && k < static_cast<int>(this->varPred_[j].size()))
-                                      ? &this->varPred_[j][k]
-                                      : nullptr;
-                // 获取障碍物高度（z 尺寸），从 sizePred_ 或 sizeHist_ 获取
-                double obstacle_height = 0.0;
-                if (j < this->sizePred_.size() && k < static_cast<int>(this->sizePred_[j].size()) && 
-                    !this->sizePred_[j][k].empty()) {
-                    obstacle_height = this->sizePred_[j][k][0](2);  // z 尺寸（高度）
-                } else if (j < this->sizeHist_.size() && !this->sizeHist_[j].empty()) {
-                    obstacle_height = this->sizeHist_[j][0](2);  // 使用历史尺寸
-                }
-
-                // 遍历未来时间步 t
-                for (std::size_t t = 0; t < traj.size(); ++t) {
-                    const Eigen::Vector3d& p = traj[t];
-                    Eigen::Vector2d mu(p(0), p(1));
-
-                    Eigen::Matrix2d Sigma = Eigen::Matrix2d::Zero();
-                    if (varPtr && t < varPtr->size()) {
-                        // varPred 存的就是每个时间步 x/y 的方差
-                        double vx = std::max((*varPtr)[t](0), 1e-4);
-                        double vy = std::max((*varPtr)[t](1), 1e-4);
-                        Sigma(0, 0) = vx;
-                        Sigma(1, 1) = vy;
-                    } else {
-                        // 没有方差信息时给一个小的各向同性协方差
-                        double v = 0.2 * 0.2;
-                        Sigma(0, 0) = v;
-                        Sigma(1, 1) = v;
-                    }
-
-                    // 时间衰减：越远的时间步权重越小
-                    double time_decay = std::pow(gamma, static_cast<double>(t));
-                    double combined_weight = omega * time_decay;
-                    if (combined_weight <= 0.0) continue;
-
-                    stampGaussianToBuffer(
-                        float_risk_data,
-                        height_map,
-                        riskMsg.info,
-                        mu,
-                        Sigma,
-                        combined_weight,
-                        obstacle_height
-                    );
-                }
-            }
+        // 诊断：检查数据源
+        static int call_count = 0;
+        call_count++;
+        bool should_log = (call_count % 30 == 0);  // 每30次调用打印一次（约1秒）
+        if (should_log) {
+            ROS_WARN("[RISK-MAP] call_count=%d allPredPoints_.size()=%zu posPred_.size()=%zu posHist_.size()=%zu intentProb_.size()=%zu",
+                     call_count, this->allPredPoints_.size(), this->posPred_.size(), this->posHist_.size(), this->intentProb_.size());
         }
 
-        // 新增：处理DBSCAN检测的原始框（红色框）- 用恒定速度模型做简单预测
-        if (this->detector_){
-            std::vector<onboardDetector::box3D> dbBoxes;
-            this->detector_->getDbScanBoxes(dbBoxes);
+        // 修改：使用 posPred_ 作为主要数据源（更稳定，不会被清空）
+        // 即使 allPredPoints_ 被清空，posPred_ 仍然有数据
+        int processed_obstacles = 0;
+        int processed_intents = 0;
+        int processed_timesteps = 0;
+        int skipped_obstacles = 0;
+        int skipped_intents = 0;
+        int skipped_timesteps = 0;
+        
+        // 遍历 posPred_（更稳定的数据源）
+        for (size_t i = 0; i < this->posPred_.size(); ++i) {
+            // 检查必要的数据是否存在
+            if (i >= this->intentProb_.size()) {
+                skipped_obstacles++;
+                continue;
+            }
+            if (i >= this->posHist_.size() || this->posHist_[i].empty()) {
+                skipped_obstacles++;
+                continue;
+            }
             
-            // 预测时间步数（与蓝色框保持一致）
-            const int predSteps = static_cast<int>(3.0 / this->dt_); // 3秒预测
+            const auto& intents = this->intentProb_[i];
+            if (intents.size() == 0) {
+                skipped_obstacles++;
+                continue;
+            }
             
-            for (const auto& box : dbBoxes){
-                // 检查这个红色框是否已经在蓝色框里（避免重复）
-                bool isAlreadyInBlue = false;
-                for (std::size_t j = 0; j < this->posHist_.size(); ++j){
-                    if (this->posHist_[j].empty()) continue;
-                    Eigen::Vector3d bluePos = this->posHist_[j][0];
-                    double dist = std::sqrt(std::pow(box.x - bluePos(0), 2) + 
-                                           std::pow(box.y - bluePos(1), 2));
-                    if (dist < 0.5){ // 如果距离很近，认为是同一个障碍物
-                        isAlreadyInBlue = true;
-                        break;
-                    }
+            // 遍历每个意图模态
+            for (int j = 0; j < this->numIntent_ && j < static_cast<int>(intents.size()); ++j) {
+                double omega = intents(j);  // 该模态概率
+                if (omega <= 1e-4) {
+                    skipped_intents++;
+                    continue;  // 概率太小略过
                 }
-                if (isAlreadyInBlue) continue; // 跳过已经在蓝色框里的
                 
-                // 红色框的当前位置和速度
-                Eigen::Vector2d currPos(box.x, box.y);
-                Eigen::Vector2d currVel(box.Vx, box.Vy);
-                double velNorm = currVel.norm();
+                if (i >= this->posPred_.size() || j >= static_cast<int>(this->posPred_[i].size())) {
+                    skipped_intents++;
+                    continue;
+                }
                 
-                // 获取红色框的高度（从 box 结构获取，z_width 是高度）
-                double red_box_height = (box.z_width > 0.1) ? box.z_width : 1.5;  // 默认 1.5m
-                
-                // 如果速度太小，用固定大小的风险场；否则用恒定速度预测
-                if (velNorm < 0.1){
-                    // 静止或低速：直接用当前位置+固定大小的高斯分布
-                    Eigen::Matrix2d Sigma = Eigen::Matrix2d::Identity() * 0.5 * 0.5; // 0.5m标准差
-                    double weight = 0.5; // 红色框的权重（比蓝色框稍低，因为不确定性更大）
-                    stampGaussianToBuffer(
-                        float_risk_data,
-                        height_map,
-                        riskMsg.info,
-                        currPos,
-                        Sigma,
-                        weight,
-                        red_box_height
-                    );
+                const auto& traj = this->posPred_[i][j];  // 该模态的轨迹
+                if (traj.empty()) {
+                    skipped_intents++;
+                    continue;
+                }
+
+                // 遍历每个时间步（使用 posPred_ 的时间步数，与 publishVarPoints 中的 l 对应）
+                for (size_t l = 0; l < traj.size(); ++l) {
+                    processed_timesteps++;
+                    
+                    // 获取均值和标准差（与 publishVarPoints 完全一致）
+                    // publishVarPoints 中使用：meanx = posPred_[i][j][l](0)
+                    double meanx = traj[l](0);
+                    double meany = traj[l](1);
+                    double stdx = 0.0;
+                    double stdy = 0.0;
+                    
+                    // 计算标准差（与 publishVarPoints 完全一致）
+                    // publishVarPoints 中使用：stdx = sizePred_[i][j][l](0) - sizeHist_[i][0](0)
+                    if (i < this->sizePred_.size() && j < static_cast<int>(this->sizePred_[i].size()) && 
+                        l < this->sizePred_[i][j].size() && i < this->sizeHist_.size() && 
+                        !this->sizeHist_[i].empty()) {
+                        stdx = this->sizePred_[i][j][l](0) - this->sizeHist_[i][0](0);
+                        stdy = this->sizePred_[i][j][l](1) - this->sizeHist_[i][0](1);
                 } else {
-                    // 有速度：用恒定速度模型预测未来轨迹
-                    for (int t = 0; t < predSteps; ++t){
-                        double dt = this->dt_ * t;
-                        Eigen::Vector2d futurePos = currPos + currVel * dt;
-                        
-                        // 不确定性随时间增长（线性增长）
-                        double sigma_base = 0.3; // 基础标准差
-                        double sigma_growth = 0.1 * dt; // 每秒钟增长0.1m
-                        double sigma = std::max(sigma_base, sigma_base + sigma_growth);
-                        Eigen::Matrix2d Sigma = Eigen::Matrix2d::Identity() * sigma * sigma;
+                        // 如果没有尺寸信息，使用默认值
+                        stdx = 0.2;
+                        stdy = 0.2;
+                    }
+                    
+                    // 确保标准差为正
+                    stdx = std::max(stdx, 0.1);
+                    stdy = std::max(stdy, 0.1);
+                    
+                    // 获取障碍物高度
+                    double obstacle_height = 0.0;
+                    if (i < this->sizeHist_.size() && !this->sizeHist_[i].empty()) {
+                        obstacle_height = this->sizeHist_[i][0](2);
+                    }
                         
                         // 时间衰减
-                        double time_decay = std::pow(gamma, static_cast<double>(t));
-                        double weight = 0.5 * time_decay; // 红色框的权重
-                        
+                    double time_decay = std::pow(gamma, static_cast<double>(l));
+                    double combined_weight = omega * time_decay;
+                    if (combined_weight <= 0.0) {
+                        skipped_timesteps++;
+                        continue;
+                    }
+                    
+                    // 构建协方差矩阵（使用标准差）
+                    Eigen::Vector2d mu(meanx, meany);
+                    Eigen::Matrix2d Sigma = Eigen::Matrix2d::Zero();
+                    Sigma(0, 0) = stdx * stdx;
+                    Sigma(1, 1) = stdy * stdy;
+                    
+                    // 将风险圈（椭圆）添加到风险地图
                         stampGaussianToBuffer(
                             float_risk_data,
                             height_map,
                             riskMsg.info,
-                            futurePos,
+                        mu,
                             Sigma,
-                            weight,
-                            red_box_height
+                        combined_weight,
+                        obstacle_height
                         );
                     }
-                }
+                processed_intents++;
             }
+            processed_obstacles++;
+        }
+        
+        // 详细诊断日志
+        if (should_log) {
+            ROS_WARN("[RISK-MAP] processed: obs=%d (skipped=%d) intents=%d (skipped=%d) timesteps=%d (skipped=%d)",
+                     processed_obstacles, skipped_obstacles, processed_intents, skipped_intents, 
+                     processed_timesteps, skipped_timesteps);
         }
 
         // b) 将浮点风险映射到 [0,100] 的 int8 OccupancyGrid
         riskMsg.data.resize(this->riskMapWidth_ * this->riskMapHeight_);
 
         double max_risk = 0.0;
+        double mean_risk = 0.0;
+        int non_zero_count = 0;
         for (double v : float_risk_data) {
             if (v > max_risk) max_risk = v;
+            if (v > 1e-8) {
+                mean_risk += v;
+                non_zero_count++;
+            }
+        }
+        if (non_zero_count > 0) {
+            mean_risk /= non_zero_count;
+        }
+
+        // 诊断日志（合并到 should_log）
+        if (should_log) {
+            ROS_WARN("[RISK-MAP] stats: max_risk=%.6f mean_risk=%.6f non_zero=%d/%zu (%.2f%%)",
+                     max_risk, mean_risk, non_zero_count, float_risk_data.size(), 
+                     100.0 * non_zero_count / float_risk_data.size());
         }
 
         if (max_risk <= 1e-8) {
             // 没有任何风险，直接全部设为 0
             std::fill(riskMsg.data.begin(), riskMsg.data.end(), 0);
+            if (should_log) {
+                ROS_WARN("[RISK-MAP] WARNING: max_risk=0, risk map is empty! Check if allPredPoints_ has data.");
+            }
         } else {
             for (std::size_t i = 0; i < float_risk_data.size(); ++i) {
                 double norm = float_risk_data[i] / max_risk;   // 0~1
                 if (norm < 0.0) norm = 0.0;
                 if (norm > 1.0) norm = 1.0;
-                riskMsg.data[i] = static_cast<int8_t>(std::round(norm * 100.0));
+                // 使用 ceil 向上取整，确保微小的风险值（如 0.5%）不会被截断为 0
+                // 这样可以保留障碍物边缘的梯度信息
+                double scaled = norm * 100.0;
+                riskMsg.data[i] = static_cast<int8_t>(std::min(100, static_cast<int>(std::ceil(scaled))));
+            }
+            if (should_log) {
+                // 统计发布的数据
+                int non_zero_msg = 0;
+                for (int8_t v : riskMsg.data) {
+                    if (v > 0) non_zero_msg++;
+                }
+                ROS_WARN("[RISK-MAP] published: non_zero_msg=%d/%zu (%.2f%%)",
+                         non_zero_msg, riskMsg.data.size(), 100.0 * non_zero_msg / riskMsg.data.size());
             }
         }
 
+        // 数据保留机制：如果新数据为空或数据量太少，使用保留的旧数据
+        ros::Time current_time = ros::Time::now();
+        bool use_retained_data = false;
+        
+        // 检查新数据是否有效
+        int non_zero_new = 0;
+        for (int8_t v : riskMsg.data) {
+            if (v > 0) non_zero_new++;
+        }
+        bool new_data_valid = (non_zero_new > 100) && (max_risk > 1e-8);  // 至少100个非零栅格
+        
+        // 如果新数据无效，且存在保留的旧数据，且旧数据未过期，则使用旧数据
+        if (!new_data_valid && !lastValidRiskMap_.data.empty()) {
+            double time_since_last = (current_time - lastValidRiskMapTime_).toSec();
+            if (time_since_last < riskMapRetentionTime_) {
+                use_retained_data = true;
+                riskMsg = lastValidRiskMap_;
+                riskMsg.header.stamp = current_time;  // 更新时间戳
+                if (should_log) {
+                    ROS_WARN("[RISK-MAP] Using retained data (new data invalid: non_zero=%d, max_risk=%.6f, time_since_last=%.2fs)",
+                             non_zero_new, max_risk, time_since_last);
+                }
+            } else {
+                if (should_log) {
+                    ROS_WARN("[RISK-MAP] Retained data expired (time_since_last=%.2fs > %.2fs), publishing empty map",
+                             time_since_last, riskMapRetentionTime_);
+                }
+            }
+        }
+        
+        // 如果新数据有效，更新保留数据
+        if (new_data_valid) {
+            lastValidRiskMap_ = riskMsg;
+            lastValidRiskMapTime_ = current_time;
+            if (should_log) {
+                ROS_WARN("[RISK-MAP] Updated retained data (non_zero=%d, max_risk=%.6f)", non_zero_new, max_risk);
+            }
+        }
+        
+        // 确保总是发布风险地图（即使全为0）
         this->riskMapPub_.publish(riskMsg);
 
         // 发布高度地图（使用 OccupancyGrid 格式，但存储的是高度值，单位：米）
