@@ -47,8 +47,9 @@ max_height_visualization: 2.5 # m
 visualize_global_map: true
 verbose: false
 
-# prebuilt_map_directory: "No"
+prebuilt_map_directory: "No"
 # 原论文的静态背景
 # prebuilt_map_directory: "/cfg/saved_map/demo_map.pcd"
 # 静态背景test
-prebuilt_map_directory: "/home/ff/intent-mpc/my_two_cylinders.pcd"
+# prebuilt_map_directory: "/home/ff/intent-mpc/my_two_cylinders.pcd"
+# 做mpc实验的时候不用静态地图

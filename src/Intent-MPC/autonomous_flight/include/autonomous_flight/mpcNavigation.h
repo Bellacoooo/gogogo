@@ -14,13 +14,14 @@
 #include <dynamic_predictor/dynamicPredictor.h>
 #include <global_planner/rrtOccMap.h>
 #include <global_planner/a_star_occ.h>
-#include <global_planner/sipp_occ_map.h>
+// #include <global_planner/sipp_occ_map.h>  // SIPP已删除
 #include <global_planner/risk_map_2d.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <trajectory_planner/polyTrajOccMap.h>
 #include <trajectory_planner/piecewiseLinearTraj.h>
 #include <trajectory_planner/bsplineTraj.h>
 #include <trajectory_planner/mpcPlanner.h>
+#include <std_msgs/Bool.h>
 #include <mutex>
 
 namespace AutoFlight{
@@ -32,7 +33,7 @@ namespace AutoFlight{
 		std::shared_ptr<dynamicPredictor::predictor> predictor_;
 		std::shared_ptr<globalPlanner::rrtOccMap<3>> rrtPlanner_;
 		std::shared_ptr<globalPlanner::AStarOccMap> aStarPlanner_;
-		std::shared_ptr<globalPlanner::SippOccMap> sippPlanner_;
+		// std::shared_ptr<globalPlanner::SippOccMap> sippPlanner_;  // SIPP已删除
 		std::shared_ptr<globalPlanner::RiskMap2D> riskMap2D_;  // 风险地图
 		std::shared_ptr<trajPlanner::polyTrajOccMap> polyTraj_;
 		std::shared_ptr<trajPlanner::pwlTraj> pwlTraj_;
@@ -43,14 +44,15 @@ namespace AutoFlight{
 		ros::Timer visTimer_;
 		ros::Timer freeMapTimer_;
 
-		ros::Publisher rrtPathPub_;
-		ros::Publisher polyTrajPub_;
-		ros::Publisher pwlTrajPub_;
-		ros::Publisher mpcTrajPub_;
-		ros::Publisher inputTrajPub_;
-		ros::Publisher goalPub_;
-		
-		ros::Subscriber riskMapSub_;  // 订阅风险地图
+	ros::Publisher rrtPathPub_;
+	ros::Publisher polyTrajPub_;
+	ros::Publisher pwlTrajPub_;
+	ros::Publisher mpcTrajPub_;
+	ros::Publisher inputTrajPub_;
+	ros::Publisher goalPub_;
+	ros::Publisher mpcStatusPub_;  // 发布 MPC 求解状态（用于数据记录）
+	
+	ros::Subscriber riskMapSub_;  // 订阅风险地图
 
 		std::thread mpcWorker_;
 
@@ -58,7 +60,7 @@ namespace AutoFlight{
 		bool useFakeDetector_;
 		bool usePredictor_;
 		bool useGlobalPlanner_;
-		std::string globalPlannerType_ = "rrt"; // rrt / astar / sipp
+		std::string globalPlannerType_ = "rrt"; // rrt / astar (sipp已删除)
 		bool noYawTurning_;
 		bool useYawControl_;
 		bool usePredefinedGoal_;

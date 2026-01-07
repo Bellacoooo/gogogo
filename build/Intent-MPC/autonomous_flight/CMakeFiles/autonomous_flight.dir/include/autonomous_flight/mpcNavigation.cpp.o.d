@@ -2105,7 +2105,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/a_star_occ.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/risk_map_2d.h \
  /usr/include/c++/9/unordered_set /usr/include/c++/9/bits/unordered_set.h \
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/polyTrajOccMap.h \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/utils.h \
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/Point.h \
@@ -2144,4 +2143,5 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_common.h \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_qpoases_interface.hpp \
  /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_solver_sfunction.h \
- /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_qpoases_interface.hpp
+ /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/mpc_solver/acado_qpoases_interface.hpp \
+ /opt/ros/noetic/include/std_msgs/Bool.h

@@ -164,15 +164,12 @@ namespace AutoFlight{
 			}
 		}
 
-		// initialize global planner (rrt / astar / sipp)
+		// initialize global planner (rrt / astar)
 		if (this->globalPlannerType_ == "astar"){
 			this->aStarPlanner_.reset(new globalPlanner::AStarOccMap (this->nh_));
 			this->aStarPlanner_->setMap(this->map_);
 		}
-		else if (this->globalPlannerType_ == "sipp"){
-			this->sippPlanner_.reset(new globalPlanner::SippOccMap (this->nh_));
-			this->sippPlanner_->setMap(this->map_);
-		}
+		// SIPP 已删除
 		else{ // rrt by default
 			this->rrtPlanner_.reset(new globalPlanner::rrtOccMap<3> (this->nh_));
 			this->rrtPlanner_->setMap(this->map_);
@@ -200,6 +197,7 @@ namespace AutoFlight{
 		this->mpcTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/mpc_trajectory", 10);
 		this->inputTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/input_trajectory", 10);
 		this->goalPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("mpcNavigation/goal", 10);
+		this->mpcStatusPub_ = this->nh_.advertise<std_msgs::Bool>("mpcNavigation/infeasible", 10);
 		
 		// 订阅风险地图
 		this->riskMapSub_ = this->nh_.subscribe("dynamic_predictor/dynamic_risk_map", 1, 
@@ -362,13 +360,7 @@ namespace AutoFlight{
 								}
 								ROS_INFO("[MPC] A* returned %zu waypoints (RAW, before smoothing)", rrtPathMsgTemp.poses.size());
 							}
-							else if (this->globalPlannerType_ == "sipp" && this->sippPlanner_){
-								ROS_INFO("[MPC] ========== USING SIPP PLANNER ==========");
-								this->sippPlanner_->updateStart(this->odom_.pose.pose);
-								this->sippPlanner_->updateGoal(this->goal_.pose);
-								this->sippPlanner_->makePlan(rrtPathMsgTemp);
-								ROS_INFO("[MPC] SIPP returned %zu waypoints (RAW, before smoothing)", rrtPathMsgTemp.poses.size());
-							}
+							// SIPP 已删除
 							else if (this->rrtPlanner_){
 								this->rrtPlanner_->updateStart(this->odom_.pose.pose);
 								this->rrtPlanner_->updateGoal(this->goal_.pose);
@@ -465,18 +457,24 @@ namespace AutoFlight{
 						this->mpc_->updateDynamicObstacles(obstaclesPos, obstaclesVel, obstaclesSize);
 					}
 
-					ros::Time trajStartTime = ros::Time::now();
-					bool newTrajReturn;
-					if (this->usePredictor_){
-						// makePlan with predictor
-						newTrajReturn = this->mpc_->makePlanWithPred();
-					}
-					else{
-						newTrajReturn = this->mpc_->makePlan();
-					}
-					nav_msgs::Path mpcTraj;	
-					
-					if (newTrajReturn){
+				ros::Time trajStartTime = ros::Time::now();
+				bool newTrajReturn;
+				if (this->usePredictor_){
+					// makePlan with predictor
+					newTrajReturn = this->mpc_->makePlanWithPred();
+				}
+				else{
+					newTrajReturn = this->mpc_->makePlan();
+				}
+				
+				// 发布 MPC 求解状态（仅发布，不改变逻辑）
+				std_msgs::Bool mpcStatusMsg;
+				mpcStatusMsg.data = !newTrajReturn;  // true = infeasible, false = success
+				this->mpcStatusPub_.publish(mpcStatusMsg);
+				
+				nav_msgs::Path mpcTraj;	
+				
+				if (newTrajReturn){
 						this->trajStartTime_ = trajStartTime;
 						if (this->mpcHasCollision() or this->hasDynamicCollision()){
 							this->mpcTrajectoryReady_ = false;

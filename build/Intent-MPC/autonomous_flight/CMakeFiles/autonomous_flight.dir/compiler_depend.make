@@ -1483,7 +1483,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/risk_map_2d.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h \
-  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h \
   /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/dynamicMap.h \
   /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/occupancyMap.h \
@@ -1653,6 +1652,7 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
   /opt/ros/noetic/include/sensor_msgs/PointField.h \
   /opt/ros/noetic/include/sensor_msgs/RegionOfInterest.h \
   /opt/ros/noetic/include/sensor_msgs/image_encodings.h \
+  /opt/ros/noetic/include/std_msgs/Bool.h \
   /opt/ros/noetic/include/std_msgs/ColorRGBA.h \
   /opt/ros/noetic/include/std_msgs/Empty.h \
   /opt/ros/noetic/include/std_msgs/Float32.h \
@@ -5586,6 +5586,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 
 /usr/include/boost/mpl/aux_/msvc_type.hpp:
 
+/opt/ros/noetic/include/std_msgs/Bool.h:
+
 /usr/include/boost/integer_traits.hpp:
 
 /usr/include/eigen3/Eigen/src/Core/arch/Default/Settings.h:
@@ -6265,8 +6267,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/autonomous_flight.dir/include/autonomous
 /usr/include/boost/chrono/clock_string.hpp:
 
 /usr/include/boost/mpl/inserter.hpp:
-
-/home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h:
 
 /usr/include/boost/smart_ptr/detail/sp_counted_base_std_atomic.hpp:
 

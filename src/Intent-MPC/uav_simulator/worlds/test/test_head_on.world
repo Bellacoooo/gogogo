@@ -1,0 +1,152 @@
+
+            <sdf version='1.7'>
+            <world name='default'>
+                <light name='sun' type='directional'>
+                <cast_shadows>1</cast_shadows>
+                <pose>0 0 10 0 -0 0</pose>
+                <diffuse>0.8 0.8 0.8 1</diffuse>
+                <specular>0.2 0.2 0.2 1</specular>
+                <attenuation>
+                    <range>1000</range>
+                    <constant>0.9</constant>
+                    <linear>0.01</linear>
+                    <quadratic>0.001</quadratic>
+                </attenuation>
+                <direction>-0.5 0.1 -0.9</direction>
+                <spot>
+                    <inner_angle>0</inner_angle>
+                    <outer_angle>0</outer_angle>
+                    <falloff>0</falloff>
+                </spot>
+                </light>
+                 
+                            
+                             
+                            
+                             
+                            
+                             
+                         
+                            
+                            <model name='dynamic_cylinder_1_0.3_0.3_1.3'>
+                            <static>true</static>
+                            <pose>-10 0 0 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <cylinder>
+                                            <radius>0.17</radius>
+                                            <length>1.3</length>
+                                        </cylinder>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>1</loop>
+                                <velocity>0.4</velocity>
+                                <path>
+                                <waypoint>-10 0 0</waypoint>
+                                <waypoint>-0.5 0 0</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+                             
+                            
+                             
+                    
+                             
+                            
+                             
+                            
+                             
+                            
+                            <model name='dynamic_box_2_0.2_0.1_1.8'>
+                            <static>true</static>
+                            <pose>-10 -3 0 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <box>
+                                            <size>0.22 0.11 1.75</size> <!-- Width, Depth, Height -->
+                                        </box>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>1</loop>
+                                <velocity>0.3</velocity>
+                                <path>
+                                <waypoint>-10 -3 0</waypoint>
+                                <waypoint>0 2 0</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+
+
+                            <model name='dynamic_box_3_0.2_0.2_1.3'>
+                            <static>true</static>
+                            <pose>-10 3 0 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <link name='link'>
+                                <visual name='visual'>
+                                    <geometry>
+                                        <box>
+                                            <size>0.16 0.15 1.32</size> <!-- Width, Depth, Height -->
+                                        </box>
+                                    </geometry>
+                                    <material>
+                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
+                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
+                                    </material>
+                                </visual>
+                            </link>
+                            <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+                                <orientation>false</orientation>
+                                <loop>1</loop>
+                                <velocity>0.2</velocity>
+                                <path>
+                                <waypoint>-10 3 0</waypoint>
+                                <waypoint>0 -2 0</waypoint>
+                                </path>
+                            </plugin>
+                            </model> 
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+                             
+                            
+            </world>
+            </sdf>
+            

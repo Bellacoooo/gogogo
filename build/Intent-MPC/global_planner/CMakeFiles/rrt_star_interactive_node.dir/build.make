@@ -247,7 +247,6 @@ rrt_star_interactive_node_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
-/home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /opt/ros/noetic/lib/libcv_bridge.so
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /usr/lib/x86_64-linux-gnu/libopencv_calib3d.so.4.2.0
 /home/ff/intent-mpc/devel/lib/global_planner/rrt_star_interactive_node: /usr/lib/x86_64-linux-gnu/libopencv_dnn.so.4.2.0

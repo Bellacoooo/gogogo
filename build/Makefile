@@ -289,32 +289,6 @@ gtest_main/fast:
 .PHONY : gtest_main/fast
 
 #=============================================================================
-# Target rules for targets named _catkin_empty_exported_target
-
-# Build rule for target.
-_catkin_empty_exported_target: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 _catkin_empty_exported_target
-.PHONY : _catkin_empty_exported_target
-
-# fast build rule for target.
-_catkin_empty_exported_target/fast:
-	$(MAKE) $(MAKESILENT) -f sipp_vendor/CMakeFiles/_catkin_empty_exported_target.dir/build.make sipp_vendor/CMakeFiles/_catkin_empty_exported_target.dir/build
-.PHONY : _catkin_empty_exported_target/fast
-
-#=============================================================================
-# Target rules for targets named sipp
-
-# Build rule for target.
-sipp: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 sipp
-.PHONY : sipp
-
-# fast build rule for target.
-sipp/fast:
-	$(MAKE) $(MAKESILENT) -f sipp_vendor/CMakeFiles/sipp.dir/build.make sipp_vendor/CMakeFiles/sipp.dir/build
-.PHONY : sipp/fast
-
-#=============================================================================
 # Target rules for targets named roscpp_generate_messages_cpp
 
 # Build rule for target.
@@ -1667,6 +1641,19 @@ fake_detector_node/fast:
 .PHONY : fake_detector_node/fast
 
 #=============================================================================
+# Target rules for targets named data_recorder_node
+
+# Build rule for target.
+data_recorder_node: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 data_recorder_node
+.PHONY : data_recorder_node
+
+# fast build rule for target.
+data_recorder_node/fast:
+	$(MAKE) $(MAKESILENT) -f Intent-MPC/flight_data_recorder/CMakeFiles/data_recorder_node.dir/build.make Intent-MPC/flight_data_recorder/CMakeFiles/data_recorder_node.dir/build
+.PHONY : data_recorder_node/fast
+
+#=============================================================================
 # Target rules for targets named map_manager_generate_messages
 
 # Build rule for target.
@@ -2485,7 +2472,6 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
-	@echo "... _catkin_empty_exported_target"
 	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedObstacle"
 	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedObstacles"
 	@echo "... _dynamic_predictor_generate_messages_check_deps_PredictedTrajectory"
@@ -2629,6 +2615,7 @@ help:
 	@echo "... vision_msgs_generate_messages_py"
 	@echo "... autonomous_flight"
 	@echo "... bspline_node"
+	@echo "... data_recorder_node"
 	@echo "... detector_node"
 	@echo "... dynamic_map_node"
 	@echo "... dynamic_predictor"
@@ -2655,7 +2642,6 @@ help:
 	@echo "... rrt_interactive_node"
 	@echo "... rrt_star_interactive_node"
 	@echo "... save_map_node"
-	@echo "... sipp"
 	@echo "... testObstacleClustering"
 	@echo "... test_dep_node"
 	@echo "... time_optimizer"

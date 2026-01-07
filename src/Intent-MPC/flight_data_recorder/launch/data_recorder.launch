@@ -1,0 +1,10 @@
+<launch>
+    <!-- Load parameters -->
+    <rosparam file="$(find flight_data_recorder)/cfg/data_recorder.yaml" command="load"/>
+    
+    <!-- Start data recorder node -->
+    <node pkg="flight_data_recorder" type="data_recorder_node" name="data_recorder_node" output="screen"/>
+</launch>
+
+
+

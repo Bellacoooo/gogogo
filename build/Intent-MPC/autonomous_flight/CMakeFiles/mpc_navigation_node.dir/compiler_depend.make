@@ -27,7 +27,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/risk_map_2d.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h \
-  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h \
   /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h \
   /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/dynamicMap.h \
   /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/occupancyMap.h \
@@ -197,6 +196,7 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
   /opt/ros/noetic/include/sensor_msgs/PointField.h \
   /opt/ros/noetic/include/sensor_msgs/RegionOfInterest.h \
   /opt/ros/noetic/include/sensor_msgs/image_encodings.h \
+  /opt/ros/noetic/include/std_msgs/Bool.h \
   /opt/ros/noetic/include/std_msgs/ColorRGBA.h \
   /opt/ros/noetic/include/std_msgs/Empty.h \
   /opt/ros/noetic/include/std_msgs/Float32.h \
@@ -3338,6 +3338,8 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/smart_ptr/detail/sp_counted_impl.hpp:
 
+/usr/include/boost/smart_ptr/detail/sp_counted_base_std_atomic.hpp:
+
 /usr/include/boost/smart_ptr/detail/sp_counted_base.hpp:
 
 /usr/include/boost/smart_ptr/detail/sp_convertible.hpp:
@@ -3760,9 +3762,9 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/interprocess/streams/bufferstream.hpp:
 
-/opt/ros/noetic/include/std_msgs/MultiArrayDimension.h:
-
 /usr/include/boost/date_time/time_formatting_streams.hpp:
+
+/opt/ros/noetic/include/std_msgs/MultiArrayDimension.h:
 
 /usr/include/boost/interprocess/exceptions.hpp:
 
@@ -3789,8 +3791,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 /home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/uvDetector.h:
 
 /usr/include/boost/numeric/conversion/detail/numeric_cast_traits.hpp:
-
-/usr/include/boost/integer_traits.hpp:
 
 /usr/include/boost/mpl/aux_/msvc_type.hpp:
 
@@ -4005,6 +4005,14 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 /usr/include/boost/date_time/gregorian/greg_day.hpp:
 
 /usr/include/boost/date_time/time_system_counted.hpp:
+
+/usr/include/eigen3/Eigen/src/Core/arch/SSE/MathFunctions.h:
+
+/usr/include/boost/date_time/gregorian/greg_date.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/types.h:
+
+/usr/include/boost/mpl/iterator_category.hpp:
 
 /usr/include/boost/function_types/is_nonmember_callable_builtin.hpp:
 
@@ -4332,6 +4340,28 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/predef/os/bsd/free.h:
 
+/usr/include/eigen3/Eigen/src/Core/BooleanRedux.h:
+
+/usr/include/boost/iostreams/detail/ios.hpp:
+
+/usr/include/kdl/frames.hpp:
+
+/usr/include/boost/range/iterator_range.hpp:
+
+/usr/include/boost/date_time/posix_time/ptime.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
+
+/usr/include/boost/config/stdlib/libstdcpp3.hpp:
+
+/opt/ros/noetic/include/pcl_conversions/pcl_conversions.h:
+
+/usr/include/boost/numeric/conversion/int_float_mixture_enum.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/unistd.h:
+
+/opt/ros/noetic/include/ros/message.h:
+
 /opt/ros/noetic/include/message_filters/synchronizer.h:
 
 /usr/include/boost/type_traits/add_const.hpp:
@@ -4508,9 +4538,37 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/osqp/types.h:
 
-/usr/include/boost/algorithm/string/sequence_traits.hpp:
+/usr/include/boost/function_types/detail/components_impl/arity20_1.hpp:
 
-/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/osqp/scaling.h:
+/usr/include/boost/date_time/gregorian/parsers.hpp:
+
+/usr/include/boost/numeric/conversion/detail/is_subranged.hpp:
+
+/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
+
+/usr/include/boost/parameter/aux_/pack/tag_template_keyword_arg.hpp:
+
+/usr/include/opencv4/opencv2/core/bufferpool.hpp:
+
+/usr/include/boost/preprocessor/config/config.hpp:
+
+/usr/include/boost/detail/templated_streams.hpp:
+
+/usr/include/boost/mp11/detail/mp_void.hpp:
+
+/usr/include/c++/9/cstddef:
+
+/usr/include/boost/ratio/config.hpp:
+
+/usr/include/boost/mpl/inherit_linearly.hpp:
+
+/usr/include/boost/mpl/aux_/has_size.hpp:
+
+/usr/include/log4cxx/logstring.h:
+
+/usr/include/boost/date_time/special_defs.hpp:
+
+/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Solver.tpp:
 
 /usr/include/boost/config/helper_macros.hpp:
 
@@ -4636,10 +4694,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/mpl/apply.hpp:
 
-/usr/include/boost/iostreams/traits.hpp:
-
-/opt/ros/noetic/include/tf2/convert.h:
-
 /usr/include/boost/mpl/distance_fwd.hpp:
 
 /usr/include/opencv4/opencv2/core/saturate.hpp:
@@ -4740,6 +4794,12 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/mpl/iterator_tags.hpp:
 
+/usr/include/boost/smart_ptr/detail/spinlock_std_atomic.hpp:
+
+/home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/dynamicDetector.h:
+
+/home/ff/intent-mpc/devel/include/onboard_detector/GetDynamicObstaclesRequest.h:
+
 /usr/include/boost/type_traits/has_right_shift.hpp:
 
 /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/clustering/Kmeans.h:
@@ -4824,6 +4884,10 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/function_types/detail/components_as_mpl_sequence.hpp:
 
+/opt/ros/noetic/include/geometry_msgs/Transform.h:
+
+/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/bspline.h:
+
 /opt/ros/noetic/include/geometry_msgs/PoseWithCovariance.h:
 
 /opt/ros/noetic/include/ros/timer.h:
@@ -4861,66 +4925,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 /usr/include/boost/predef/hardware/simd/arm.h:
 
 /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h:
-
-/usr/include/boost/numeric/conversion/int_float_mixture_enum.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/unistd.h:
-
-/opt/ros/noetic/include/ros/message.h:
-
-/usr/include/eigen3/Eigen/src/Core/arch/SSE/MathFunctions.h:
-
-/usr/include/boost/date_time/gregorian/greg_date.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/types.h:
-
-/usr/include/boost/mpl/iterator_category.hpp:
-
-/usr/include/boost/smart_ptr/detail/sp_counted_base_std_atomic.hpp:
-
-/home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h:
-
-/usr/include/boost/function_types/detail/components_impl/arity20_1.hpp:
-
-/usr/include/boost/date_time/gregorian/parsers.hpp:
-
-/usr/include/boost/numeric/conversion/detail/is_subranged.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h:
-
-/usr/include/boost/parameter/aux_/pack/tag_template_keyword_arg.hpp:
-
-/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/bspline.h:
-
-/opt/ros/noetic/include/geometry_msgs/Transform.h:
-
-/usr/include/opencv4/opencv2/core/bufferpool.hpp:
-
-/usr/include/boost/preprocessor/config/config.hpp:
-
-/usr/include/boost/detail/templated_streams.hpp:
-
-/usr/include/boost/mp11/detail/mp_void.hpp:
-
-/usr/include/c++/9/cstddef:
-
-/usr/include/boost/ratio/config.hpp:
-
-/usr/include/boost/mpl/inherit_linearly.hpp:
-
-/usr/include/boost/mpl/aux_/has_size.hpp:
-
-/home/ff/intent-mpc/devel/include/onboard_detector/GetDynamicObstaclesRequest.h:
-
-/usr/include/boost/smart_ptr/detail/spinlock_std_atomic.hpp:
-
-/home/ff/intent-mpc/src/Intent-MPC/onboard_detector/include/onboard_detector/dynamicDetector.h:
-
-/usr/include/log4cxx/logstring.h:
-
-/usr/include/boost/date_time/special_defs.hpp:
-
-/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/OsqpEigen/Solver.tpp:
 
 /usr/include/boost/type_traits/function_traits.hpp:
 
@@ -5174,21 +5178,13 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 
 /usr/include/boost/mpl/insert_fwd.hpp:
 
-/usr/include/eigen3/Eigen/src/Core/BooleanRedux.h:
+/opt/ros/noetic/include/tf2/convert.h:
 
-/usr/include/boost/iostreams/detail/ios.hpp:
+/usr/include/boost/iostreams/traits.hpp:
 
-/usr/include/kdl/frames.hpp:
+/usr/include/boost/algorithm/string/sequence_traits.hpp:
 
-/usr/include/boost/range/iterator_range.hpp:
-
-/usr/include/boost/date_time/posix_time/ptime.hpp:
-
-/usr/include/x86_64-linux-gnu/bits/types/wint_t.h:
-
-/usr/include/boost/config/stdlib/libstdcpp3.hpp:
-
-/opt/ros/noetic/include/pcl_conversions/pcl_conversions.h:
+/home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/osqp/scaling.h:
 
 /usr/include/eigen3/Eigen/src/SparseCore/SparsePermutation.h:
 
@@ -5495,6 +5491,12 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 /usr/include/boost/math/tools/promotion.hpp:
 
 /usr/include/boost/predef/architecture/pyramid.h:
+
+/usr/include/boost/integer_traits.hpp:
+
+/opt/ros/noetic/include/std_msgs/Bool.h:
+
+/usr/include/boost/mpl/aux_/numeric_op.hpp:
 
 /opt/ros/noetic/include/mavros_msgs/SetModeRequest.h:
 
@@ -6097,8 +6099,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
 /usr/include/boost/date_time/date_duration_types.hpp:
 
 /usr/include/boost/mpl/aux_/nttp_decl.hpp:
-
-/usr/include/boost/mpl/aux_/numeric_op.hpp:
 
 /usr/include/eigen3/Eigen/src/plugins/CommonCwiseUnaryOps.h:
 

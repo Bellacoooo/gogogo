@@ -28,7 +28,6 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/risk_map_2d.h
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtBase.h
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/rrtOccMap.h
- /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/sipp_occ_map.h
  /home/ff/intent-mpc/src/Intent-MPC/global_planner/include/global_planner/utils.h
  /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/dynamicMap.h
  /home/ff/intent-mpc/src/Intent-MPC/map_manager/include/map_manager/occupancyMap.h
@@ -198,6 +197,7 @@ Intent-MPC/autonomous_flight/CMakeFiles/mpc_navigation_node.dir/src/mpc_navigati
  /opt/ros/noetic/include/sensor_msgs/PointField.h
  /opt/ros/noetic/include/sensor_msgs/RegionOfInterest.h
  /opt/ros/noetic/include/sensor_msgs/image_encodings.h
+ /opt/ros/noetic/include/std_msgs/Bool.h
  /opt/ros/noetic/include/std_msgs/ColorRGBA.h
  /opt/ros/noetic/include/std_msgs/Empty.h
  /opt/ros/noetic/include/std_msgs/Float32.h

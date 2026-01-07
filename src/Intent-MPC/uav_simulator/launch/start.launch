@@ -64,7 +64,10 @@
   <!-- 前后左右 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_front_back_left_right.world" /> -->
   <!-- keepsome -->
- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_keep_some.world" />
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_keep_some.world" /> -->
+  <!-- head-on相向而行 -->
+  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_head_on.world" />
+
   
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test2.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_mill19_1.world" /> -->
@@ -101,7 +104,7 @@
 
   <!-- push robot_description to factory and spawn robot in gazebo at the origin, change x,y,z arguments to spawn in a different position -->
   <!-- <node name="spawn_gazebo_model" pkg="gazebo_ros" type="spawn_model" args="-urdf -param robot_description -model quadcopter -x 0 -y 0 -z 0.1" respawn="false" /> -->
-<!-- 限制话题发布频率（节流 -->
+<!-- 限制话题发布频率（节流) -->
   <node pkg="topic_tools" type="throttle" name="gt_pose_throttle" args="messages /CERLAB/quadcopter/pose_raw 30 /CERLAB/quadcopter/pose"/>
   <node pkg="topic_tools" type="throttle" name="gt_vel_throttle" args="messages /CERLAB/quadcopter/vel_raw 30 /CERLAB/quadcopter/vel"/>
   <node pkg="topic_tools" type="throttle" name="gt_acc_throttle" args="messages /CERLAB/quadcopter/acc_raw 30 /CERLAB/quadcopter/acc"/>

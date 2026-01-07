@@ -1,0 +1,7 @@
+data_recorder:
+  collision_threshold: 0.4  # meters, distance < threshold means collision
+  record_rate: 10.0  # Hz (0.1 second sampling interval)
+  detection_range: 50.0  # meters, range to query obstacles
+
+
+

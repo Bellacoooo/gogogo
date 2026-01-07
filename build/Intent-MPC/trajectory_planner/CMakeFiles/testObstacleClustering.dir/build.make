@@ -302,7 +302,6 @@ testObstacleClustering_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.2.0
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
-/home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /home/ff/intent-mpc/devel/lib/libdynamic_predictor.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /home/ff/intent-mpc/devel/lib/libmap_manager.so
 /home/ff/intent-mpc/devel/lib/trajectory_planner/testObstacleClustering: /usr/lib/x86_64-linux-gnu/libpcl_apps.so

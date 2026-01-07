@@ -535,30 +535,6 @@ src/rrt_star_interactive_node.cpp.s:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/rrt_star_interactive_node.dir/build.make Intent-MPC/global_planner/CMakeFiles/rrt_star_interactive_node.dir/src/rrt_star_interactive_node.cpp.s
 .PHONY : src/rrt_star_interactive_node.cpp.s
 
-src/sipp_occ_map.o: src/sipp_occ_map.cpp.o
-.PHONY : src/sipp_occ_map.o
-
-# target to build an object file
-src/sipp_occ_map.cpp.o:
-	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/sipp_occ_map.cpp.o
-.PHONY : src/sipp_occ_map.cpp.o
-
-src/sipp_occ_map.i: src/sipp_occ_map.cpp.i
-.PHONY : src/sipp_occ_map.i
-
-# target to preprocess a source file
-src/sipp_occ_map.cpp.i:
-	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/sipp_occ_map.cpp.i
-.PHONY : src/sipp_occ_map.cpp.i
-
-src/sipp_occ_map.s: src/sipp_occ_map.cpp.s
-.PHONY : src/sipp_occ_map.s
-
-# target to generate assembly for a file
-src/sipp_occ_map.cpp.s:
-	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/sipp_occ_map.cpp.s
-.PHONY : src/sipp_occ_map.cpp.s
-
 src/test_dep_node.o: src/test_dep_node.cpp.o
 .PHONY : src/test_dep_node.o
 
@@ -631,9 +607,6 @@ help:
 	@echo "... src/rrt_star_interactive_node.o"
 	@echo "... src/rrt_star_interactive_node.i"
 	@echo "... src/rrt_star_interactive_node.s"
-	@echo "... src/sipp_occ_map.o"
-	@echo "... src/sipp_occ_map.i"
-	@echo "... src/sipp_occ_map.s"
 	@echo "... src/test_dep_node.o"
 	@echo "... src/test_dep_node.i"
 	@echo "... src/test_dep_node.s"

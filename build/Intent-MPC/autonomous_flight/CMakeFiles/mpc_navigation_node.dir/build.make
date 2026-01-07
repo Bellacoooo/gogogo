@@ -305,7 +305,6 @@ mpc_navigation_node_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /usr/lib/x86_64-linux-gnu/libopencv_photo.so.4.2.0
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
-/home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /home/ff/intent-mpc/devel/lib/libsipp.so
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/lib/x86/libosqp.so
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/lib/x86/libOsqpEigen.so.0.7.0
 /home/ff/intent-mpc/devel/lib/autonomous_flight/mpc_navigation_node: /home/ff/intent-mpc/src/Intent-MPC/trajectory_planner/include/trajectory_planner/third_party/ACADO/libacado_toolkit_s.so
