@@ -16,15 +16,15 @@ RiskMap2D::RiskMap2D()
 
 void RiskMap2D::updateFromMsg(const nav_msgs::OccupancyGrid& msg)
 {
-  ROS_WARN("[RISK-MAP-UPDATE] updateFromMsg called: msg.width=%u, msg.height=%u, msg.resolution=%.6f, msg.data.size()=%zu",
-           msg.info.width, msg.info.height, msg.info.resolution, msg.data.size());
+  // ROS_WARN("[RISK-MAP-UPDATE] updateFromMsg called: msg.width=%u, msg.height=%u, msg.resolution=%.6f, msg.data.size()=%zu",
+  //          msg.info.width, msg.info.height, msg.info.resolution, msg.data.size());
   
   std::lock_guard<std::mutex> lock(mutex_);
-  ROS_WARN("[RISK-MAP-UPDATE] Lock acquired");
+  // ROS_WARN("[RISK-MAP-UPDATE] Lock acquired");
   
   if (msg.info.width == 0 || msg.info.height == 0 || msg.info.resolution <= 0.0)
   {
-    ROS_WARN("[RISK-MAP-UPDATE] Invalid message parameters, setting valid_=false");
+    // ROS_WARN("[RISK-MAP-UPDATE] Invalid message parameters, setting valid_=false");
     valid_ = false;
     return;
   }
@@ -35,16 +35,16 @@ void RiskMap2D::updateFromMsg(const nav_msgs::OccupancyGrid& msg)
   size_(0) = static_cast<int>(msg.info.width);
   size_(1) = static_cast<int>(msg.info.height);
   
-  ROS_WARN("[RISK-MAP-UPDATE] Parameters set: resolution=%.6f, origin=(%.3f,%.3f), size=(%d,%d)",
-           resolution_, origin_(0), origin_(1), size_(0), size_(1));
+  // ROS_WARN("[RISK-MAP-UPDATE] Parameters set: resolution=%.6f, origin=(%.3f,%.3f), size=(%d,%d)",
+  //          resolution_, origin_(0), origin_(1), size_(0), size_(1));
 
   // 将 OccupancyGrid 的 [0, 100] 值转换为 [0.0, 1.0] 的风险值
   std::size_t expected_size = static_cast<std::size_t>(size_(0)) * static_cast<std::size_t>(size_(1));
-  ROS_WARN("[RISK-MAP-UPDATE] Resizing data_ to %zu elements", expected_size);
+  // ROS_WARN("[RISK-MAP-UPDATE] Resizing data_ to %zu elements", expected_size);
   
   try {
     data_.resize(expected_size, 0.0);  // 初始化为0.0，防止未初始化数据
-    ROS_WARN("[RISK-MAP-UPDATE] data_.resize() completed, data_.size()=%zu", data_.size());
+    // ROS_WARN("[RISK-MAP-UPDATE] data_.resize() completed, data_.size()=%zu", data_.size());
   } catch (const std::exception& e) {
     ROS_ERROR("[RISK-MAP-UPDATE] Exception in data_.resize(): %s", e.what());
     valid_ = false;
@@ -56,7 +56,7 @@ void RiskMap2D::updateFromMsg(const nav_msgs::OccupancyGrid& msg)
   }
   
   std::size_t copy_size = std::min(msg.data.size(), expected_size);
-  ROS_WARN("[RISK-MAP-UPDATE] Copying %zu elements from msg.data", copy_size);
+  // ROS_WARN("[RISK-MAP-UPDATE] Copying %zu elements from msg.data", copy_size);
   
   std::size_t non_zero_count = 0;
   for (std::size_t i = 0; i < copy_size; ++i)
@@ -75,12 +75,12 @@ void RiskMap2D::updateFromMsg(const nav_msgs::OccupancyGrid& msg)
     }
   }
   
-  ROS_WARN("[RISK-MAP-UPDATE] Copy completed: non_zero_count=%zu, expected_size=%zu, copy_size=%zu",
-           non_zero_count, expected_size, copy_size);
+  // ROS_WARN("[RISK-MAP-UPDATE] Copy completed: non_zero_count=%zu, expected_size=%zu, copy_size=%zu",
+  //          non_zero_count, expected_size, copy_size);
   
   // 如果 msg.data 小于预期大小，剩余部分保持为 0.0（已在 resize 时初始化）
   valid_ = true;
-  ROS_WARN("[RISK-MAP-UPDATE] updateFromMsg completed: valid_=true, data_.size()=%zu", data_.size());
+  // ROS_WARN("[RISK-MAP-UPDATE] updateFromMsg completed: valid_=true, data_.size()=%zu", data_.size());
 }
 
 bool RiskMap2D::worldToGrid(double wx, double wy, int& ix, int& iy) const

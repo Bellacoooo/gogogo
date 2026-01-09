@@ -82,52 +82,52 @@ void AStarOccMap::updateGoal(const geometry_msgs::Pose &goal)
 void AStarOccMap::setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map)
 {
   risk_map_ = risk_map;
-  ROS_WARN("[A*-RISK-DEBUG] setRiskMap called: risk_map_=%p, w_risk_=%.3f, k_risk_=%.3f, z_gate_=%.3f",
-           risk_map_.get(), w_risk_, k_risk_, z_gate_);
+  // ROS_WARN("[A*-RISK-DEBUG] setRiskMap called: risk_map_=%p, w_risk_=%.3f, k_risk_=%.3f, z_gate_=%.3f",
+  //          risk_map_.get(), w_risk_, k_risk_, z_gate_);
   
   if (risk_map_)
   {
     bool is_valid = risk_map_->isValid();
-    ROS_WARN("[A*-RISK-DEBUG] risk_map_ pointer exists, isValid()=%s", is_valid ? "true" : "false");
+    // ROS_WARN("[A*-RISK-DEBUG] risk_map_ pointer exists, isValid()=%s", is_valid ? "true" : "false");
     
     if (is_valid)
     {
       double res = risk_map_->getResolution();
       Eigen::Vector2i size = risk_map_->getSize();
       Eigen::Vector2d origin = risk_map_->getOrigin();
-      ROS_WARN("[A*-RISK-DEBUG] Risk map valid: resolution=%.3f, size=(%d,%d), origin=(%.2f,%.2f)",
-               res, size(0), size(1), origin(0), origin(1));
+      // ROS_WARN("[A*-RISK-DEBUG] Risk map valid: resolution=%.3f, size=(%d,%d), origin=(%.2f,%.2f)",
+      //          res, size(0), size(1), origin(0), origin(1));
       
       // 检查数据是否非空
       // 注意：这里不能直接访问 data_，但可以通过查询几个点来验证
       // 使用 try-catch 保护，防止 queryBilinear 内部出现问题
       try {
         double test_val = risk_map_->queryBilinear(origin(0), origin(1));
-        ROS_WARN("[A*-RISK-DEBUG] Test query at origin: queryBilinear(%.2f,%.2f)=%.6f",
-                 origin(0), origin(1), test_val);
+        // ROS_WARN("[A*-RISK-DEBUG] Test query at origin: queryBilinear(%.2f,%.2f)=%.6f",
+        //          origin(0), origin(1), test_val);
       } catch (const std::exception& e) {
-        ROS_ERROR("[A*-RISK-DEBUG] Exception in test queryBilinear: %s", e.what());
+        // ROS_ERROR("[A*-RISK-DEBUG] Exception in test queryBilinear: %s", e.what());
       } catch (...) {
-        ROS_ERROR("[A*-RISK-DEBUG] Unknown exception in test queryBilinear");
+        // ROS_ERROR("[A*-RISK-DEBUG] Unknown exception in test queryBilinear");
       }
     }
     else
     {
-      ROS_WARN("[A*-RISK-DEBUG] Risk map pointer exists but isValid()=false");
+      // ROS_WARN("[A*-RISK-DEBUG] Risk map pointer exists but isValid()=false");
     }
   }
   else
   {
-    ROS_WARN("[A*-RISK-DEBUG] Risk map pointer is NULL");
+    // ROS_WARN("[A*-RISK-DEBUG] Risk map pointer is NULL");
   }
   
   if (w_risk_ > 0.0)
   {
-    ROS_WARN("[A*-RISK-DEBUG] w_risk_ > 0, risk cost will be used if risk_map_ is valid");
+    // ROS_WARN("[A*-RISK-DEBUG] w_risk_ > 0, risk cost will be used if risk_map_ is valid");
   }
   else
   {
-    ROS_WARN("[A*-RISK-DEBUG] w_risk_ = 0, risk cost will NOT be used");
+    // ROS_WARN("[A*-RISK-DEBUG] w_risk_ = 0, risk cost will NOT be used");
   }
 }
 

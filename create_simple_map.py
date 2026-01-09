@@ -19,8 +19,8 @@ def create_simple_map(output_file):
 
     # ========== 自定义障碍物：两个“实心”圆柱 ==========
     cylinders = [
-        {'center': [2.0, 0.5, 0.0], 'radius': 0.5, 'height': 2.0},  # 前方偏左
-        {'center': [4.0, -0.5, 0.0], 'radius': 0.5, 'height': 2.0}, # 更远偏右
+        {'center': [-2.0, 1.0, 0.0], 'radius': 0.5, 'height': 2.0},  # 前方偏左
+        {'center': [-4.0, -1.0, 0.0], 'radius': 0.5, 'height': 2.0}, # 更远偏右
     ]
 
     for cyl in cylinders:

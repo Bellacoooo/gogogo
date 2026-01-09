@@ -1,3 +1,8 @@
+# MPC 交互式测试工具参数（仅用于 mpc_interactive.launch）
+# 
+# 注意: 这个文件仅用于开发测试，不用于实际导航！
+# 实际飞行参数在 autonomous_flight/cfg/mpc_navigation/planner_param.yaml
+# 
 horizon: 30
 z_range_min: 0.9
 z_range_max: 1.2

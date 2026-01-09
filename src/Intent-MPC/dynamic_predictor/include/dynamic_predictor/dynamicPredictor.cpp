@@ -141,7 +141,7 @@ namespace dynamicPredictor{
         logFile_.open(csvFilePath.c_str(), std::ios::out | std::ios::trunc);
         if (logFile_.is_open()) {
             // 立即写入CSV表头（确保文件被创建，即使没有数据）
-            logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,dt,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
+            logFile_ << "时间戳,障碍物ID,障碍物X,障碍物Y,ADE(米),FDE(米),D_t,s_adaptive,最佳意图,有效步数,P_forward,P_left,P_right,P_stop\n";
             logFile_.flush();  // 确保数据写入缓冲区
             
             // 验证文件是否真的被创建
@@ -162,7 +162,7 @@ namespace dynamicPredictor{
             ROS_WARN_STREAM(this->hint_ << ": Failed to open file at Desktop, trying fallback: " << fallbackPath);
             logFile_.open(fallbackPath.c_str(), std::ios::out | std::ios::trunc);
             if (logFile_.is_open()) {
-                logFile_ << "t_pred,obstacle_id,ADE,FDE,D_t,s_adaptive,k_adaptive,P_forward,P_left,P_right,P_stop\n";
+                logFile_ << "时间戳,障碍物ID,障碍物X,障碍物Y,ADE(米),FDE(米),D_t,s_adaptive,最佳意图,有效步数,P_forward,P_left,P_right,P_stop\n";
                 logFile_.flush();  // 确保数据写入缓冲区
                 ROS_WARN_STREAM(this->hint_ << ": Using fallback location: " << fallbackPath);
                 std::cout << "\n========================================" << std::endl;
@@ -276,59 +276,78 @@ namespace dynamicPredictor{
             std::cout << this->hint_ << ": Prob scale param is set to: " << this->pscale_ << std::endl;
         } 
 
-        // 自适应方案参数
-            // 新增：自适应方案参数 - gamma1（NIS权重）
-        if (not this->nh_.getParam(this->ns_ + "/gamma1", this->gamma1_)){
-            this->gamma1_ = 0.5;  // 默认值
-            std::cout << this->hint_ << ": No gamma1 parameter found. Use default: 0.5." << std::endl;
-        }
-        else{
-            std::cout << this->hint_ << ": The gamma1 is set to: " << this->gamma1_ << std::endl;
-        }
-
-        // 新增：自适应方案参数 - gamma2（加加速度权重）
-        if (not this->nh_.getParam(this->ns_ + "/gamma2", this->gamma2_)){
-            this->gamma2_ = 0.5;  // 默认值
-            std::cout << this->hint_ << ": No gamma2 parameter found. Use default: 0.5." << std::endl;
-        }
-        else{
-            std::cout << this->hint_ << ": The gamma2 is set to: " << this->gamma2_ << std::endl;
+        // ==================== 自适应意图惯性方案参数 ====================
+        // 多维特征融合权重 (加加速度、角加速度、预测误差)
+        if (not this->nh_.getParam(this->ns_ + "/w1", this->w1_)){
+            this->w1_ = 0.4;  // 加加速度权重
+            std::cout << this->hint_ << ": No w1 parameter found. Use default: 0.4." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The w1 (jerk weight) is set to: " << this->w1_ << std::endl;
         }
 
-        // 新增：自适应方案参数 - lambda1（熵敏感度）
-        if (not this->nh_.getParam(this->ns_ + "/lambda1", this->lambda1_)){
-            this->lambda1_ = 1.0;  // 默认值
-            std::cout << this->hint_ << ": No lambda1 parameter found. Use default: 1.0." << std::endl;
-        }
-        else{
-            std::cout << this->hint_ << ": The lambda1 is set to: " << this->lambda1_ << std::endl;
+        if (not this->nh_.getParam(this->ns_ + "/w2", this->w2_)){
+            this->w2_ = 0.3;  // 角加速度权重
+            std::cout << this->hint_ << ": No w2 parameter found. Use default: 0.3." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The w2 (angular accel weight) is set to: " << this->w2_ << std::endl;
         }
 
-        // 新增：自适应方案参数 - lambda2（运动诊断敏感度）
-        if (not this->nh_.getParam(this->ns_ + "/lambda2", this->lambda2_)){
-            this->lambda2_ = 2.0;  // 默认值
-            std::cout << this->hint_ << ": No lambda2 parameter found. Use default: 2.0." << std::endl;
-        }
-        else{
-            std::cout << this->hint_ << ": The lambda2 is set to: " << this->lambda2_ << std::endl;
+        if (not this->nh_.getParam(this->ns_ + "/w3", this->w3_)){
+            this->w3_ = 0.3;  // 预测误差权重
+            std::cout << this->hint_ << ": No w3 parameter found. Use default: 0.3." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The w3 (prediction error weight) is set to: " << this->w3_ << std::endl;
         }
 
-        // 新增：自适应方案参数 - M_thresh（运动突变阈值）
-        if (not this->nh_.getParam(this->ns_ + "/M_thresh", this->M_thresh_)){
-            this->M_thresh_ = 1.0;  // 默认值
-            std::cout << this->hint_ << ": No M_thresh parameter found. Use default: 1.0." << std::endl;
-        }
-        else{
-            std::cout << this->hint_ << ": The M_thresh is set to: " << this->M_thresh_ << std::endl;
+        // 归一化上限参数
+        if (not this->nh_.getParam(this->ns_ + "/j_max", this->j_max_)){
+            this->j_max_ = 10.0;  // 加加速度上限 (m/s^3)，行人典型值
+            std::cout << this->hint_ << ": No j_max parameter found. Use default: 10.0 m/s^3." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The j_max (jerk limit) is set to: " << this->j_max_ << std::endl;
         }
 
-        // 新增：自适应方案参数 - s_max（最大自适应权重）
+        if (not this->nh_.getParam(this->ns_ + "/alpha_max", this->alpha_max_)){
+            this->alpha_max_ = M_PI;  // 角加速度上限 (rad/s^2)
+            std::cout << this->hint_ << ": No alpha_max parameter found. Use default: π rad/s^2." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The alpha_max (angular accel limit) is set to: " << this->alpha_max_ << std::endl;
+        }
+
+        if (not this->nh_.getParam(this->ns_ + "/e_max", this->e_max_)){
+            this->e_max_ = 0.3;  // 预测误差上限 (m)
+            std::cout << this->hint_ << ": No e_max parameter found. Use default: 0.3 m." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The e_max (prediction error limit) is set to: " << this->e_max_ << std::endl;
+        }
+
+        // Sigmoid映射参数
+        if (not this->nh_.getParam(this->ns_ + "/s_min", this->s_min_)){
+            this->s_min_ = 1.2;  // 最小自适应权重
+            std::cout << this->hint_ << ": No s_min parameter found. Use default: 1.2." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The s_min is set to: " << this->s_min_ << std::endl;
+        }
+
         if (not this->nh_.getParam(this->ns_ + "/s_max", this->s_max_)){
-            this->s_max_ = 5.0;  // 默认值
-            std::cout << this->hint_ << ": No s_max parameter found. Use default: 2.0." << std::endl;
-        }
-        else{
+            this->s_max_ = 5.0;  // 最大自适应权重
+            std::cout << this->hint_ << ": No s_max parameter found. Use default: 5.0." << std::endl;
+        } else {
             std::cout << this->hint_ << ": The s_max is set to: " << this->s_max_ << std::endl;
+        }
+
+        if (not this->nh_.getParam(this->ns_ + "/sigmoid_k", this->sigmoid_k_)){
+            this->sigmoid_k_ = 10.0;  // Sigmoid陡峭度因子
+            std::cout << this->hint_ << ": No sigmoid_k parameter found. Use default: 10.0." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The sigmoid_k is set to: " << this->sigmoid_k_ << std::endl;
+        }
+
+        if (not this->nh_.getParam(this->ns_ + "/sigmoid_mu", this->sigmoid_mu_)){
+            this->sigmoid_mu_ = 0.5;  // Sigmoid中心偏移量
+            std::cout << this->hint_ << ": No sigmoid_mu parameter found. Use default: 0.5." << std::endl;
+        } else {
+            std::cout << this->hint_ << ": The sigmoid_mu is set to: " << this->sigmoid_mu_ << std::endl;
         }
 
         // 新增：自适应方案参数 - history_window（历史窗口大小）
@@ -342,23 +361,22 @@ namespace dynamicPredictor{
             std::cout << this->hint_ << ": The history_window is set to: " << this->historyWindow_ << std::endl;
         }
 
-        // 初始化历史数据容器（放在参数加载之后，确保使用正确的 historyWindow_ 值）
-        this->accHistory_.reserve(this->historyWindow_ + 1);
-        this->caPredHistory_.reserve(this->historyWindow_ + 1);
+        // 历史数据现在由 intentProb 循环逐帧传递，不再需要全局历史容器初始化
 
-        // 初始化日志文件
-        std::string log_filename = "/tmp/adaptive_mdp_log.csv"; // 可写路径
-        logFile_.open(log_filename, std::ios::out | std::ios::app);
-        if (logFile_.is_open()) {
-            // 写入表头（仅在文件新建时写入，通过判断文件大小实现）
-            logFile_.seekp(0, std::ios::end);
-            if (logFile_.tellp() == 0) {
-                logFile_ << "Time(s),S_Adaptive,Ht,Mt,NIS,Jerk,P_Forward,P_Left,P_Right,P_Stop\n";
-            }
-            std::cout << this->hint_ << ": Log file initialized at " << log_filename << std::endl;
-        } else {
-            std::cerr << this->hint_ << "Error: Failed to open log file!" << std::endl;
-        }
+        // 注释：日志文件已在构造函数中初始化（带时间戳的intent_eval_<timestamp>.csv）
+        // 不要在这里重新打开，否则会覆盖构造函数中创建的文件
+        // std::string log_filename = "/tmp/adaptive_mdp_log.csv"; // 可写路径
+        // logFile_.open(log_filename, std::ios::out | std::ios::app);
+        // if (logFile_.is_open()) {
+        //     // 写入表头（仅在文件新建时写入，通过判断文件大小实现）
+        //     logFile_.seekp(0, std::ios::end);
+        //     if (logFile_.tellp() == 0) {
+        //         logFile_ << "Time(s),S_Adaptive,Ht,Mt,NIS,Jerk,P_Forward,P_Left,P_Right,P_Stop\n";
+        //     }
+        //     std::cout << this->hint_ << ": Log file initialized at " << log_filename << std::endl;
+        // } else {
+        //     std::cerr << this->hint_ << "Error: Failed to open log file!" << std::endl;
+        // }
 
     }
 
@@ -501,78 +519,107 @@ namespace dynamicPredictor{
 
 
 
-// 自己加的指标
-    // 自适应的指标，和计算。四个函数
-    // 1. 计算加加速度幅值 ||j_t||
-    double predictor::computeJerkNorm(const Eigen::Vector3d& currAcc) {
-        // 如果历史为空，初始化并返回0
-        if (accHistory_.empty()) {
-            accHistory_.push_back(currAcc);
-            return 0.0;
-        }
-        // 取最近一次历史加速度计算加加速度
-        Eigen::Vector3d prevAcc = accHistory_.back();
-        double jerkNorm = (currAcc - prevAcc).norm() / dt_;  // dt_为预测时间步长（原有参数）
-        // 更新历史（保持窗口大小）
-        if (accHistory_.size() >= historyWindow_) {
-            accHistory_.erase(accHistory_.begin());
-        }
-        accHistory_.push_back(currAcc);
-        return jerkNorm;
+// ==================== 自适应意图惯性机制：核心指标计算 ====================
+
+    /**
+     * @brief 计算归一化加加速度特征 f_jerk(t)
+     * @param currAcc 当前时刻的加速度 (m/s^2)
+     * @param prevAcc 前一时刻的加速度 (m/s^2)
+     * @return 归一化的加加速度特征，范围 [0, 1]
+     * 
+     * 物理意义：加加速度反映了"加速度的变化率"，是运动突变的直接体现。
+     * 稳定运动（如匀速直行）对应加加速度接近0；
+     * 意图切换（如从"直行"变为"转向"或"停止"）导致加加速度显著增大。
+     * 
+     * 数学定义：
+     *   jerk_t = (a_t - a_{t-1}) / Δt
+     *   f_jerk(t) = min(||jerk_t|| / j_max, 1.0)
+     */
+    double predictor::computeJerkFeature(const Eigen::Vector3d& currAcc, const Eigen::Vector3d& prevAcc) {
+        // 计算加加速度向量 (m/s^3)
+        Eigen::Vector3d jerk = (currAcc - prevAcc) / dt_;
+        double jerkNorm = jerk.norm();
+        
+        // 归一化到 [0, 1]
+        double f_jerk = std::min(jerkNorm / j_max_, 1.0);
+        return f_jerk;
     }
 
-    // 2. 计算归一化残差平方 NIS_t（假设残差协方差由跟踪器提供，此处简化为单位矩阵）
-    double predictor::computeNIS(const Eigen::Vector3d& currPos, const Eigen::Vector3d& caPredPos, const Eigen::Matrix3d& residualCov) {
-        Eigen::Vector3d residual = currPos - caPredPos;
-        // 避免协方差矩阵奇异，添加微小扰动
-        Eigen::Matrix3d cov = residualCov + Eigen::Matrix3d::Identity() * 1e-6;
-        double nis = residual.transpose() * cov.inverse() * residual;
-        // 存储CA模型预测位置用于后续计算
-        if (caPredHistory_.size() >= historyWindow_) {
-            caPredHistory_.erase(caPredHistory_.begin());
-        }
-        caPredHistory_.push_back(caPredPos);
-        return nis;
+    /**
+     * @brief 计算归一化角加速度特征 f_angular(t)
+     * @param currAngle 当前时刻的朝向角 (rad)
+     * @param prevAngle 前一时刻的朝向角 (rad)
+     * @return 归一化的角加速度特征，范围 [0, 1]
+     * 
+     * 注意：此函数已废弃，角加速度计算现在直接在 genTransitionMatrix 中完成，
+     * 以确保每个历史帧使用正确的前一帧数据。保留此函数仅为兼容性。
+     */
+    double predictor::computeAngularAccelFeature(double currAngle, double prevAngle) {
+        // 此函数已不再使用，计算逻辑已移至 genTransitionMatrix
+        return 0.0;
     }
 
-    // 3. 计算意图熵 H_t
-    double predictor::computeIntentEntropy(const Eigen::VectorXd& intentProb) {
-        double entropy = 0.0;
-        for (int i = 0; i < intentProb.size(); ++i) {
-            double p = intentProb(i);
-            if (p > 1e-6) {  // 避免log(0)
-                entropy -= p * log(p);
-            }
-        }
-        return entropy;
+    /**
+     * @brief 计算归一化预测-观测误差特征 f_error(t)
+     * @param currPos 当前时刻的实际观测位置 (m)
+     * @param prevPos 前一时刻的位置 (m)
+     * @param prevVel 前一时刻的速度 (m/s)
+     * @return 归一化的预测误差特征，范围 [0, 1]
+     * 
+     * 物理意义：基于牛顿第一定律的推论——若障碍物无外力作用（意图未变），
+     * 其运动应符合惯性假设（Constant Velocity Model）。
+     * 当预测误差较小时，表明障碍物运动符合惯性假设，意图稳定；
+     * 当预测误差显著增大时，说明存在显著的控制输入（加速、制动或转向），预示潜在的意图改变。
+     * 
+     * 数学定义：
+     *   p̂_t = p_{t-1} + v_{t-1} * Δt  (惯性预测位置)
+     *   e_t = ||p_t - p̂_t||  (预测-观测误差)
+     *   f_error(t) = min(e_t / e_max, 1.0)
+     */
+    double predictor::computePredictionErrorFeature(const Eigen::Vector3d& currPos, 
+                                                     const Eigen::Vector3d& prevPos, 
+                                                     const Eigen::Vector3d& prevVel) {
+        // 基于恒速模型（Constant Velocity）进行惯性预测
+        Eigen::Vector3d predictedPos = prevPos + prevVel * dt_;
+        
+        // 计算预测位置与实际观测位置的欧氏距离 (m)
+        double predictionError = (currPos - predictedPos).norm();
+        
+        // 归一化到 [0, 1]
+        double f_error = std::min(predictionError / e_max_, 1.0);
+        return f_error;
     }
 
-    // 4. 计算自适应权重 s_adaptive
-    double predictor::computeAdaptiveS(const double Ht, const double Mt) {
-        // 计算熵约束项：使用指数衰减，但在Ht=Ht_max时保持为1.0
-        // Ht_max = log(4) ≈ 1.386（均匀分布时的最大熵）
-        // 当Ht ≤ Ht_max时（正常或更确定），D_entropy = 1.0（不衰减）
-        // 当Ht > Ht_max时（异常高熵），D_entropy会衰减
-        // 这样在正常状态下（Ht≈Ht_max），D_entropy=1.0，Dt完全由D_motion决定
-        double Ht_max = log(4.0);
-        double entropyTerm = exp(-lambda1_ * std::max(0.0, Ht - Ht_max));
-        entropyTerm = std::max(0.0, std::min(1.0, entropyTerm));  // 限制在[0,1]
+    /**
+     * @brief 通过Sigmoid函数计算自适应意图惯性参数 s_adaptive
+     * @param Mt 综合运动变化指标，范围 [0, 1]
+     * @return 自适应权重 s_adaptive，范围 [s_min, s_max]
+     * 
+     * 设计原则：
+     * 1. 负相关性：s_adaptive 随 Mt 单调递减
+     * 2. 平滑性：映射函数连续可微，避免参数跳变
+     * 3. 值域约束：s_adaptive ∈ [s_min, s_max]
+     * 
+     * 数学定义：
+     *   s_adaptive(Mt) = s_min + (s_max - s_min) * σ(-k(Mt - μ))
+     *   其中 σ(x) = 1 / (1 + e^(-x)) 为标准Logistic函数
+     *   
+     * 特性分析：
+     * - 当障碍物处于稳定运动状态（Mt → 0）时，s_adaptive → s_max，系统表现出强意图惯性
+     * - 当障碍物发生剧烈机动（Mt → 1）时，s_adaptive → s_min，系统迅速降低对历史意图的信任
+     * - 在过渡区域（Mt ≈ μ = 0.5），函数具有较大的斜率，保证了意图识别的敏捷性
+     */
+    double predictor::computeAdaptiveS(double Mt) {
+        // 标准Sigmoid函数：σ(x) = 1 / (1 + e^(-x))
+        // 使用负号实现负相关性：Mt增大 → s_adaptive减小
+        double sigmoid_input = -sigmoid_k_ * (Mt - sigmoid_mu_);
+        double sigmoid_output = 1.0 / (1.0 + std::exp(-sigmoid_input));
         
-        // 计算运动诊断约束项：使用sigmoid函数，让过渡更平滑
-        // 当Mt << M_thresh时（稳定），D_motion接近1
-        // 当Mt ≈ M_thresh时（中等机动），D_motion在0.5附近，产生中间值
-        // 当Mt >> M_thresh时（大机动），D_motion接近0
-        // 使用sigmoid: 1 / (1 + exp(lambda2 * (Mt - M_thresh)))
-        // 为了产生更多中间值（0.6-0.9），使用较小的lambda2或调整阈值
-        // 这里使用lambda2/2来扩大过渡区间，让更多Mt值落在中间范围
-        double motionTerm = 1.0 / (1.0 + exp((lambda2_ * 0.7) * (Mt - M_thresh_)));
+        // 线性映射到 [s_min, s_max]
+        double s_adaptive = s_min_ + (s_max_ - s_min_) * sigmoid_output;
         
-        // 衰减因子 D_t（稳定时接近1，不稳定时接近0）
-        double Dt = entropyTerm * motionTerm;
-        
-        // 自适应权重（限制在[1, s_max_]）
-        double s_adaptive = 1.0 + (s_max_ - 1.0) * Dt;
-        return std::max(1.0, std::min(s_adaptive, s_max_));  // 截断到有效范围
+        // 安全截断（防止数值误差）
+        return std::max(s_min_, std::min(s_adaptive, s_max_));
     }
 
 
@@ -597,26 +644,43 @@ namespace dynamicPredictor{
             P.resize(this->numIntent_);
             P.setConstant(1.0/this->numIntent_);
             int numHist = this->posHist_[i].size();
+            
+            // 遍历历史帧，从过去到现在迭代更新意图概率
             for (int j=2; j<numHist; ++j){
                 // transition matrix 
-                 // 获取历史位置和速度
-                Eigen::Vector3d prevPos, prevVel;
-                Eigen::Vector3d currPos, currVel;
-                prevPos = this->posHist_[i][numHist-j-1];
-                prevVel = this->velHist_[i][numHist-j-1];
-                currPos = this->posHist_[i][numHist-j-2];
-                currVel = this->velHist_[i][numHist-j-2];
-                double prevAngle = atan2(prevPos(1)-this->posHist_[i][numHist-j](1), prevPos(0)-this->posHist_[i][numHist-j](0));
-                double currAngle = atan2(currPos(1)-prevPos(1), currPos(0)-prevPos(0));
-                // currVel = this->posHist_[i][numHist-j-2];
-                // Eigen::MatrixXd transMat = this->genTransitionMatrix(prevPos, currPos, prevVel, currVel);
-                // 原论文用的是这个函数
-                // Eigen::MatrixXd transMat = this->genTransitionMatrix(prevAngle, currAngle, currVel);
-                // 现在改为自适应改为下面的两行，增加了输入
-                Eigen::Vector3d currAcc = this->accHist_[i][numHist-j-2];  // 与pos/vel获取逻辑一致
-                Eigen::MatrixXd transMat = this->genTransitionMatrix(prevAngle, currAngle, currVel, currPos, currAcc, i);
+                // 获取三个连续帧的数据（用于计算运动变化指标）
+                // 索引说明：numHist-j 是"前前帧"，numHist-j-1 是"前一帧"，numHist-j-2 是"当前帧"
+                
+                // 前前帧数据（用于计算前一帧的角速度）
+                Eigen::Vector3d prevPrevPos = this->posHist_[i][numHist-j];
+                
+                // 前一帧数据
+                Eigen::Vector3d prevPos = this->posHist_[i][numHist-j-1];
+                Eigen::Vector3d prevVel = this->velHist_[i][numHist-j-1];
+                Eigen::Vector3d prevAcc = this->accHist_[i][numHist-j-1];
+                
+                // 当前帧数据
+                Eigen::Vector3d currPos = this->posHist_[i][numHist-j-2];
+                Eigen::Vector3d currVel = this->velHist_[i][numHist-j-2];
+                Eigen::Vector3d currAcc = this->accHist_[i][numHist-j-2];
+                
+                // 计算角度（朝向）
+                double prevPrevAngle = atan2(prevPos(1) - prevPrevPos(1), prevPos(0) - prevPrevPos(0));
+                double prevAngle = atan2(currPos(1) - prevPos(1), currPos(0) - prevPos(0));
+                // 修正：currAngle应该基于当前速度方向，而不是位置差
+                double currAngle = atan2(currVel(1), currVel(0));
+                
+                // 判断是否有有效的前一帧数据（第一帧j=2时没有有效的前一帧）
+                bool hasValidPrevFrame = (j > 2);
+                
+                // 调用 genTransitionMatrix，传入完整的历史帧数据
+                Eigen::MatrixXd transMat = this->genTransitionMatrix(
+                    prevAngle, currAngle, currVel, currPos, currAcc,
+                    prevAcc, prevPos, prevVel, prevPrevAngle,
+                    hasValidPrevFrame, i
+                );
 
-                Eigen::VectorXd newP= transMat*P;
+                Eigen::VectorXd newP = transMat * P;
                 P = newP;
             }
             intentProbTemp[i] = P;
@@ -666,9 +730,21 @@ namespace dynamicPredictor{
         }
     }
 
-    //据角度和速度，计算“意图转移概率矩阵”
+    //据角度和速度，计算"意图转移概率矩阵"
     // Eigen::MatrixXd predictor::genTransitionMatrix(const Eigen::Vector3d &prevPos, const Eigen::Vector3d &currPos, const Eigen::Vector3d &prevVel, const Eigen::Vector3d &currVel){
-    Eigen::MatrixXd predictor::genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc, int obsIdx){
+    Eigen::MatrixXd predictor::genTransitionMatrix(
+        const double &prevAngle, 
+        const double &currAngle, 
+        const Eigen::Vector3d &currVel, 
+        const Eigen::Vector3d &currPos, 
+        const Eigen::Vector3d &currAcc,
+        const Eigen::Vector3d &prevAcc,
+        const Eigen::Vector3d &prevPos,
+        const Eigen::Vector3d &prevVel,
+        const double &prevPrevAngle,
+        bool hasValidPrevFrame,
+        int obsIdx
+    ){
         // Initialize transMat
         Eigen::MatrixXd transMat;
         Eigen::VectorXd probVec;        
@@ -689,104 +765,82 @@ namespace dynamicPredictor{
         // 表示当前速度的模长（未使用，注释掉以避免警告）
         // double r = sqrt(pow(currVel(0), 2) + pow(currVel(1), 2));   
 
-    // 3. 新增：计算自适应权重所需指标（根据你的扩展逻辑）
-        // 3. 计算自适应权重所需指标
-        // 3.1 加加速度 norm（使用传入的 currAcc）
-        double jerkNormRaw = computeJerkNorm(currAcc);  // 调用已有计算函数，无需再用 .norm()
-        double jerkCap = 50.0; // 加加速度上限，避免异常尖峰
-        double jerkNorm = std::min(jerkNormRaw, jerkCap);
+    // ==================== 自适应意图惯性机制：指标计算与权重映射 ====================
+        
+        // 3. 计算三个核心物理指标
+        // 注意：只有当 hasValidPrevFrame=true 时才计算有效指标，否则使用默认值
+        
+        // 3.1 加加速度特征 f_jerk(t)
+        double f_jerk = 0.0;
+        if (hasValidPrevFrame) {
+            f_jerk = computeJerkFeature(currAcc, prevAcc);
+        }
 
-        // 3.2 NIS 计算：使用已有的 KF（CV）预测
-        Eigen::Vector3d kfPredPos = currPos + currVel * dt_; // 恒速模型预测
-        Eigen::Matrix3d residualCov = Eigen::Matrix3d::Identity() * 0.1;  // 残差协方差（可按需要调整）
-        double nis = computeNIS(currPos, kfPredPos, residualCov);  // 使用 KF 预测位置计算 NIS
+        // 3.2 角加速度特征 f_angular(t)
+        // 需要前前帧角度(prevPrevAngle)来计算前一帧角速度
+        double f_angular = 0.0;
+        if (hasValidPrevFrame) {
+            // 计算前一帧的角速度
+            double prevAngularVel = (prevAngle - prevPrevAngle) / dt_;
+            // 角度归一化到 [-π, π]
+            while (prevAngularVel > M_PI) prevAngularVel -= 2.0 * M_PI;
+            while (prevAngularVel <= -M_PI) prevAngularVel += 2.0 * M_PI;
+            
+            // 计算当前帧的角速度
+            double currAngularVel = (currAngle - prevAngle) / dt_;
+            while (currAngularVel > M_PI) currAngularVel -= 2.0 * M_PI;
+            while (currAngularVel <= -M_PI) currAngularVel += 2.0 * M_PI;
+            
+            // 计算角加速度
+            double angularAccel = (currAngularVel - prevAngularVel) / dt_;
+            f_angular = std::min(std::abs(angularAccel) / alpha_max_, 1.0);
+        }
 
-        // 3.3 意图熵（从当前意图概率计算）
-        // 注意：在 intentProb() 函数中，意图概率 P 正在迭代计算中
-        // 这里使用均匀分布作为初始估计，因为当前时刻的意图概率还未计算完成
-        Eigen::VectorXd currIntentProb = Eigen::VectorXd::Constant(this->numIntent_, 1.0 / this->numIntent_);  // 使用均匀分布作为初始估计
-        double Ht = 0.0;
-        for (int k = 0; k < currIntentProb.size(); ++k) {
-            double p = currIntentProb(k);
-            if (p > 1e-6) {  // 避免log(0)
-                Ht -= p * log(p);
+        // 3.3 预测-观测误差特征 f_error(t)
+        double f_error = 0.0;
+        if (hasValidPrevFrame) {
+            f_error = computePredictionErrorFeature(currPos, prevPos, prevVel);
+        }
+
+        // 4. 多维特征融合：综合运动变化指标 M_t
+        // M_t = w1 * f_jerk + w2 * f_angular + w3 * f_error
+        double Mt = w1_ * f_jerk + w2_ * f_angular + w3_ * f_error;
+        // 安全截断到 [0, 1]（防止权重设置不当导致越界）
+        Mt = std::max(0.0, std::min(Mt, 1.0));
+
+        // 5. Sigmoid映射：计算自适应意图惯性参数 s_adaptive
+        double s_adaptive = computeAdaptiveS(Mt);
+        
+        // 调试输出：监控自适应参数变化
+        // ROS_INFO_THROTTLE(2.0, "Obs %d: f_jerk=%.3f, f_angular=%.3f, f_error=%.3f => Mt=%.3f => s_adaptive=%.3f",
+        //                   obsIdx, f_jerk, f_angular, f_error, Mt, s_adaptive);
+        
+        // 6. 保存当前障碍物的自适应指标（用于可视化和日志）
+        if (obsIdx >= 0 && obsIdx < static_cast<int>(currentSAdaptive_.size())) {
+            currentSAdaptive_[obsIdx] = s_adaptive;
+            // 存储 Mt 用于分析（复用 currentDt_ 变量名，实际存储 Mt）
+            if (obsIdx < static_cast<int>(currentDt_.size())) {
+                currentDt_[obsIdx] = Mt;
             }
         }
-        // 对于均匀分布，Ht = log(4) ≈ 1.386
-
-        // 3.4 运动诊断指标
-        double Mt = gamma1_ * nis + gamma2_ * jerkNorm;
-
-        // 3.5 自适应权重
-        double s_adaptive = computeAdaptiveS(Ht, Mt);
         
-        // 3.6 计算 D_t（衰减因子）
-        // 熵约束项：使用指数衰减，但在Ht=Ht_max时保持为1.0
-        // Ht_max = log(4) ≈ 1.386（均匀分布时的最大熵）
-        // 当Ht ≤ Ht_max时（正常或更确定），D_entropy = 1.0（不衰减）
-        // 当Ht > Ht_max时（异常高熵），D_entropy会衰减
-        double Ht_max = log(4.0);
-        double D_entropy = exp(-lambda1_ * std::max(0.0, Ht - Ht_max));
-        D_entropy = std::max(0.0, std::min(1.0, D_entropy));  // 限制在[0,1]
-        
-        // 运动诊断约束项：使用sigmoid函数，让过渡更平滑
-        // 当Mt << M_thresh时（稳定），D_motion接近1
-        // 当Mt ≈ M_thresh时（中等机动），D_motion在0.5附近，产生中间值
-        // 当Mt >> M_thresh时（大机动），D_motion接近0
-        // 使用sigmoid: 1 / (1 + exp(lambda2 * (Mt - M_thresh)))
-        double D_motion = 1.0 / (1.0 + exp(lambda2_ * (Mt - M_thresh_)));
-        // 衰减因子 D_t（稳定时接近1，不稳定时接近0）
-        double Dt = D_entropy * D_motion;
-        
-        // 保存当前障碍物的自适应指标（用于CSV日志）
-        if (obsIdx >= 0 && obsIdx < static_cast<int>(currentDt_.size())) {
-            currentDt_[obsIdx] = Dt;
-            currentSAdaptive_[obsIdx] = s_adaptive;
-        }
-        
-        // 4. 生成转移矩阵的每一列
+        // 7. 生成转移矩阵的每一列
+        // 对每种意图（前进、左、右、停）都生成一个"转移概率列"
+        // 每列表示：从这个意图出发，到别的意图的概率
+        // 使用自适应权重 s_adaptive 来调节意图惯性
+        double r = sqrt(pow(currVel(0), 2) + pow(currVel(1), 2));  // 速度模长
         for (int i = 0; i < this->numIntent_; ++i) {
             Eigen::VectorXd scale = Eigen::VectorXd::Ones(this->numIntent_);
-            // 用固定权重
-            scale(i) = this->pscale_;
-            // 用自适应权重
-            scale(i) = s_adaptive;  
-            // transMat.col(i) = this->genTransitionVector(theta, r, scale);
-        }        
-
-        // //对每种意图（前进、左、右、停）都生成一个“转移概率列”；
-        // // 每列表示：从这个意图出发，到别的意图的概率；
-        // // 这些概率是通过 genTransitionVector() 算出来的。
-        // // fill in every column of transition matrix
-        // for (int i=0; i<this->numIntent_;i++){
-        //     Eigen::VectorXd scale;
-        //     scale.setOnes(this->numIntent_);
-        //     scale(i) = this->pscale_;
-        //     Eigen::VectorXd probVec = this->genTransitionVector(theta, r, scale);
-        //     transMat.block(0,i,this->numIntent_,1) = probVec;
-        // }        
-
-
-            // 写入日志数据
-        if (logFile_.is_open()) {
-        // 记录时间戳（ROS时间，精确到秒）
-        logFile_ << ros::Time::now().toSec() << ",";
-        // 记录核心变量
-        logFile_ << s_adaptive << "," 
-                << Ht << "," 
-                << Mt << "," 
-                << nis << "," 
-                << jerkNorm << ",";
-        // 记录4种意图概率（FORWARD/LEFT/RIGHT/STOP）
-        logFile_ << currIntentProb(FORWARD) << "," 
-                << currIntentProb(LEFT) << "," 
-                << currIntentProb(RIGHT) << "," 
-                << currIntentProb(STOP) << "\n";
+            // 关键修改：用自适应权重替代固定的 pscale_
+            scale(i) = s_adaptive;
+            // 调用原论文的转移概率生成函数
+            Eigen::VectorXd probVec = this->genTransitionVector(theta, r, scale);
+            transMat.block(0, i, this->numIntent_, 1) = probVec;
         }
 
-            // 【新增】发布 S_Adaptive 值
+        // 8. 发布当前的 s_adaptive 值（用于实时监控）
         std_msgs::Float32 s_msg;
-        s_msg.data = s_adaptive; // 假设 s_adaptive 在这里是可见的
+        s_msg.data = s_adaptive;
         this->sValuePub_.publish(s_msg);
 
         return transMat;
@@ -1626,7 +1680,6 @@ namespace dynamicPredictor{
 
         // 数据保留机制：如果新数据为空或数据量太少，使用保留的旧数据
         ros::Time current_time = ros::Time::now();
-        bool use_retained_data = false;
         
         // 检查新数据是否有效
         int non_zero_new = 0;
@@ -1639,7 +1692,6 @@ namespace dynamicPredictor{
         if (!new_data_valid && !lastValidRiskMap_.data.empty()) {
             double time_since_last = (current_time - lastValidRiskMapTime_).toSec();
             if (time_since_last < riskMapRetentionTime_) {
-                use_retained_data = true;
                 riskMsg = lastValidRiskMap_;
                 riskMsg.header.stamp = current_time;  // 更新时间戳
                 if (should_log) {
@@ -1803,7 +1855,7 @@ namespace dynamicPredictor{
     // 新增成员函数：计算并打印误差
     void predictor::calculateAndPrintErrors() {
         if (posHist_.empty() || posPred_.empty()) {
-            ROS_WARN("No reference or prediction data available, skip error calculation.");
+            // ROS_WARN("No reference or prediction data available, skip error calculation.");
             return;
         }
 
@@ -1917,29 +1969,38 @@ namespace dynamicPredictor{
 
             // 打印结果（只打印有有效预测的障碍物）
             if (bestIntent != -1) {
-                ROS_INFO_STREAM("Obstacle " << obsIdx 
-                            << " | Min ADE: " << minADE 
-                            << " | Min FDE: " << minFDE 
-                            << " | Best Intent: " << bestIntent 
-                            << " | Valid Steps: " << validSteps);
+                ROS_INFO_THROTTLE(1.0, "Obstacle %zu | Min ADE: %.4f | Min FDE: %.4f | Best Intent: %d | Valid Steps: %d",
+                            obsIdx, minADE, minFDE, bestIntent, validSteps);
                 
                 // 写入CSV文件
                 if (logFile_.is_open()) {
-                    double t_pred = ros::Time::now().toSec();
+                    // 使用当前时间的字符串格式 YYYY-MM-DD HH:MM:SS
+                    std::time_t now = std::time(nullptr);
+                    std::tm* timeinfo = std::localtime(&now);
+                    std::stringstream time_ss;
+                    time_ss << std::put_time(timeinfo, "%Y-%m-%d %H:%M:%S");
+                    std::string timestamp_str = time_ss.str();
                     
                     // 获取当前意图概率分布
                     Eigen::VectorXd intentProbVec;
                     if (static_cast<size_t>(obsIdx) < intentProb_.size() && intentProb_[obsIdx].size() > 0) {
                         intentProbVec = intentProb_[obsIdx];
+                        ROS_INFO_THROTTLE(5.0, "CSV写入：Obs %zu, intentProb_.size()=%zu, intentProbVec.size()=%ld", 
+                                          obsIdx, intentProb_.size(), intentProbVec.size());
                     } else {
                         intentProbVec = Eigen::VectorXd::Constant(numIntent_, 1.0 / numIntent_);
+                        ROS_WARN_THROTTLE(5.0, "CSV写入：Obs %zu 使用默认概率分布", obsIdx);
                     }
                     
-                    // 确保概率向量有4个元素（forward, left, right, stop）
-                    double P_forward = (intentProbVec.size() > 0) ? intentProbVec(0) : 0.25;
-                    double P_left = (intentProbVec.size() > 1) ? intentProbVec(1) : 0.25;
-                    double P_right = (intentProbVec.size() > 2) ? intentProbVec(2) : 0.25;
-                    double P_stop = (intentProbVec.size() > 3) ? intentProbVec(3) : 0.25;
+                    // 按照枚举顺序提取概率：FORWARD=0, LEFT=1, RIGHT=2, STOP=3
+                    double P_forward = (intentProbVec.size() > FORWARD) ? intentProbVec(FORWARD) : 0.25;
+                    double P_left = (intentProbVec.size() > LEFT) ? intentProbVec(LEFT) : 0.25;
+                    double P_right = (intentProbVec.size() > RIGHT) ? intentProbVec(RIGHT) : 0.25;
+                    double P_stop = (intentProbVec.size() > STOP) ? intentProbVec(STOP) : 0.25;
+                    
+                    // 调试输出：打印意图概率
+                    // ROS_INFO_THROTTLE(5.0, "Obs %zu Intent Prob: Forward=%.3f, Left=%.3f, Right=%.3f, Stop=%.3f", 
+                    //                   obsIdx, P_forward, P_left, P_right, P_stop);
                     
                     // 获取自适应指标
                     double Dt = (static_cast<size_t>(obsIdx) < currentDt_.size()) ? currentDt_[obsIdx] : 0.0;
@@ -1947,20 +2008,38 @@ namespace dynamicPredictor{
                     // 确保 bestIntent 在有效范围内 (0-3)
                     int k_adap = (bestIntent >= 0 && bestIntent < numIntent_) ? bestIntent : -1;
                     
-                    // 写入CSV行
+                    // 获取障碍物当前位置（当前时刻的位置，即历史轨迹的最后一个点）
+                    double obstacle_x = 0.0;
+                    double obstacle_y = 0.0;
+                    if (static_cast<size_t>(obsIdx) < posHist_.size() && !posHist_[obsIdx].empty()) {
+                        obstacle_x = posHist_[obsIdx][0](0);  // 当前时刻的x坐标
+                        obstacle_y = posHist_[obsIdx][0](1);  // 当前时刻的y坐标
+                        ROS_INFO_THROTTLE(5.0, "CSV写入：Obs %zu 位置=(%.3f, %.3f), P=[%.3f,%.3f,%.3f,%.3f]", 
+                                          obsIdx, obstacle_x, obstacle_y, P_forward, P_left, P_right, P_stop);
+                    } else {
+                        ROS_WARN_THROTTLE(5.0, "CSV写入：Obs %zu 位置数据不可用", obsIdx);
+                    }
+                    
+                    // 写入CSV行（按表头顺序：时间戳,障碍物ID,障碍物X,障碍物Y,ADE(米),FDE(米),D_t,s_adaptive,最佳意图,有效步数,P_forward,P_left,P_right,P_stop）
                     logFile_ << std::fixed << std::setprecision(6)
-                             << t_pred << ","
+                             << timestamp_str << ","
                              << obsIdx << ","
+                             << obstacle_x << ","
+                             << obstacle_y << ","
                              << minADE << ","
                              << minFDE << ","
                              << Dt << ","
                              << s_adap << ","
                              << k_adap << ","
+                             << validSteps << ","
                              << P_forward << ","
                              << P_left << ","
                              << P_right << ","
                              << P_stop << "\n";
                     logFile_.flush();  // 立即刷新到磁盘
+                    ROS_INFO_THROTTLE(5.0, "CSV数据已写入并刷新");
+                } else {
+                    ROS_ERROR_THROTTLE(5.0, "CSV文件未打开！无法写入数据");
                 }
             }
         }

@@ -93,20 +93,26 @@ namespace dynamicPredictor{
 
         // 为了自适应新增的的
             // 新增：自适应方案所需变量
-        std::vector<Eigen::Vector3d> accHistory_;  // 存储历史加速度，用于计算加加速度
-        std::vector<Eigen::Vector3d> caPredHistory_; // 存储CA模型预测位置
-        double gamma1_, gamma2_;  // M_t的权重系数
-        double lambda1_, lambda2_; // D_t的敏感度参数
-        double M_thresh_;         // 运动诊断阈值
-        double s_max_;            // 最大权重（原pscale_的替代）
-        size_t historyWindow_ = 1;   // 历史数据窗口大小（至少1）
+        // 指标计算参数
+        double w1_, w2_, w3_;          // 多维特征融合权重 (加加速度、角加速度、预测误差)
+        double j_max_;                 // 加加速度归一化上限 (m/s^3)
+        double alpha_max_;             // 角加速度归一化上限 (rad/s^2)
+        double e_max_;                 // 预测误差归一化上限 (m)
+        
+        // Sigmoid映射参数
+        double s_min_;                 // 最小自适应权重
+        double s_max_;                 // 最大自适应权重
+        double sigmoid_k_;             // Sigmoid陡峭度因子
+        double sigmoid_mu_;            // Sigmoid中心偏移量
+        
+        size_t historyWindow_ = 1;     // 历史数据窗口大小（至少1）
         ros::Time lastPrintTime_;
 
         // 新增：核心指标计算函数
-        double computeJerkNorm(const Eigen::Vector3d& currAcc);  // 计算加加速度幅值
-        double computeNIS(const Eigen::Vector3d& currPos, const Eigen::Vector3d& caPredPos, const Eigen::Matrix3d& residualCov);  // 计算归一化残差平方
-        double computeIntentEntropy(const Eigen::VectorXd& intentProb);  // 计算意图熵H_t
-        double computeAdaptiveS(const double Ht, const double Mt);  // 计算自适应权重s_adaptive
+        double computeJerkFeature(const Eigen::Vector3d& currAcc, const Eigen::Vector3d& prevAcc);  // 计算归一化加加速度特征
+        double computeAngularAccelFeature(double currAngle, double prevAngle);  // 计算归一化角加速度特征
+        double computePredictionErrorFeature(const Eigen::Vector3d& currPos, const Eigen::Vector3d& prevPos, const Eigen::Vector3d& prevVel);  // 计算归一化预测误差特征
+        double computeAdaptiveS(double Mt);  // 通过Sigmoid函数计算自适应权重s_adaptive
 
         std::ofstream logFile_;  // 日志文件流
         
@@ -144,9 +150,22 @@ namespace dynamicPredictor{
         // main function for prediction
         void predict();
         void intentProb(std::vector<Eigen::VectorXd> &intentProbTemp);
-        // 添加了自适应的参数
-        Eigen::MatrixXd genTransitionMatrix(const double &prevAngle, const double &currAngle, const Eigen::Vector3d &currVel, 
-                                   const Eigen::Vector3d &currPos, const Eigen::Vector3d &currAcc, int obsIdx = 0);        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
+        // 添加了自适应的参数（扩展签名以支持正确的历史帧传递）
+        Eigen::MatrixXd genTransitionMatrix(
+            const double &prevAngle, 
+            const double &currAngle, 
+            const Eigen::Vector3d &currVel, 
+            const Eigen::Vector3d &currPos, 
+            const Eigen::Vector3d &currAcc,
+            // 新增：前一帧的数据，用于计算运动变化指标
+            const Eigen::Vector3d &prevAcc,      // 前一帧加速度
+            const Eigen::Vector3d &prevPos,      // 前一帧位置
+            const Eigen::Vector3d &prevVel,      // 前一帧速度
+            const double &prevPrevAngle,         // 前前帧角度（用于计算前一帧角速度）
+            bool hasValidPrevFrame,              // 是否有有效的前一帧数据
+            int obsIdx = 0
+        );
+        Eigen::VectorXd genTransitionVector(const double &theta, const double &r, const Eigen::VectorXd &scale);
         void predTraj(std::vector<std::vector<std::vector<std::vector<Eigen::Vector3d>>>> &allPredPointsTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &posPredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &sizePredTemp, std::vector<std::vector<std::vector<Eigen::Vector3d>>> &varPredTemp, const std::vector<int>& mainIntents);
         void genPoints(const int &intentType, const Eigen::Vector3d &currPos, const Eigen::Vector3d &currVel, const Eigen::Vector3d &currAcc, const Eigen::Vector3d &currSize, std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predSize);
         void genTraj(const std::vector<std::vector<Eigen::Vector3d>> &predPoints, std::vector<Eigen::Vector3d> &predPos, std::vector<Eigen::Vector3d> &predSize, std::vector<Eigen::Vector3d> &varPred);

@@ -974,14 +974,14 @@ namespace AutoFlight{
 	}
 
 	void mpcNavigation::riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg){
-		ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
-		         this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
+		// ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
+		//          this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
 		
 		if (this->riskMap2D_) {
-			ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
+			// ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
 			try {
 				this->riskMap2D_->updateFromMsg(*msg);
-				ROS_WARN("[MPC-RISK-CB] updateFromMsg completed");
+				// ROS_WARN("[MPC-RISK-CB] updateFromMsg completed");
 			} catch (const std::exception& e) {
 				ROS_ERROR("[MPC-RISK-CB] Exception in updateFromMsg: %s", e.what());
 				return;
@@ -992,21 +992,21 @@ namespace AutoFlight{
 			
 			// 如果 A* 规划器已初始化，立即更新风险地图
 			if (this->aStarPlanner_) {
-				ROS_WARN("[MPC-RISK-CB] Calling aStarPlanner_->setRiskMap...");
+				// ROS_WARN("[MPC-RISK-CB] Calling aStarPlanner_->setRiskMap...");
 				try {
 					this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-					ROS_WARN("[MPC-RISK-CB] setRiskMap completed");
+					// ROS_WARN("[MPC-RISK-CB] setRiskMap completed");
 				} catch (const std::exception& e) {
 					ROS_ERROR("[MPC-RISK-CB] Exception in setRiskMap: %s", e.what());
 				} catch (...) {
 					ROS_ERROR("[MPC-RISK-CB] Unknown exception in setRiskMap");
 				}
 			} else {
-				ROS_WARN("[MPC-RISK-CB] aStarPlanner_ is NULL, skipping setRiskMap");
+				// ROS_WARN("[MPC-RISK-CB] aStarPlanner_ is NULL, skipping setRiskMap");
 			}
 		} else {
-			ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
+			// ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
 		}
-		ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
+		// ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
 	}
 }
