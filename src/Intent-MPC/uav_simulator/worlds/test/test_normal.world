@@ -2,8 +2,10 @@
   <world name='default'>
     <!-- 动态障碍物：圆柱体，命名符合 fake_detector 识别规则 -->
     <model name="dynamic_cylinder_0.6_0.6_1.7">
-      <!-- 场景：右侧 (0,-3,0) 直线穿越到左上 (-3,2,0)，循环往返（使用插件自带 loop） -->
-      <pose>0 -3 0 0 0 0</pose>
+      <!-- 场景：左下方区域直线往返，循环执行 -->
+      <!-- 无人机在原点(0,0,0)，朝向向下(-Y)，障碍物在左下方(-X, -Y)循环往返 -->
+      <!-- 初始位置：左下方 (-1.5, -2.5, 0) -->
+      <pose>-1.5 -2.5 0 0 0 0</pose>
       <static>0</static>
       <link name="body">
         <inertial>
@@ -47,11 +49,11 @@
         <velocity>1.5</velocity> <!-- 直线速度，可按需调整 -->
         <angular_velocity>0.0</angular_velocity> <!-- 不转弯 -->
         <path>
-          <!-- 手写往返闭环：0,-3 -> -3,2 -> 0,-3 -> -3,2 ... -->
-          <waypoint>0.000 -3.000 0.0</waypoint>
-          <waypoint>-3.000 2.000 0.0</waypoint>
-          <waypoint>0.000 -3.000 0.0</waypoint>
-          <waypoint>-3.000 2.000 0.0</waypoint>
+          <!-- 左下方区域往返：(-1.5,-2.5) ↔ (-3.5,-4.5) -->
+          <waypoint>-1.5 -2.5 0.0</waypoint>
+          <waypoint>-3.5 -4.5 0.0</waypoint>
+          <waypoint>-1.5 -2.5 0.0</waypoint>
+          <waypoint>-3.5 -4.5 0.0</waypoint>
         </path>
       </plugin>
     </model>

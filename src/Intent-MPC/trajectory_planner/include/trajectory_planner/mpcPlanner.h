@@ -77,16 +77,46 @@ namespace trajPlanner{
 		std::vector<Eigen::Vector3d> trajScore_;
 
 
-		// parameters
-		int horizon_;
-		double maxVel_ = 1.0;
-		double maxAcc_ = 1.0;
-		double zRangeMin_;
-		double zRangeMax_;
-		double dynamicSafetyDist_;
-		double staticSafetyDist_;
-		double staticSlack_;
-		double dynamicSlack_;
+	// parameters
+	int horizon_;
+	double maxVel_ = 1.0;
+	double maxAcc_ = 1.0;
+	double zRangeMin_;
+	double zRangeMax_;
+	double dynamicSafetyDist_;
+	double staticSafetyDist_;
+	double staticSlack_;
+	double dynamicSlack_;
+
+	// Risk-aware adaptive ellipsoid parameters
+	double riskS0_;          // 基线膨胀量 (m)
+	double riskAlpha_;       // closing speed 系数
+	double riskBeta_;        // TTC 指数项系数
+	double riskTau_;         // TTC 衰减时间常数 (s)
+	double riskKappa_;       // 各向异性强度 [0,1)
+	double riskSMin_;        // 最小膨胀量 (m)
+	double riskSMax_;        // 最大膨胀量 (m)
+	double riskVelThreshold_; // 低速阈值，低于此速度时保持朝向稳定 (m/s)
+	bool useRiskAdaptive_;   // 是否启用风险自适应椭球
+	
+	// 稳定性补丁参数
+	double riskLambdaS_;     // s 的低通滤波系数 [0,1]
+	double riskLambdaPhi_;   // phi 的低通滤波系数 [0,1]
+	double riskMaxDeltaS_;   // s 的最大变化率 (m/step)
+	double riskMaxDeltaPhi_; // phi 的最大变化率 (rad/step)
+	double riskTimeConstS_;  // s 的时间常数 (s)，用于自动计算 lambda_s
+	double riskTimeConstPhi_;// phi 的时间常数 (s)，用于自动计算 lambda_phi
+	
+	// 保存上一帧的状态，用于平滑和低速稳定性
+	std::vector<std::vector<double>> prevYaw_;   // 上一帧的 yaw (per obstacle, per horizon step)
+	std::vector<double> prevSFilt_;              // 上一帧的平滑后 s (per obstacle)
+	std::vector<double> prevPhiFilt_;            // 上一帧的平滑后 phi (per obstacle)
+	std::vector<bool> isFirstUpdate_;            // 是否是该障碍物的首次更新 (per obstacle)
+	
+	// 保存最后一次 MPC 计算的椭球参数，用于可视化
+	std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> lastOxyz_;  // 障碍物位置 (per horizon step)
+	std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> lastOsize_; // 椭球半轴 (per horizon step)
+	std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1>> lastYaw_;   // 椭球朝向 (per horizon step)
 
 		// clustering params
 		double cloudRes_;

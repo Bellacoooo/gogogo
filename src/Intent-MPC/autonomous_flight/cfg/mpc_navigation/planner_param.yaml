@@ -40,7 +40,31 @@ mpc_planner/z_range_max: 2.9
 mpc_planner/static_safety_dist: 0.8
 mpc_planner/dynamic_safety_dist: 0.6
 mpc_planner/static_constraint_slack_ratio: 0.01
-mpc_planner/dynamic_constraint_slack_ratio: 0.2 
+mpc_planner/dynamic_constraint_slack_ratio: 0.2
+
+# ========== 风险自适应椭球参数 ==========
+# 🚨 紧急禁用：如果遇到倒退、崩溃或椭球过大问题，将下面改为 false
+# 启用/禁用风险自适应椭球（true=启用，false=使用原始固定椭球）
+mpc_planner/use_risk_adaptive: true
+
+# 风险裕量计算参数：s = clip(s0 + alpha*vc + beta*exp(-ttc/tau), s_min, s_max)
+mpc_planner/risk_s0: 0.10          # 基线膨胀量 (m)，静态风险（降低以防过大）
+mpc_planner/risk_alpha: 0.25       # closing speed 系数（无量纲），降低以防过大
+mpc_planner/risk_beta: 0.4         # TTC 指数项系数 (m)，降低以防过大
+mpc_planner/risk_tau: 2.0          # TTC 衰减时间常数 (s)，增大使反应更缓和
+mpc_planner/risk_s_min: 0.0        # 最小膨胀量 (m)，远距离或远离时的最小值
+mpc_planner/risk_s_max: 0.8        # 最大膨胀量 (m)，降低到0.8防止椭球过大
+
+# 各向异性参数（椭球朝向和形状）
+mpc_planner/risk_kappa: 0.20       # 各向异性强度 [0,1)，降低以防变形过大（建议 0.2-0.5）
+mpc_planner/risk_vel_threshold: 0.15  # 低速阈值 (m/s)，低于此速度时退化成圆形，避免抖动
+
+# ========== 稳定性补丁参数 ==========
+# 这些参数用于平滑椭球参数的时间变化，防止 QP 不可行或轨迹抖动
+mpc_planner/risk_time_const_s: 0.8     # s 的时间常数 (s)，增大以让变化更平滑
+mpc_planner/risk_time_const_phi: 0.8   # phi 的时间常数 (s)，增大以让变化更平滑
+mpc_planner/risk_max_delta_s: 0.2      # s 的最大变化率 (m/step)，降低以防突变
+mpc_planner/risk_max_delta_phi: 20.0   # phi 的最大变化率 (deg/step)，降低以防突变 
 # MPC clustering params
 mpc_planner/cloud_res: 0.2
 mpc_planner/local_cloud_region_x: 6.0 # forward

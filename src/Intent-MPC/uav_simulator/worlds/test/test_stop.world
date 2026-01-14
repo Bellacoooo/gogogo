@@ -68,20 +68,21 @@
                              
                          
                             
-                            <model name='dynamic_cylinder_1_0.3_0.3_1.3'>
+                            <!-- 动态障碍物：急停场景 -->
+                            <model name='dynamic_cylinder_0.6_0.6_1.7'>
                             <static>true</static>
-                            <pose>-10 -3 0.65 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+                            <pose>-3 2 0.65 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
                             <link name='link'>
                                 <visual name='visual'>
                                     <geometry>
                                         <cylinder>
-                                            <radius>0.17</radius>
-                                            <length>1.3</length>
+                                            <radius>0.3</radius>
+                                            <length>1.7</length>
                                         </cylinder>
                                     </geometry>
                                     <material>
-                                        <ambient>1 0 0 1</ambient> <!-- Red color -->
-                                        <diffuse>1 0 0 1</diffuse> <!-- Red color -->
+                                        <ambient>0.1 0.6 0.9 1</ambient> <!-- Blue color -->
+                                        <diffuse>0.1 0.6 0.9 1</diffuse> <!-- Blue color -->
                                         <specular>0.5 0.5 0.5 1</specular> <!-- Specular highlight -->
                                     </material>
                                 </visual>
@@ -89,68 +90,72 @@
                             <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
                                 <orientation>false</orientation>
                                 <loop>0</loop>
-                                <velocity>0.4</velocity>
+                                <velocity>1.5</velocity>
                                 <path>
-                                <!-- 路径设计：在x轴负方向，不经过原点，走10秒 → 慢慢停 → 转一圈 → 走回原位置 -->
-                                <!-- 无人机在原点(0,0)，障碍物保持在5米感知范围内 -->
+                                <!-- 场景设计：从(-3, 2)出发 → 到(-2, -2)急停5秒 → 原路返回(-3, 2) → 再停5秒 -->
                                 
-                                <!-- 起点：(-2, -1.5, 0)，距离原点2.5米 -->
-                                <waypoint>-2 -1.5 0</waypoint>
+                                <!-- 起点：左上方 (-3, 2) -->
+                                <waypoint>-3 2 0</waypoint>
                                 
-                                <!-- 第一段：走10秒，0.4 m/s × 10s = 4米 -->
-                                <!-- 从(-2, -1.5)到(-3.4, -4.3)，距离 = √(1.96 + 7.84) = √9.8 ≈ 3.13米 -->
-                                <!-- 调整：从(-2, -1.5)到(-3.2, -4.7)，距离 = √(1.44 + 10.24) ≈ 3.42米 -->
-                                <!-- 再调整：从(-2, -1.5)到(-3.5, -4.8)，距离 = √(2.25 + 10.89) ≈ 3.63米 -->
-                                <!-- 最终：从(-2, -1.5)到(-4, -4.8)，距离 = √(4 + 10.89) ≈ 3.86米 -->
-                                <!-- 调整到4米：从(-2, -1.5)到(-4.06, -4.9)，距离4米 -->
-                                <!-- 验证：(-4.06, -4.9)距原点 = √(16.48 + 24.01) = √40.49 ≈ 6.36米，超了！ -->
+                                <!-- 第一段：移动到(-2, -2)，距离约4.1米，耗时约10秒 -->
+                                <waypoint>-2 -2 0</waypoint>
                                 
-                                <!-- 安全方案：从(-2, -1.5)到(-3.2, -4)，距离 = √(1.44 + 6.25) ≈ 2.77米 -->
-                                <!-- 延长到4米：从(-2, -1.5)到(-3.8, -4.8) -->
-                                <!-- 距离 = √(3.24 + 10.89) ≈ 3.76米，接近4米 -->
-                                <!-- 验证：(-3.8, -4.8)距原点 = √(14.44 + 23.04) = √37.48 ≈ 6.12米，还是超了！ -->
+                                <!-- 第二段：急停5秒 - 使用原地转小圈（半径0.15米的圆，速度0.4m/s，周长约0.94米，转5圈约需4.7秒≈5秒）-->
+                                <waypoint>-1.85 -2 0</waypoint>      <!-- 右 -->
+                                <waypoint>-2 -1.85 0</waypoint>      <!-- 上 -->
+                                <waypoint>-2.15 -2 0</waypoint>      <!-- 左 -->
+                                <waypoint>-2 -2.15 0</waypoint>      <!-- 下 -->
+                                <waypoint>-1.85 -2 0</waypoint>      <!-- 右，完成1圈 -->
                                 
-                                <!-- 最终安全方案：在更小范围内移动 -->
-                                <!-- 从(-2, -1.5)到(-3, -4.5)，距离 = √(1 + 9) ≈ 3.16米 -->
-                                <!-- 调整到4米：从(-2, -1.5)到(-3.26, -4.94)，验证距原点 = √(10.63 + 24.40) ≈ 5.92米，超了 -->
+                                <waypoint>-2 -1.85 0</waypoint>      <!-- 第2圈 -->
+                                <waypoint>-2.15 -2 0</waypoint>
+                                <waypoint>-2 -2.15 0</waypoint>
+                                <waypoint>-1.85 -2 0</waypoint>
                                 
-                                <!-- 极限安全方案：从(-2, -1.5)沿(-0.6, -0.8)方向移动4米 -->
-                                <!-- 到达(-4.4, -4.7)，距原点 = √(19.36 + 22.09) ≈ 6.44米，超了 -->
+                                <waypoint>-2 -1.85 0</waypoint>      <!-- 第3圈 -->
+                                <waypoint>-2.15 -2 0</waypoint>
+                                <waypoint>-2 -2.15 0</waypoint>
+                                <waypoint>-1.85 -2 0</waypoint>
                                 
-                                <!-- 彻底保守：从(-1.5, -1)到(-3, -3.5)，距离 = √(2.25 + 6.25) ≈ 2.92米 -->
-                                <!-- 延长：从(-1.5, -1)到(-3.55, -4.1)，距离 ≈ 4米 -->
-                                <!-- 验证：(-3.55, -4.1)距原点 = √(12.60 + 16.81) = √29.41 ≈ 5.42米，超了一点 -->
+                                <waypoint>-2 -1.85 0</waypoint>      <!-- 第4圈 -->
+                                <waypoint>-2.15 -2 0</waypoint>
+                                <waypoint>-2 -2.15 0</waypoint>
+                                <waypoint>-1.85 -2 0</waypoint>
                                 
-                                <!-- 最终方案：从(-1.5, -1)到(-3.3, -3.8)，距离 = √(3.24 + 7.84) ≈ 3.33米 -->
-                                <!-- 再延长：到(-3.8, -4.2)，距离 ≈ 4米，验证：√(14.44 + 17.64) ≈ 5.66米，超了 -->
+                                <waypoint>-2 -1.85 0</waypoint>      <!-- 第5圈 -->
+                                <waypoint>-2.15 -2 0</waypoint>
+                                <waypoint>-2 -2.15 0</waypoint>
+                                <waypoint>-2 -2 0</waypoint>         <!-- 回到中心点 -->
                                 
-                                <!-- 保险方案：从(-1.5, -1)到(-3.2, -3.6)，距离 = √(2.89 + 6.76) ≈ 3.1米 -->
-                                <!-- 调整到接近4米：到(-3.67, -4)，距离 ≈ 3.77米 -->
-                                <!-- 验证：(-3.67, -4)距原点 = √(13.47 + 16) ≈ 5.42米，还是超了 -->
+                                <!-- 第三段：原路返回起点(-3, 2)，距离约4.1米，耗时约10秒 -->
+                                <waypoint>-3 2 0</waypoint>
                                 
-                                <!-- 终极保守：走3.5米，从(-1.5, -1)到(-3.4, -3.7) -->
-                                <waypoint>-3.4 -3.7 0</waypoint>
+                                <!-- 第四段：在起点停5秒 - 再转5圈小圈 -->
+                                <waypoint>-2.85 2 0</waypoint>       <!-- 右 -->
+                                <waypoint>-3 2.15 0</waypoint>       <!-- 上 -->
+                                <waypoint>-3.15 2 0</waypoint>       <!-- 左 -->
+                                <waypoint>-3 1.85 0</waypoint>       <!-- 下 -->
+                                <waypoint>-2.85 2 0</waypoint>       <!-- 第1圈完成 -->
                                 
-                                <!-- 第二段：慢慢停止，5个0.08米路径段 -->
-                                <waypoint>-3.46 -3.76 0</waypoint>
-                                <waypoint>-3.52 -3.82 0</waypoint>
-                                <waypoint>-3.58 -3.88 0</waypoint>
-                                <waypoint>-3.64 -3.94 0</waypoint>
-                                <waypoint>-3.7 -4 0</waypoint>
+                                <waypoint>-3 2.15 0</waypoint>       <!-- 第2圈 -->
+                                <waypoint>-3.15 2 0</waypoint>
+                                <waypoint>-3 1.85 0</waypoint>
+                                <waypoint>-2.85 2 0</waypoint>
                                 
-                                <!-- 第三段：转一圈，以(-2.7, -3)为圆心，半径1米 -->
-                                <waypoint>-2.7 -4 0</waypoint>           <!-- 下，距原点√(7.29+16)≈4.82m -->
-                                <waypoint>-2 -3.7 0</waypoint>           <!-- 左下，距原点√(4+13.69)≈4.20m -->
-                                <waypoint>-1.7 -3 0</waypoint>           <!-- 左，距原点√(2.89+9)≈3.45m -->
-                                <waypoint>-2 -2.3 0</waypoint>           <!-- 左上，距原点√(4+5.29)≈3.05m -->
-                                <waypoint>-2.7 -2 0</waypoint>           <!-- 上，距原点√(7.29+4)≈3.36m -->
-                                <waypoint>-3.4 -2.3 0</waypoint>         <!-- 右上，距原点√(11.56+5.29)≈4.10m -->
-                                <waypoint>-3.7 -3 0</waypoint>           <!-- 右，距原点√(13.69+9)≈4.76m -->
-                                <waypoint>-3.4 -3.7 0</waypoint>         <!-- 右下，距原点√(11.56+13.69)≈5.02m，刚好 -->
-                                <waypoint>-2.7 -4 0</waypoint>           <!-- 回到下，完成一圈 -->
+                                <waypoint>-3 2.15 0</waypoint>       <!-- 第3圈 -->
+                                <waypoint>-3.15 2 0</waypoint>
+                                <waypoint>-3 1.85 0</waypoint>
+                                <waypoint>-2.85 2 0</waypoint>
                                 
-                                <!-- 第四段：走回原来的位置 -->
-                                <waypoint>-1.5 -1 0</waypoint>
+                                <waypoint>-3 2.15 0</waypoint>       <!-- 第4圈 -->
+                                <waypoint>-3.15 2 0</waypoint>
+                                <waypoint>-3 1.85 0</waypoint>
+                                <waypoint>-2.85 2 0</waypoint>
+                                
+                                <waypoint>-3 2.15 0</waypoint>       <!-- 第5圈 -->
+                                <waypoint>-3.15 2 0</waypoint>
+                                <waypoint>-3 1.85 0</waypoint>
+                                <waypoint>-3 2 0</waypoint>          <!-- 回到起点 -->
                                 </path>
                             </plugin>
                             </model> 
@@ -168,3 +173,4 @@
             </world>
             </sdf>
             
+

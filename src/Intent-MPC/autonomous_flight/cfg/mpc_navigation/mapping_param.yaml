@@ -49,7 +49,7 @@ verbose: false
 
 # prebuilt_map_directory: "No"
 # 原论文的静态地图
-# prebuilt_map_directory: "/cfg/saved_map/demo_map.pcd"
+prebuilt_map_directory: "/cfg/saved_map/demo_map.pcd"
 # 静态背景test地图
 # prebuilt_map_directory: "/home/ff/intent-mpc/my_two_cylinders.pcd"
 # 在无人机下面的两个圆柱体，是mpc一个动态障碍物用的

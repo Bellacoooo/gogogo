@@ -225,19 +225,22 @@ class TrajectoryEvaluator:
         """
         计算 ADE 和 FDE（与 C++ 逻辑一致）
         - 使用2D距离（忽略z分量）
-        - 回测：用历史轨迹的最后 total_pred_steps 个点作为"未来"参考
+        - 回测：用历史轨迹中最近的 total_pred_steps 个点作为"ground truth"
+        
+        说明：
+        - ref_points（历史轨迹）采用索引0=最新，索引越大越旧的存储方式
+        - 我们用最近的历史数据（索引0到total_pred_steps-1）作为评估参考
         """
         if not pred_points or not ref_points:
             return float('inf'), float('inf')
         
         hist_size = len(ref_points)
-        if hist_size < self.total_pred_steps + 1:
+        if hist_size < self.total_pred_steps:
             # 历史轨迹不够长，无法进行回测
             return float('inf'), float('inf')
         
-        # 回测：用历史轨迹的最后 total_pred_steps 个点作为"未来"参考
-        # 参考 C++: refStartIdx = histSize - totalPredSteps
-        ref_start_idx = hist_size - self.total_pred_steps
+        # 修复后：从最新点开始（索引0），取total_pred_steps个点
+        ref_start_idx = 0  # 从最新点开始
         valid_steps = min(self.total_pred_steps, len(pred_points))
         
         if valid_steps == 0:
@@ -249,7 +252,7 @@ class TrajectoryEvaluator:
         actual_steps = 0
         
         for t in range(valid_steps):
-            ref_idx = ref_start_idx + t
+            ref_idx = ref_start_idx + t  # ref_start_idx=0，所以 ref_idx = t
             if ref_idx >= hist_size:
                 break
             

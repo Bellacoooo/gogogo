@@ -115,16 +115,124 @@ namespace trajPlanner{
 			cout << this->hint_ << ": Static slack variable is set to: " << this->staticSlack_ << endl;
 		}				
 
-		// dynamic slack variable
-		if (not this->nh_.getParam(this->ns_ + "/dynamic_constraint_slack_ratio", this->dynamicSlack_)){
-			this->dynamicSlack_ = 0.5;
-			cout << this->hint_ << ": No dynamic slack variable param. Use default: 0.5" << endl;
-		}
-		else{
-			cout << this->hint_ << ": Dynamic slack variable is set to: " << this->dynamicSlack_ << endl;
-		}
-
+	// dynamic slack variable
+	if (not this->nh_.getParam(this->ns_ + "/dynamic_constraint_slack_ratio", this->dynamicSlack_)){
+		this->dynamicSlack_ = 0.5;
+		cout << this->hint_ << ": No dynamic slack variable param. Use default: 0.5" << endl;
 	}
+	else{
+		cout << this->hint_ << ": Dynamic slack variable is set to: " << this->dynamicSlack_ << endl;
+	}
+
+	// ========== 风险自适应椭球参数 ==========
+	if (not this->nh_.getParam(this->ns_ + "/use_risk_adaptive", this->useRiskAdaptive_)){
+		this->useRiskAdaptive_ = false;
+		cout << this->hint_ << ": Risk-adaptive ellipsoid disabled by default." << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk-adaptive ellipsoid: " << (this->useRiskAdaptive_ ? "ENABLED" : "DISABLED") << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_s0", this->riskS0_)){
+		this->riskS0_ = 0.2;
+		cout << this->hint_ << ": No risk_s0 param. Use default: 0.2m" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk s0 (baseline margin): " << this->riskS0_ << "m" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_alpha", this->riskAlpha_)){
+		this->riskAlpha_ = 0.3;
+		cout << this->hint_ << ": No risk_alpha param. Use default: 0.3" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk alpha (closing speed coeff): " << this->riskAlpha_ << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_beta", this->riskBeta_)){
+		this->riskBeta_ = 0.5;
+		cout << this->hint_ << ": No risk_beta param. Use default: 0.5" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk beta (TTC exp coeff): " << this->riskBeta_ << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_tau", this->riskTau_)){
+		this->riskTau_ = 2.0;
+		cout << this->hint_ << ": No risk_tau param. Use default: 2.0s" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk tau (TTC decay time): " << this->riskTau_ << "s" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_kappa", this->riskKappa_)){
+		this->riskKappa_ = 0.3;
+		cout << this->hint_ << ": No risk_kappa param. Use default: 0.3" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk kappa (anisotropy strength): " << this->riskKappa_ << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_s_min", this->riskSMin_)){
+		this->riskSMin_ = 0.0;
+		cout << this->hint_ << ": No risk_s_min param. Use default: 0.0m" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk s_min (min margin): " << this->riskSMin_ << "m" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_s_max", this->riskSMax_)){
+		this->riskSMax_ = 1.5;
+		cout << this->hint_ << ": No risk_s_max param. Use default: 1.5m" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk s_max (max margin): " << this->riskSMax_ << "m" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_vel_threshold", this->riskVelThreshold_)){
+		this->riskVelThreshold_ = 0.1;
+		cout << this->hint_ << ": No risk_vel_threshold param. Use default: 0.1m/s" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk velocity threshold (low-speed stability): " << this->riskVelThreshold_ << "m/s" << endl;
+	}
+
+	// ========== 稳定性补丁参数 ==========
+	if (not this->nh_.getParam(this->ns_ + "/risk_time_const_s", this->riskTimeConstS_)){
+		this->riskTimeConstS_ = 0.5;
+		cout << this->hint_ << ": No risk_time_const_s param. Use default: 0.5s" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk time constant for s (smoothing): " << this->riskTimeConstS_ << "s" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_time_const_phi", this->riskTimeConstPhi_)){
+		this->riskTimeConstPhi_ = 0.5;
+		cout << this->hint_ << ": No risk_time_const_phi param. Use default: 0.5s" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk time constant for phi (smoothing): " << this->riskTimeConstPhi_ << "s" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_max_delta_s", this->riskMaxDeltaS_)){
+		this->riskMaxDeltaS_ = 0.3;
+		cout << this->hint_ << ": No risk_max_delta_s param. Use default: 0.3m/step" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk max delta s (rate limit): " << this->riskMaxDeltaS_ << "m/step" << endl;
+	}
+
+	if (not this->nh_.getParam(this->ns_ + "/risk_max_delta_phi", this->riskMaxDeltaPhi_)){
+		this->riskMaxDeltaPhi_ = 30.0 * M_PI / 180.0;  // 30 degrees
+		cout << this->hint_ << ": No risk_max_delta_phi param. Use default: 30deg/step" << endl;
+	}
+	else{
+		cout << this->hint_ << ": Risk max delta phi (rate limit): " << this->riskMaxDeltaPhi_ * 180.0 / M_PI << "deg/step" << endl;
+	}
+
+	// lambda 系数会在运行时根据实际 dt 和时间常数计算
+
+}
 
 	void mpcPlanner::initModules(){
 		this->obclustering_.reset(new obstacleClustering (this->cloudRes_));
@@ -1057,56 +1165,351 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 		upperBound << upperEquality, upperInequality, upperObstacle;
 	}
 
-	void mpcPlanner::updateObstacleParam(const std::vector<staticObstacle> &staticObstacles, const std::vector<std::vector<Eigen::Vector3d>> &dynamicObstaclesPos, const std::vector<std::vector<Eigen::Vector3d>> &dynamicObstaclesSize, int &numObs, int mpcWindow, 
-		std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &oxyz, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &osize, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1>> &yaw, 
-		std::vector<std::vector<int>> &isDyamic){
-		isDyamic.clear();
-		isDyamic.resize(mpcWindow);
-		numObs = staticObstacles.size()+dynamicObstaclesPos.size();
-		int numDynamicOb = dynamicObstaclesPos.size();
-		int numStaticOb = staticObstacles.size();
-		oxyz.resize(mpcWindow);
-		osize.resize(mpcWindow);
-		yaw.resize(mpcWindow);
-		for(int j=0; j<mpcWindow;j++){
-			oxyz[j].resize(numObs,3);
-			osize[j].resize(numObs,3);
-			yaw[j].resize(numObs,1);
-			isDyamic[j].resize(numObs);
-			for(int i=0; i<numDynamicOb; i++){
-				if (j<dynamicObstaclesPos[i].size()){
-					oxyz[j](i,0) = dynamicObstaclesPos[i][j](0);
-					oxyz[j](i,1) = dynamicObstaclesPos[i][j](1);
-					oxyz[j](i,2) = dynamicObstaclesPos[i][j](2);
-					osize[j](i,0) = dynamicObstaclesSize[i][j](0)/2 + this->dynamicSafetyDist_;
-					osize[j](i,1) = dynamicObstaclesSize[i][j](1)/2 + this->dynamicSafetyDist_;
-					osize[j](i,2) = dynamicObstaclesSize[i][j](2)/2 + this->dynamicSafetyDist_;
-					yaw[j](i,0) = 0.0;
-					isDyamic[j][i] = 1;
-				}
-				else{
-					oxyz[j](i,0) = dynamicObstaclesPos[i].back()(0);
-					oxyz[j](i,1) = dynamicObstaclesPos[i].back()(1);
-					oxyz[j](i,2) = dynamicObstaclesPos[i].back()(2);
-					osize[j](i,0) = dynamicObstaclesSize[i].back()(0)/2 + this->dynamicSafetyDist_;
-					osize[j](i,1) = dynamicObstaclesSize[i].back()(1)/2 + this->dynamicSafetyDist_;
-					osize[j](i,2) = dynamicObstaclesSize[i].back()(2)/2 + this->dynamicSafetyDist_;
-					yaw[j](i,0) = 0.0;
-					isDyamic[j][i] = 1;
-				}
+void mpcPlanner::updateObstacleParam(const std::vector<staticObstacle> &staticObstacles, const std::vector<std::vector<Eigen::Vector3d>> &dynamicObstaclesPos, const std::vector<std::vector<Eigen::Vector3d>> &dynamicObstaclesSize, int &numObs, int mpcWindow, 
+	std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &oxyz, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 3>> &osize, std::vector<Eigen::Matrix<double, Eigen::Dynamic, 1>> &yaw, 
+	std::vector<std::vector<int>> &isDyamic){
+	isDyamic.clear();
+	isDyamic.resize(mpcWindow);
+	numObs = staticObstacles.size()+dynamicObstaclesPos.size();
+	int numDynamicOb = dynamicObstaclesPos.size();
+	int numStaticOb = staticObstacles.size();
+	oxyz.resize(mpcWindow);
+	osize.resize(mpcWindow);
+	yaw.resize(mpcWindow);
+
+	// 初始化历史状态变量（如果尚未初始化或障碍物数量变化）
+	// 注意：障碍物数量变化时，重新初始化所有历史状态，避免索引错配
+	bool obstacleCountChanged = (prevSFilt_.size() != numDynamicOb);
+	
+	if (prevYaw_.size() != numDynamicOb){
+		prevYaw_.resize(numDynamicOb);
+		for (int i=0; i<numDynamicOb; i++){
+			prevYaw_[i].resize(mpcWindow, 0.0);
+		}
+	}
+	
+	if (obstacleCountChanged){
+		// 障碍物数量变化，重新初始化（避免历史状态错配）
+		prevSFilt_.clear();
+		prevPhiFilt_.clear();
+		isFirstUpdate_.clear();
+		prevSFilt_.resize(numDynamicOb, this->riskS0_);     // 初始化为基线值
+		prevPhiFilt_.resize(numDynamicOb, 0.0);
+		isFirstUpdate_.resize(numDynamicOb, true);          // 标记为首次更新
+		
+		ROS_INFO_THROTTLE(2.0, "[Risk-Adaptive] Obstacle count changed to %d, history reset", numDynamicOb);
+	}
+
+	// Helper lambda 函数
+	auto clamp = [](double x, double lo, double hi){
+		return std::max(lo, std::min(x, hi));
+	};
+
+	// 角度归一化到 [-π, π]
+	auto wrapToPi = [](double a){
+		while (a >  M_PI) a -= 2.0*M_PI;
+		while (a < -M_PI) a += 2.0*M_PI;
+		return a;
+	};
+
+	// 计算低通滤波系数（基于 MPC 重规划周期 dt）
+	const double dt = this->ts_;  // MPC 时间步长
+	const double lambda_s = dt / (this->riskTimeConstS_ + dt);
+	const double lambda_phi = dt / (this->riskTimeConstPhi_ + dt);
+
+	// 机器人当前状态（2D，用于风险计算）
+	Eigen::Vector2d pr(this->currPos_(0), this->currPos_(1));
+	Eigen::Vector2d vr(this->currVel_(0), this->currVel_(1));
+
+	// ========== 第一步：对每个动态障碍物计算风险参数（只算一次）==========
+	std::vector<double> s_filt_per_obstacle(numDynamicOb, this->riskS0_);
+	std::vector<double> phi_filt_per_obstacle(numDynamicOb, 0.0);
+	std::vector<double> a_per_obstacle(numDynamicOb, 0.0);
+	std::vector<double> b_per_obstacle(numDynamicOb, 0.0);
+	std::vector<double> c_per_obstacle(numDynamicOb, 0.0);
+
+	for(int i=0; i<numDynamicOb; i++){
+		// 获取障碍物当前时刻（j=0）的位置和尺寸
+		Eigen::Vector3d pi3, si3;
+		if (dynamicObstaclesPos[i].size() > 0){
+			pi3 = dynamicObstaclesPos[i][0];  // 使用第一步的位置
+			si3 = dynamicObstaclesSize[i][0];
+		}
+		else{
+			continue;  // 没有障碍物数据，跳过
+		}
+
+		// 计算基线椭球半轴
+		double a0 = si3(0) * 0.5 + this->dynamicSafetyDist_;
+		double b0 = si3(1) * 0.5 + this->dynamicSafetyDist_;
+		double c0 = si3(2) * 0.5 + this->dynamicSafetyDist_;
+
+		// 估算障碍物速度（从位置差分）
+		Eigen::Vector2d vi(0.0, 0.0);
+		if (dynamicObstaclesPos[i].size() >= 2){
+			Eigen::Vector3d p_now = dynamicObstaclesPos[i][0];
+			Eigen::Vector3d p_nxt = dynamicObstaclesPos[i][1];
+			Eigen::Vector3d v3 = (p_nxt - p_now) / this->ts_;
+			vi = Eigen::Vector2d(v3(0), v3(1));
+		}
+
+		// 默认值（不启用风险自适应时使用）
+		double a = a0;
+		double b = b0;
+		double c = c0;
+		double phi = 0.0;
+
+		if (this->useRiskAdaptive_){
+			// ========== 风险自适应椭球计算（带稳定性补丁）==========
+			
+			// 算危险程度（相对运动）
+			Eigen::Vector2d pi(pi3(0), pi3(1));
+			Eigen::Vector2d r = pr - pi;
+			double d = r.norm();
+			const double eps = 1e-6;
+			
+			// 安全检查：距离太近时使用保守策略
+			if (d < 0.1){
+				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: distance too close (%.3fm), using conservative ellipsoid", i, d);
+				// 使用最大膨胀作为保守策略
+				double s_conservative = this->riskSMax_;
+				a = a0 + s_conservative * (1.0 + this->riskKappa_);
+				b = b0 + s_conservative * (1.0 - this->riskKappa_);
+				c = c0;
+				phi = 0.0;
+				
+				s_filt_per_obstacle[i] = s_conservative;
+				phi_filt_per_obstacle[i] = phi;
+				a_per_obstacle[i] = a;
+				b_per_obstacle[i] = b;
+				c_per_obstacle[i] = c;
+				continue;  // 跳过正常计算
 			}
-			for(int i=0; i<numStaticOb; i++){
-				oxyz[j](i+numDynamicOb,0) = staticObstacles[i].centroid(0);
-				oxyz[j](i+numDynamicOb,1) = staticObstacles[i].centroid(1);
-				oxyz[j](i+numDynamicOb,2) = staticObstacles[i].centroid(2);
-				osize[j](i+numDynamicOb,0) = staticObstacles[i].size(0)/2 + this->staticSafetyDist_;
-				osize[j](i+numDynamicOb,1) = staticObstacles[i].size(1)/2 + this->staticSafetyDist_;
-				osize[j](i+numDynamicOb,2) = staticObstacles[i].size(2)/2 + this->staticSafetyDist_;
-				yaw[j](i+numDynamicOb,0) = staticObstacles[i].yaw;
-				isDyamic[j][i] = 0;
+			
+			Eigen::Vector2d r_hat = r / (d + eps);
+
+			Eigen::Vector2d v_rel = vr - vi;
+			double vc = std::max(0.0, -r_hat.dot(v_rel));  // closing speed
+			
+			// TTC 限制：避免过小的值导致 exp 爆炸
+			double ttc = d / (vc + eps);
+			ttc = std::max(ttc, 0.1);  // TTC 最小 0.1s
+			ttc = std::min(ttc, 100.0); // TTC 最大 100s（避免 exp 下溢）
+
+			// 计算原始风险裕量 s_raw
+			double exp_term = std::exp(-ttc / this->riskTau_);
+			// 检查 exp 是否有效
+			if (std::isnan(exp_term) || std::isinf(exp_term)){
+				exp_term = 0.0;
+				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: exp term invalid, set to 0", i);
+			}
+			
+			double s_raw = this->riskS0_ + this->riskAlpha_ * vc + this->riskBeta_ * exp_term;
+			
+			// ========== 稳定性补丁 A: s 的平滑和限幅 ==========
+			s_raw = clamp(s_raw, this->riskSMin_, this->riskSMax_);
+			
+			double s_filt;
+			double s_prev = prevSFilt_[i];  // 保存用于调试输出
+			
+			if (isFirstUpdate_[i]){
+				s_filt = s_raw;
+				isFirstUpdate_[i] = false;
+			}
+			else{
+				s_filt = (1.0 - lambda_s) * prevSFilt_[i] + lambda_s * s_raw;
+				s_filt = clamp(s_filt, this->riskSMin_, this->riskSMax_);
+				
+				double ds = s_filt - prevSFilt_[i];
+				ds = clamp(ds, -this->riskMaxDeltaS_, this->riskMaxDeltaS_);
+				s_filt = prevSFilt_[i] + ds;
+				s_filt = clamp(s_filt, this->riskSMin_, this->riskSMax_);
+			}
+			prevSFilt_[i] = s_filt;
+
+			// 确定原始椭球朝向 phi_raw
+			double vi_norm = vi.norm();
+			double phi_raw = std::atan2(vi.y(), vi.x());
+			
+			// ========== 稳定性补丁 B: phi 的平滑 ==========
+			double dphi = wrapToPi(phi_raw - prevPhiFilt_[i]);
+			double phi_filt = wrapToPi(prevPhiFilt_[i] + lambda_phi * dphi);
+			
+			double dphi_limited = wrapToPi(phi_filt - prevPhiFilt_[i]);
+			dphi_limited = clamp(dphi_limited, -this->riskMaxDeltaPhi_, this->riskMaxDeltaPhi_);
+			phi_filt = wrapToPi(prevPhiFilt_[i] + dphi_limited);
+			prevPhiFilt_[i] = phi_filt;
+
+			// ========== 稳定性补丁 C: 低速退化 ==========
+			double kappa_eff = this->riskKappa_;
+			double phi_use = phi_filt;
+			
+			if (vi_norm < this->riskVelThreshold_){
+				kappa_eff = 0.0;
+				phi_use = (prevYaw_[i].size() > 0) ? prevYaw_[i][0] : prevPhiFilt_[i];
+			}
+			else{
+				phi_use = phi_filt;
+			}
+
+			// 各向异性分配
+			double delta_parallel = s_filt * (1.0 + kappa_eff);
+			double delta_perp     = s_filt * (1.0 - kappa_eff);
+
+			a = a0 + delta_parallel;
+			b = b0 + delta_perp;
+			c = c0;
+			
+			if (kappa_eff == 0.0){
+				b = a;
+			}
+			
+			phi = phi_use;
+
+			// ========== 安全检查：椭球大小合理性 ==========
+			const double MAX_ELLIPSOID_AXIS = 3.0;  // 椭球半轴不超过 3m
+			bool size_valid = true;
+			
+			if (a > MAX_ELLIPSOID_AXIS || b > MAX_ELLIPSOID_AXIS || c > MAX_ELLIPSOID_AXIS){
+				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Ellipsoid too large! a=%.2f, b=%.2f, c=%.2f. Clamping to %.2fm", 
+				                  i, a, b, c, MAX_ELLIPSOID_AXIS);
+				a = std::min(a, MAX_ELLIPSOID_AXIS);
+				b = std::min(b, MAX_ELLIPSOID_AXIS);
+				c = std::min(c, MAX_ELLIPSOID_AXIS);
+				size_valid = false;
+			}
+			
+			// 检查 NaN/Inf
+			if (std::isnan(a) || std::isinf(a) || std::isnan(b) || std::isinf(b) || 
+			    std::isnan(c) || std::isinf(c) || std::isnan(phi) || std::isinf(phi)){
+				ROS_ERROR_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: NaN/Inf detected! Using baseline ellipsoid", i);
+				a = a0;
+				b = b0;
+				c = c0;
+				phi = 0.0;
+				size_valid = false;
+			}
+			
+			// 检查椭球是否退化（太小）
+			if (a < a0 * 0.5 || b < b0 * 0.5){
+				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Ellipsoid too small, using baseline", i);
+				a = a0;
+				b = b0;
+				size_valid = false;
+			}
+
+			// 调试输出（每秒一次）
+			if (size_valid){
+				ROS_INFO_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: d=%.2fm, vc=%.2fm/s, ttc=%.2fs | "
+				                       "s_raw=%.2f→s_filt=%.2f(Δ%.3f) | phi=%.1f° | "
+				                       "a=%.2f, b=%.2f, κ=%.2f", 
+				                       i, d, vc, ttc,
+				                       s_raw, s_filt, (s_filt - s_prev),
+				                       phi*180/M_PI,
+				                       a, b, kappa_eff);
+			}
+			else{
+				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Using safe fallback - a=%.2f, b=%.2f", i, a, b);
+			}
+		}
+
+		// 保存计算结果
+		s_filt_per_obstacle[i] = (this->useRiskAdaptive_) ? prevSFilt_[i] : this->riskS0_;
+		phi_filt_per_obstacle[i] = phi;
+		a_per_obstacle[i] = a;
+		b_per_obstacle[i] = b;
+		c_per_obstacle[i] = c;
+		
+		// ========== 额外诊断：检测可能导致倒退的情况 ==========
+		if (this->useRiskAdaptive_){
+			// 如果椭球比距离还大，MPC 可能找不到前进路径而倒退
+			double max_radius = std::max({a, b, c});
+			Eigen::Vector2d pi(pi3(0), pi3(1));
+			double dist_xy = (pr - pi).norm();
+			
+			if (max_radius > dist_xy * 0.7){
+				ROS_WARN_THROTTLE(0.5, "[Risk-Adaptive] ⚠️ Obs_%d: Ellipsoid TOO LARGE! "
+				                       "max_radius=%.2fm, dist=%.2fm (%.0f%%) - MPC may RETREAT!", 
+				                       i, max_radius, dist_xy, (max_radius/dist_xy)*100.0);
 			}
 		}
 	}
+	
+	// ========== 机器人运动诊断 ==========
+	if (this->useRiskAdaptive_ && vr.x() < -0.1){
+		ROS_WARN_THROTTLE(0.5, "[Risk-Adaptive] ⚠️ Robot RETREATING! vr=(%.2f, %.2f) m/s", vr.x(), vr.y());
+	}
+
+	// ========== 第二步：填充 horizon 内的所有步（使用相同的参数）==========
+	for(int j=0; j<mpcWindow;j++){
+		oxyz[j].resize(numObs,3);
+		osize[j].resize(numObs,3);
+		yaw[j].resize(numObs,1);
+		isDyamic[j].resize(numObs);
+
+		// ========== 处理动态障碍物 ==========
+		for(int i=0; i<numDynamicOb; i++){
+			// 获取障碍物在步 j 的位置
+			Eigen::Vector3d pi3;
+			if (j < dynamicObstaclesPos[i].size()){
+				pi3 = dynamicObstaclesPos[i][j];
+			}
+			else{
+				pi3 = dynamicObstaclesPos[i].back();
+			}
+
+			// 写入障碍物位置
+			oxyz[j](i,0) = pi3(0);
+			oxyz[j](i,1) = pi3(1);
+			oxyz[j](i,2) = pi3(2);
+
+			// 使用预计算的椭球参数（整个 horizon 使用相同参数）
+			double a = a_per_obstacle[i];
+			double b = b_per_obstacle[i];
+			double c = c_per_obstacle[i];
+			double phi = phi_filt_per_obstacle[i];
+
+			// 更新 prevYaw_（用于低速时的引用）
+			if (prevYaw_[i].size() > j){
+				prevYaw_[i][j] = phi;
+			}
+
+			// 写回椭球参数
+			osize[j](i,0) = a;
+			osize[j](i,1) = b;
+			osize[j](i,2) = c;
+			yaw[j](i,0) = phi;
+			isDyamic[j][i] = 1;
+		}
+
+		// ========== 处理静态障碍物（保持原逻辑） ==========
+		for(int i=0; i<numStaticOb; i++){
+			oxyz[j](i+numDynamicOb,0) = staticObstacles[i].centroid(0);
+			oxyz[j](i+numDynamicOb,1) = staticObstacles[i].centroid(1);
+			oxyz[j](i+numDynamicOb,2) = staticObstacles[i].centroid(2);
+			osize[j](i+numDynamicOb,0) = staticObstacles[i].size(0)/2 + this->staticSafetyDist_;
+			osize[j](i+numDynamicOb,1) = staticObstacles[i].size(1)/2 + this->staticSafetyDist_;
+			osize[j](i+numDynamicOb,2) = staticObstacles[i].size(2)/2 + this->staticSafetyDist_;
+			yaw[j](i+numDynamicOb,0) = staticObstacles[i].yaw;
+			isDyamic[j][i] = 0;
+		}
+	}
+	
+	// ========== 保存椭球参数供可视化使用 ==========
+	this->lastOxyz_ = oxyz;
+	this->lastOsize_ = osize;
+	this->lastYaw_ = yaw;
+	
+	// ========== 调试输出：总结椭球参数 ==========
+	if (numDynamicOb > 0 && oxyz.size() > 0 && oxyz[0].rows() > 0){
+		ROS_INFO_THROTTLE(1.0, "[updateObstacleParam] 💾 Saved %d dynamic obstacles, horizon=%d steps", 
+		                  numDynamicOb, (int)oxyz.size());
+		for (int i = 0; i < numDynamicOb && i < 3; i++){  // 只打印前3个障碍物
+			ROS_INFO_THROTTLE(1.0, "   Obs_%d @ t=0: osize=(%.2f,%.2f,%.2f), yaw=%.1f°",
+			                  i, osize[0](i,0), osize[0](i,1), osize[0](i,2), yaw[0](i,0)*180/M_PI);
+		}
+	}
+}
 
 	void mpcPlanner::getReferenceTraj(std::vector<Eigen::Vector3d>& referenceTraj){
 		// find the nearest position in the reference trajectory
@@ -1515,16 +1918,13 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 	}
 
 	void mpcPlanner::publishEllipsoidObstacles(){
-		// 发布 MPC 约束中实际使用的椭球障碍物可视化
-		// 注意：应该显示 MPC solver 中实际使用的约束，而不是预测轨迹
-		// MPC 实际使用的是 dynamicObstaclesPos_，在 updateObstacleParam 中转换为椭球约束
+		// 发布 MPC 约束中实际使用的椭球障碍物可视化（使用风险自适应计算的参数）
 		visualization_msgs::MarkerArray ellipsoidMsg;
 		
-		// 直接使用 dynamicObstaclesPos_，这是 MPC 实际使用的数据
-		// 注意：updatePredObstacles 中 dynamicObstaclesPos_ 只用了第一个意图的第一个时间步
-		// 而且整个 horizon 都是同一个位置（这是错误的，但可视化应该显示实际使用的数据）
-		if (this->dynamicObstaclesPos_.size() == 0){
-			// 即使没有数据，也发布空的 MarkerArray，确保 topic 活跃
+		// 检查是否有保存的椭球参数（来自最后一次 MPC 计算）
+		if (this->lastOxyz_.size() == 0 || this->lastOsize_.size() == 0 || this->lastYaw_.size() == 0){
+			// 没有椭球参数，发布空的 MarkerArray
+			ROS_WARN_THROTTLE(2.0, "[Vis] ❌ No ellipsoid data to visualize (lastOxyz/Osize/Yaw empty)");
 			visualization_msgs::Marker deleteAll;
 			deleteAll.header.frame_id = "map";
 			deleteAll.header.stamp = ros::Time::now();
@@ -1535,36 +1935,49 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 			return;
 		}
 		
+		ROS_INFO_THROTTLE(1.0, "[Vis] ✅ Publishing ellipsoids: %zu horizon steps, obstacles at t=0: %ld", 
+		                  this->lastOxyz_.size(), 
+		                  (this->lastOxyz_.size() > 0) ? this->lastOxyz_[0].rows() : 0);
+		
 		int markerId = 0;
+		int numDynamicOb = this->dynamicObstaclesPos_.size();
 		
 		// 遍历每个障碍物，显示 MPC horizon 中每个时间步的椭球约束
-		// 注意：只显示 horizon 内的椭球，不要显示整个预测轨迹
-		for (int obIdx = 0; obIdx < int(this->dynamicObstaclesPos_.size()); ++obIdx){
-			if (this->dynamicObstaclesPos_[obIdx].size() == 0 || 
-			    this->dynamicObstaclesSize_[obIdx].size() == 0){
+		for (int obIdx = 0; obIdx < numDynamicOb; ++obIdx){
+			if (this->dynamicObstaclesPos_[obIdx].size() == 0){
 				continue;
 			}
 			
 			// 只显示 horizon 内的椭球（MPC 实际使用的约束）
-			int horizon = std::min(this->horizon_, int(this->dynamicObstaclesPos_[obIdx].size()));
+			int horizon = std::min(this->horizon_, int(this->lastOxyz_.size()));
 			
 			// 每隔几个时间步绘制一次，避免过于密集
-			// 对于 horizon=20，如果 stepDivisor=5，则显示 4 个椭球
-			int stepDivisor = 5;  // 可以根据需要调整
+			int stepDivisor = 5;
 			int step = std::max(1, horizon / stepDivisor);
 			if (step == 0) step = 1;
 			
 			for (int t = 0; t < horizon; t += step){
-				Eigen::Vector3d pos = this->dynamicObstaclesPos_[obIdx][t];
-				Eigen::Vector3d size = this->dynamicObstaclesSize_[obIdx][t];
+				// 使用保存的实际椭球参数（包含风险自适应的计算结果）
+				if (t >= lastOxyz_.size() || obIdx >= lastOxyz_[t].rows()){
+					continue;
+				}
 				
-				// 椭球参数：半轴长度（加上安全距离，与 updateObstacleParam 中一致）
-				double a = size(0) / 2.0 + this->dynamicSafetyDist_;  // x 半轴
-				double b = size(1) / 2.0 + this->dynamicSafetyDist_;  // y 半轴
-				double c = size(2) / 2.0 + this->dynamicSafetyDist_;  // z 半轴
-				double yaw = 0.0;  // 动态障碍物 yaw = 0（与 updateObstacleParam 中一致）
+				// 从保存的参数中读取（这些是 MPC 实际使用的椭球参数）
+				Eigen::Vector3d pos(lastOxyz_[t](obIdx, 0), 
+				                    lastOxyz_[t](obIdx, 1), 
+				                    lastOxyz_[t](obIdx, 2));
+				double a = lastOsize_[t](obIdx, 0);    // 包含风险自适应的 a
+				double b = lastOsize_[t](obIdx, 1);    // 包含风险自适应的 b
+				double c = lastOsize_[t](obIdx, 2);    // 包含风险自适应的 c
+				double yaw = lastYaw_[t](obIdx, 0);    // 包含风险自适应的 phi
 				
-				// 绘制椭球
+				// ⚠️ 调试输出：显示椭球大小（只在 t=0 时打印，避免刷屏）
+				if (t == 0){
+					ROS_INFO_THROTTLE(1.0, "[Vis] Obs_%d @ t=%d: pos=(%.2f,%.2f,%.2f), size=(a=%.2f,b=%.2f,c=%.2f), yaw=%.1f°", 
+					                  obIdx, t, pos.x(), pos.y(), pos.z(), a, b, c, yaw*180/M_PI);
+				}
+				
+				// 绘制椭球（现在是真实的风险自适应椭球）
 				visualization_msgs::Marker ellipsoid = createEllipsoidMarker(
 					markerId++, pos, a, b, c, yaw);
 				if (ellipsoid.points.size() >= 4){
@@ -1585,8 +1998,8 @@ bool mpcPlanner::solveTraj(const std::vector<staticObstacle> &staticObstacles, c
 		
 		// 打印调试信息
 		if (ellipsoidMsg.markers.size() > 0 && ellipsoidMsg.markers[0].action != visualization_msgs::Marker::DELETEALL){
-			ROS_INFO_THROTTLE(2.0, "[MPC] Publishing %zu ellipsoid markers (dynamicObstaclesPos_ size=%zu)", 
-			                  ellipsoidMsg.markers.size(), this->dynamicObstaclesPos_.size());
+			ROS_INFO_THROTTLE(2.0, "[MPC-Vis] Publishing %zu ellipsoid markers with Risk-Adaptive params (numObs=%d)", 
+			                  ellipsoidMsg.markers.size(), numDynamicOb);
 		}
 		this->ellipsoidObstacleVisPub_.publish(ellipsoidMsg);
 	}

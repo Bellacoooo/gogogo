@@ -1877,34 +1877,33 @@ namespace dynamicPredictor{
                 continue;
             }
 
-            // 说明：posHist_是历史轨迹，最后一个点是当前时刻 t0
-            // posPred_是从当前时刻 t0 开始的未来预测轨迹（t0+1, t0+2, ..., t0+totalPredSteps）
-            // 要计算ADE/FDE，需要未来的真实轨迹（t0+1 到 t0+totalPredSteps），但在实时系统中我们没有
+            // 说明：posHist_是历史轨迹，采用deque的push_front存储，索引0是最新，索引越大越旧
+            // posHist_[0] = 当前时刻 t0 (最新)
+            // posHist_[1] = t0-1 时刻
+            // posHist_[n] = t0-n 时刻 (最旧)
             
-            // 回测方案：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
-            // 这意味着：假设在 t0 - totalPredSteps 时刻做了预测，预测未来 totalPredSteps 步
-            // 然后用 t0 - totalPredSteps + 1 到 t0 的历史轨迹作为"未来"参考
-            // 注意：这需要历史轨迹足够长，且假设运动模式在短时间内相对稳定
+            // posPred_是从当前时刻 t0 开始的未来预测轨迹（t0+dt, t0+2dt, ..., t0+totalPredSteps*dt）
+            // 在实时系统中，我们没有未来的真实轨迹，所以用历史数据进行回溯评估
+            
+            // 回测方案：用历史轨迹中最近的 totalPredSteps 个点作为"ground truth"
+            // 即：posHist_[0] 到 posHist_[totalPredSteps-1]
+            // 这相当于：如果我们在 t0-totalPredSteps 时刻做预测，现在用实际发生的轨迹来评估
             
             const int histSize = static_cast<int>(refTraj.size());
-            if (histSize < totalPredSteps + 1) {
-                // 历史轨迹需要至少 totalPredSteps + 1 个点才能进行回测
-                // （需要 totalPredSteps 个点作为"未来"参考）
-                ROS_WARN("Obstacle %zu: history size (%d) < required steps (%d + 1), skip error calculation.", 
+            if (histSize < totalPredSteps) {
+                // 历史轨迹需要至少 totalPredSteps 个点才能进行回测
+                ROS_WARN("Obstacle %zu: history size (%d) < required steps (%d), skip error calculation.", 
                         obsIdx, histSize, totalPredSteps);
                 continue;
             }
 
-            // 回测：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
-            // 历史轨迹索引范围：[0, histSize-1]，最后 totalPredSteps 个点的索引是 [histSize - totalPredSteps, histSize - 1]
-            // 假设在 histSize - totalPredSteps - 1 时刻做了预测，预测未来 totalPredSteps 步
-            // 预测的时刻应该是 [histSize - totalPredSteps, histSize - 1]（共 totalPredSteps 个点）
-            const int refStartIdx = histSize - totalPredSteps; // 参考轨迹起始索引
-            const int validSteps = std::min(totalPredSteps, histSize - refStartIdx); // 确保不超过历史轨迹长度
+            // 修复后的索引：从最新的点开始（索引0），往旧的方向取totalPredSteps个点
+            // posHist_[0] 是最新（t0），posHist_[totalPredSteps-1] 是 t0-totalPredSteps+1
+            const int refStartIdx = 0; // 从最新点开始
+            const int validSteps = std::min(totalPredSteps, histSize); // 确保不超过历史轨迹长度
             
-            // 注意：当前 posPred_ 是在当前时刻 t0（histSize-1）做的预测，不是 predStartIdx 时刻
-            // 这里用当前预测作为近似（假设运动模式稳定）
-            // 理想情况下，应该在 predStartIdx 时刻保存预测结果
+            // 注意：这里的评估是"如果在过去某时刻预测，现在的历史数据就是真实发生的轨迹"
+            // 虽然当前预测是基于posHist_[0]的状态，但我们用近期历史数据作为评估参考是合理的
 
             // 遍历所有意图的预测轨迹，找最小ADE和FDE
             double minADE = INFINITY;
@@ -1927,12 +1926,14 @@ namespace dynamicPredictor{
                 int actualSteps = 0; // 实际计算的有效步数
 
                 for (int t = 0; t < validSteps; ++t) {
-                    // 修复2：时间对齐
-                    // 回测场景：用历史轨迹的最后 totalPredSteps 个点作为"未来"参考
-                    // 历史轨迹的最后 totalPredSteps 个点的索引范围：[refStartIdx, histSize - 1]
-                    // 即：[histSize - totalPredSteps, histSize - 1]
-                    // 预测轨迹的 t 时刻对应参考轨迹的 refStartIdx + t
-                    const int refIdx = refStartIdx + t;
+                    // 修复后的时间对齐：
+                    // posHist_采用push_front存储，索引0是最新（t0），索引越大越旧
+                    // 预测轨迹predTraj[t]是未来第t步的预测位置
+                    // 为了回测评估，我们用最近的历史数据：
+                    // predTraj[0] 对应 refTraj[0]（最新）
+                    // predTraj[1] 对应 refTraj[1]（次新）
+                    // predTraj[t] 对应 refTraj[t]
+                    const int refIdx = refStartIdx + t;  // refStartIdx=0, 所以 refIdx = t
                     if (refIdx >= histSize) {
                         // 索引越界，提前退出
                         break;
