@@ -413,8 +413,25 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   ROS_INFO("[A*] Straight line check: %d/%d blocked, %d not_in_map, %d free",
            blocked_count, num_checks + 1, not_in_map_count, num_checks + 1 - blocked_count - not_in_map_count);
   
+  // 🚀 优化：如果直线路径可达，直接返回（避免A*搜索浪费时间）
   if (blocked_count == 0 && straight_dist > 0.1) {
-    ROS_WARN("[A*] WARNING: Straight line is FREE but A* may still plan a detour! This indicates a bug.");
+    ROS_INFO("[A*] ✅ Straight line is FREE! Returning direct path (skipping A* search)");
+    
+    // 构造直线路径
+    int num_waypoints = std::max(3, static_cast<int>(std::ceil(straight_dist / grid_res_)));
+    for (int i = 0; i <= num_waypoints; ++i) {
+      double t = static_cast<double>(i) / num_waypoints;
+      geometry_msgs::PoseStamped pose;
+      pose.header = path.header;
+      pose.pose.position.x = s.x() + t * (g.x() - s.x());
+      pose.pose.position.y = s.y() + t * (g.y() - s.y());
+      pose.pose.position.z = s.z() + t * (g.z() - s.z());
+      pose.pose.orientation.w = 1.0;
+      path.poses.push_back(pose);
+    }
+    
+    ROS_INFO("[A*] Path found! Direct line, path has %d waypoints.", num_waypoints + 1);
+    return;
   }
   
   if (!isFree(gx, gy, gz))
