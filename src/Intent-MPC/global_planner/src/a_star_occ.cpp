@@ -17,7 +17,15 @@ AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
 
   nh_.param("astar/grid_resolution", grid_res_param_, 0.5);
   
-  // 风险地图参数
+  // 🔧 新方案参数（按照用户建议）
+  nh_.param("astar/w_d", w_d_, 1.0);           // 距离权重
+  nh_.param("astar/R_max", R_max_, 0.8);       // 极高风险阈值
+  nh_.param("astar/eta", eta_, 1.0);           // 风险启发式权重
+  nh_.param("astar/S_h", S_h_, 5.0);           // 前瞻距离（米）
+  
+  // Delta_s 和 sample_step 默认为 resolution/2，在 setMap 后初始化
+  
+  // 保留旧参数以兼容（已废弃）
   nh_.param("astar/w_risk", w_risk_, 0.0);
   nh_.param("astar/k_risk", k_risk_, 1.0);
   nh_.param("astar/z_gate", z_gate_, 2.0);
@@ -27,8 +35,8 @@ AStarOccMap::AStarOccMap(const ros::NodeHandle &nh) : nh_(nh)
   
   ROS_INFO("[A*] Simple 3D A* initialized (grid_res=%.2f m, use26dir=%s).", 
            grid_res_param_, use26dir_ ? "true" : "false");
-  ROS_INFO("[A*] Risk map params: w_risk=%.1f, k_risk=%.1f, z_gate=%.2f", 
-           w_risk_, k_risk_, z_gate_);
+  ROS_INFO("[A*] 🔧 New risk scheme: w_d=%.2f, R_max=%.3f, eta=%.2f, S_h=%.1fm", 
+           w_d_, R_max_, eta_, S_h_);
   ROS_INFO("[A*] Raw path will be published to /astar/planned_path");
 }
 
@@ -62,10 +70,16 @@ void AStarOccMap::setMap(const std::shared_ptr<mapManager::occMap> &map)
     // 否则栅格索引会不匹配，导致地图查询错误
     grid_res_ = res_;  // 强制使用地图分辨率，忽略grid_res_param_
     
+    // 🔧 初始化采样步长（默认为resolution/2）
+    Delta_s_ = grid_res_ * 0.5;
+    sample_step_ = grid_res_ * 0.5;
+    
     ROS_INFO("[A*] Using grid resolution %.3f m (map res=%.3f m, param=%.3f m).", 
              grid_res_, res_, grid_res_param_);
     ROS_INFO("[A*] Map origin offset: (%.3f, %.3f, %.3f)", 
              map_origin_.x(), map_origin_.y(), map_origin_.z());
+    ROS_INFO("[A*] Sampling steps: Delta_s=%.3fm, sample_step=%.3fm", 
+             Delta_s_, sample_step_);
   }
 }
 
@@ -415,15 +429,23 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   }
 
   // 启发函数：欧几里得距离 + tie-breaking 因子
-  // tie-breaking 因子让路径更倾向于直线，减少扭曲
-  // 🔧 增大 tie-breaker，更强烈地偏好直线和对角线路径
-  const double tie_breaker = 1.001;  // 0.1% 的提升，偏好直线路径
+  // 🔧 新方案启发式：h(n) = h_dist(n) + eta * h_risk(n)
   auto heuristic = [&](int x, int y, int z) -> double {
+    Eigen::Vector3d q = indexToPos(x, y, z);
+    
+    // h_dist: 欧氏距离
     double dx = static_cast<double>(x - gx);
     double dy = static_cast<double>(y - gy);
     double dz = static_cast<double>(z - gz);
-    double h = std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
-    return h * tie_breaker;  // 添加 tie-breaking 因子
+    double h_dist = std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
+    
+    // h_risk: 风险前瞻
+    double h_risk = 0.0;
+    if (eta_ > 0.0) {
+      h_risk = riskLookahead(q, g);
+    }
+    
+    return w_d_ * h_dist + eta_ * h_risk;
   };
 
   // 使用map存储节点信息，key是idx1d
@@ -553,8 +575,22 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
         continue;
       }
       
+      // 🔧 新方案：检查边段可行性（占据 + 风险阈值）
+      Eigen::Vector3d cur_pos = indexToPos(cur.x, cur.y, cur.z);
+      if (!edgeFeasible(cur_pos, neighbor_pos)) {
+        // 边段不可行（穿过高风险区域或障碍物）
+        continue;
+      }
+      
+      // 🔧 新方案：step只计算几何距离，不加风险
       double step = std::sqrt(dx[k]*dx[k] + dy[k]*dy[k] + dz[k]*dz[k]) * grid_res_;
       
+      // 🔧 新方案：g只累计几何距离（不加风险！）
+      // 风险通过 edgeFeasible（硬约束）和 h_risk（启发式）处理
+      double tentative_g = cur.g + w_d_ * step;
+      
+      // ============ 以下旧风险代价计算逻辑已废弃 ============
+      #if 0
       // Step4-B: 计算风险代价
       double risk_cost = 0.0;
       
@@ -661,7 +697,9 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
       }
       
       // 总代价 = 移动代价 + 风险代价
-      double tentative_g = cur.g + step + risk_cost;
+      double tentative_g_old = cur.g + step + risk_cost;  // 旧逻辑（已废弃）
+      #endif
+      // ============ 废弃代码结束 ============
       
       long long h = idx1d(nx, ny, nz);
       
@@ -973,6 +1011,94 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
     ROS_INFO_THROTTLE(1.0, "[A*] Path quality: length=%.3f m, straight=%.3f m, ratio=%.3f",
                       path_length, straight_dist, path_length / (straight_dist + 1e-6));
   }
+}
+
+// ============================================================================
+// 🔧 新方案辅助函数实现
+// ============================================================================
+
+double AStarOccMap::getRisk(const Eigen::Vector3d& q) const
+{
+  // 统一风险查询接口
+  if (use_risk_map_25d_ && risk_map_25d_ && risk_map_25d_->isValid()) {
+    try {
+      return risk_map_25d_->query(q);
+    } catch (...) {
+      return 0.0;
+    }
+  } else if (risk_map_ && risk_map_->isValid()) {
+    try {
+      return risk_map_->queryBilinear(q(0), q(1));
+    } catch (...) {
+      return 0.0;
+    }
+  }
+  return 0.0;
+}
+
+bool AStarOccMap::edgeFeasible(const Eigen::Vector3d& q_start, const Eigen::Vector3d& q_end) const
+{
+  // 检查边段可行性：占据 + 风险阈值
+  double dist = (q_end - q_start).norm();
+  if (dist < 1e-6) return true;
+  
+  int num_samples = std::max(2, static_cast<int>(std::ceil(dist / sample_step_)));
+  
+  for (int i = 0; i <= num_samples; ++i) {
+    double t = static_cast<double>(i) / num_samples;
+    Eigen::Vector3d q_s = q_start + t * (q_end - q_start);
+    
+    // 1. 检查是否在地图内
+    if (!map_->isInMap(q_s)) {
+      return false;
+    }
+    
+    // 2. 检查占据
+    if (map_->isInflatedOccupied(q_s)) {
+      return false;
+    }
+    
+    // 3. 检查风险阈值（极高风险禁入）
+    double risk = getRisk(q_s);
+    if (risk > R_max_) {
+      return false;
+    }
+  }
+  
+  return true;
+}
+
+double AStarOccMap::riskLookahead(const Eigen::Vector3d& q, const Eigen::Vector3d& q_goal) const
+{
+  // 风险前瞻启发式：从q朝goal方向前瞻S_h米
+  Eigen::Vector3d dir = q_goal - q;
+  double dist_to_goal = dir.norm();
+  if (dist_to_goal < 1e-6) return 0.0;
+  
+  dir.normalize();
+  
+  double h_risk = 0.0;
+  double lookahead_dist = std::min(S_h_, dist_to_goal);
+  int num_samples = std::max(1, static_cast<int>(std::ceil(lookahead_dist / Delta_s_)));
+  
+  for (int i = 0; i <= num_samples; ++i) {
+    double s = (static_cast<double>(i) / num_samples) * lookahead_dist;
+    Eigen::Vector3d q_m = q + dir * s;
+    
+    // 如果前方被障碍挡住，停止累加
+    if (!map_->isInMap(q_m)) {
+      break;
+    }
+    if (map_->isInflatedOccupied(q_m)) {
+      break;
+    }
+    
+    // 累计风险
+    double risk = getRisk(q_m);
+    h_risk += risk * Delta_s_;
+  }
+  
+  return h_risk;
 }
 
 }  // namespace globalPlanner

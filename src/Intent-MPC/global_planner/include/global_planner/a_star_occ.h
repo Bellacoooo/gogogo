@@ -79,6 +79,30 @@ private:
   Eigen::Vector3d indexToPos(int ix, int iy, int iz) const;
   bool isFree(int ix, int iy, int iz) const;
   
+  // 🔧 新方案辅助函数
+  /**
+   * @brief 检查边段是否可行（占据+风险阈值）
+   * @param q_start 起点世界坐标
+   * @param q_end 终点世界坐标
+   * @return true if edge is feasible
+   */
+  bool edgeFeasible(const Eigen::Vector3d& q_start, const Eigen::Vector3d& q_end) const;
+  
+  /**
+   * @brief 风险前瞻启发式（从q朝goal方向前瞻S_h米）
+   * @param q 当前节点世界坐标
+   * @param q_goal 目标世界坐标
+   * @return 累计风险值
+   */
+  double riskLookahead(const Eigen::Vector3d& q, const Eigen::Vector3d& q_goal) const;
+  
+  /**
+   * @brief 查询点的风险值（统一接口）
+   * @param q 世界坐标
+   * @return 风险值 [0,1]
+   */
+  double getRisk(const Eigen::Vector3d& q) const;
+  
   // 使用 64 位索引避免在较大地图尺寸下发生整型溢出
   // 改进：使用更安全的哈希方法，避免溢出
   inline long long idx1d(int x, int y, int z) const
@@ -121,9 +145,19 @@ private:
   std::shared_ptr<RiskMap2D> risk_map_;      // 风险地图指针（旧版2D）
   std::shared_ptr<RiskMap25D> risk_map_25d_; // 2.5D风险地图指针（新版）
   bool use_risk_map_25d_{false};             // 是否使用2.5D风险地图
-  double w_risk_{0.0};                       // 风险代价权重
-  double k_risk_{1.0};                       // 风险转换系数（仅RiskMap2D使用）
-  double z_gate_{2.0};                       // 高度门限（米，仅RiskMap2D使用）
+  
+  // 🔧 新方案参数（按照用户建议）
+  double w_d_{1.0};                          // 距离权重（g中使用）
+  double R_max_{0.8};                        // 极高风险阈值（超过则禁入）
+  double eta_{1.0};                          // 风险启发式权重（h中使用）
+  double S_h_{5.0};                          // 前瞻距离（米）
+  double Delta_s_{0.0};                      // 前瞻采样间隔（默认=resolution/2）
+  double sample_step_{0.0};                  // 边段可行性检查采样步长（默认=resolution/2）
+  
+  // 保留旧参数以兼容（已废弃）
+  double w_risk_{0.0};                       // [废弃] 风险代价权重
+  double k_risk_{1.0};                       // [废弃] 风险转换系数
+  double z_gate_{2.0};                       // [废弃] 高度门限
   
   // 动态障碍物方框硬约束
   struct DynamicObstacleBox {
