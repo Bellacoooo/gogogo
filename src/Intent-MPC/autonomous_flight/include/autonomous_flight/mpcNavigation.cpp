@@ -215,9 +215,9 @@ namespace AutoFlight{
 			this->riskMap25D_->setOccupancyMap(this->map_);
 		}
 		
-		// 启动定时器：定期更新RiskMap25D
-		// 注意：静态风险计算很慢，降低频率到1Hz
-		this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(1.0), &mpcNavigation::updateRiskMap25DCB, this);
+		// ❌ 禁用定时器：静态风险不需要定期更新（静态环境不变）
+		// 改为在A*规划前按需更新（见updateRiskMap25DCB的调用）
+		// this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(1.0), &mpcNavigation::updateRiskMap25DCB, this);
 		
 		ROS_INFO("[MPC-Nav] RiskMap25D initialized");
 	}
@@ -315,8 +315,17 @@ namespace AutoFlight{
 										// 更新地图中心为当前位置
 										this->riskMap25D_->setMapCenter(this->currPos_);
 										
-										// TODO: 更新动态预测数据（需要从predictor获取）
-										// 暂时先使用静态风险地图功能
+										// 按需更新静态风险（只在首次或地图中心移动较远时）
+										static Eigen::Vector3d lastUpdatePos(0, 0, 0);
+										static bool firstUpdate = true;
+										double moveDist = (this->currPos_ - lastUpdatePos).norm();
+										
+										if (firstUpdate || moveDist > 2.0) {  // 移动超过2米才更新
+											this->riskMap25D_->updateStaticRiskOnly();
+											lastUpdatePos = this->currPos_;
+											firstUpdate = false;
+											ROS_INFO_THROTTLE(5.0, "[MPC-A*-CALL] Static risk updated (moved %.1fm)", moveDist);
+										}
 										
 										// 设置到A*
 										this->aStarPlanner_->setRiskMap25D(this->riskMap25D_);
