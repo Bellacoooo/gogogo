@@ -216,7 +216,8 @@ namespace AutoFlight{
 		}
 		
 		// 启动定时器：定期更新RiskMap25D
-		this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(0.1), &mpcNavigation::updateRiskMap25DCB, this);
+		// 注意：静态风险计算很慢，降低频率到1Hz
+		this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(1.0), &mpcNavigation::updateRiskMap25DCB, this);
 		
 		ROS_INFO("[MPC-Nav] RiskMap25D initialized");
 	}

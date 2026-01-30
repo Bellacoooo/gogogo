@@ -113,15 +113,13 @@ void RiskMap25D::updateStaticRisk()
             world_pos(1) = grid_origin_(1) + (iy + 0.5) * resolution_;
             world_pos(2) = fixed_height_;
             
-            // 简化的静态风险计算：搜索附近是否有障碍物
+            // 简化的静态风险计算：只检查当前点及最近邻
             double r_s = 0.0;
-            double search_radius = d_s_;  // 搜索半径
-            int search_steps = static_cast<int>(std::ceil(search_radius / resolution_));
-            double min_dist = search_radius + 1.0;  // 初始化为超过search_radius
+            double min_dist = d_s_ + 1.0;  // 初始化为超过d_s_
             
-            // 搜索周围的栅格
-            for (int dy = -search_steps; dy <= search_steps; ++dy) {
-                for (int dx = -search_steps; dx <= search_steps; ++dx) {
+            // 只检查当前点和8个相邻点（9点采样，避免全局搜索）
+            for (int dy = -1; dy <= 1; ++dy) {
+                for (int dx = -1; dx <= 1; ++dx) {
                     Eigen::Vector3d check_pos;
                     check_pos(0) = world_pos(0) + dx * resolution_;
                     check_pos(1) = world_pos(1) + dy * resolution_;
