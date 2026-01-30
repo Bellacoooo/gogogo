@@ -152,6 +152,30 @@ void RiskMap25D::updateStaticRisk()
     ROS_INFO_THROTTLE(10.0, "[RiskMap25D] Static risk updated from occupancy map");
 }
 
+void RiskMap25D::updateStaticRiskOnly()
+{
+    if (!is_initialized_) return;
+    
+    std::lock_guard<std::mutex> lock(map_mutex_);
+    
+    // 只更新静态风险，保留动态风险（如果有的话）
+    // 先保存当前风险（包含动态部分）
+    std::vector<double> total_risk_backup = risk_grid_;
+    
+    // 更新静态风险
+    updateStaticRisk();
+    
+    // 如果之前已经有动态风险，叠加回去
+    // （这里简化处理：如果backup > static，说明有动态风险）
+    if (dynamic_updated_) {
+        for (size_t i = 0; i < risk_grid_.size(); ++i) {
+            double static_risk = risk_grid_[i];
+            double dynamic_risk = std::max(0.0, total_risk_backup[i] - static_risk);
+            risk_grid_[i] = static_risk + dynamic_risk;
+        }
+    }
+}
+
 void RiskMap25D::updateFromDynamicMsg(const nav_msgs::OccupancyGrid& msg)
 {
     if (!is_initialized_) return;

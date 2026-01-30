@@ -1067,10 +1067,16 @@ namespace AutoFlight{
 		// 1. 设置地图中心（机器人当前位置）
 		this->riskMap25D_->setMapCenter(this->currPos_);
 		
-		// 注意：
-		// - 静态风险从occupancy map计算（通过getDistance接口）
-		// - 动态风险通过订阅 dynamic_predictor/dynamic_risk_map 更新（在riskMapCB中）
-		// 这里我们将静态风险计算集成到riskMapCB中，与动态风险一起更新
+		// 2. 独立更新静态风险（不依赖动态风险消息）
+		try {
+			this->riskMap25D_->updateStaticRiskOnly();
+			ROS_INFO_THROTTLE(10.0, "[RiskMap25D-Timer] Static risk updated independently");
+		} catch (const std::exception& e) {
+			ROS_ERROR_THROTTLE(5.0, "[RiskMap25D-Timer] Error updating static risk: %s", e.what());
+		}
+		
+		// 3. 发布风险地图（即使只有静态风险）
+		publishRiskMap25D();
 	}
 
 	void mpcNavigation::publishRiskMap25D(){

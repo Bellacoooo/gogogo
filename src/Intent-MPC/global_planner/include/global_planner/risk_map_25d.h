@@ -98,8 +98,14 @@ public:
     
     /**
      * @brief 更新静态风险（从内部occupancy map计算）
+     * @note 内部方法，不加锁（由调用者保证线程安全）
      */
     void updateStaticRisk();
+    
+    /**
+     * @brief 独立更新静态风险（带锁，可安全调用）
+     */
+    void updateStaticRiskOnly();
 
     /**
      * @brief 更新动态风险（基于意图预测）
