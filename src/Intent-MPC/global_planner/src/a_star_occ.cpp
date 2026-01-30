@@ -734,11 +734,11 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
         all_nodes[h] = nb;
         open.push({new_f, h});
         
-        // 打印前几个扩展的节点，用于调试
-        if (expanded_nodes < 10) {
-          ROS_INFO("[A*] Expand [%zu]: (%d,%d,%d) -> (%d,%d,%d), g=%.3f->%.3f, h=%.3f, f=%.3f",
-                   expanded_nodes, cur.x, cur.y, cur.z, nx, ny, nz, cur.g, tentative_g, h_val, new_f);
-        }
+        // 调试日志已禁用（会打印大量日志导致系统卡死）
+        // if (expanded_nodes < 10) {
+        //   ROS_INFO("[A*] Expand [%zu]: (%d,%d,%d) -> (%d,%d,%d), g=%.3f->%.3f, h=%.3f, f=%.3f",
+        //            expanded_nodes, cur.x, cur.y, cur.z, nx, ny, nz, cur.g, tentative_g, h_val, new_f);
+        // }
         
         // 检查是否是tie-breaking情况（f值相同但g值不同）
         if (!is_new) {
@@ -746,10 +746,11 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
           double old_f = old_g + old_h;
           if (std::abs(new_f - old_f) < 1e-9 && std::abs(tentative_g - old_g) > 1e-9) {
             tie_break_count++;
-            if (tie_break_count <= 10) {
-              ROS_INFO("[A*] Tie-break #%zu: node=(%d,%d,%d), old_g=%.6f, new_g=%.6f, f=%.6f",
-                       tie_break_count, nx, ny, nz, old_g, tentative_g, new_f);
-            }
+            // 调试日志已禁用（会打印大量日志）
+            // if (tie_break_count <= 10) {
+            //   ROS_INFO("[A*] Tie-break #%zu: node=(%d,%d,%d), old_g=%.6f, new_g=%.6f, f=%.6f",
+            //            tie_break_count, nx, ny, nz, old_g, tentative_g, new_f);
+            // }
           }
         }
       }
