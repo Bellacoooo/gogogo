@@ -15,10 +15,14 @@ astar/avg_velocity: 1.5         # m/s，用于到达时间估计
 astar/w1_dist: 1.0              # 距离代价权重
 astar/w2_static: 0.0            # 静态距离场权重（当前未接入距离场，先置0）
 astar/w3_dynamic: 50.0          # 动态风险权重（需调用 setDynamicPredictions 才生效），调大以明显避开高风险区域
-astar/grid_resolution: 0.1    # A* 内部虚拟栅格分辨率（米），应 >= mapping_param.yaml 中的 map_resolution
-astar/w_risk: 50.0              # 风险代价权重（0.0=不使用风险，>0=使用风险，建议10-50，值越大避障越强）
-astar/k_risk: 1.0                # 风险转换系数（用于 riskToCostLog）
-astar/z_gate: 2.0                # 高度门限（米），高于此高度的风险为0
+astar/grid_resolution: 0.1      # A* 内部虚拟栅格分辨率（米），应 >= mapping_param.yaml 中的 map_resolution
+
+# 🔧 风险代价参数调整：降低 w_risk，配合新的 1.5 次方代价函数
+# 新公式：risk_cost = w_risk * risk^1.5（比原来的 risk^2 更温和）
+# 建议值：5.0-15.0（原来 50.0 太大，导致完全避开风险区域）
+astar/w_risk: 10.0              # 风险代价权重（0.0=不使用，5-15=软约束，>20=硬约束）
+astar/k_risk: 1.0               # 风险转换系数（用于 riskToCostLog）
+astar/z_gate: 2.0               # 高度门限（米），高于此高度的风险为0
 
 poly_traj/polynomial_degree: 7
 poly_traj/differential_degree: 4
@@ -48,26 +52,48 @@ mpc_planner/dynamic_constraint_slack_ratio: 0.2
 mpc_planner/use_risk_adaptive: true
 
 # 风险裕量计算参数：s = clip(s0 + alpha*vc + beta*exp(-ttc/tau), s_min, s_max)
-mpc_planner/risk_s0: 0.10          # 基线膨胀量 (m)，静态风险（降低以防过大）
-mpc_planner/risk_alpha: 0.25       # closing speed 系数（无量纲），降低以防过大
-mpc_planner/risk_beta: 0.4         # TTC 指数项系数 (m)，降低以防过大
-mpc_planner/risk_tau: 2.0          # TTC 衰减时间常数 (s)，增大使反应更缓和
+mpc_planner/risk_s0: 0.15          # 基线膨胀量 (m)，静态风险
+mpc_planner/risk_alpha: 0.4        # closing speed 系数（无量纲），建议 0.3-0.5
+mpc_planner/risk_beta: 0.6         # TTC 指数项系数 (m)，建议 0.5-0.8
+mpc_planner/risk_tau: 1.5          # TTC 衰减时间常数 (s)，建议 1.5-2.5
 mpc_planner/risk_s_min: 0.0        # 最小膨胀量 (m)，远距离或远离时的最小值
-mpc_planner/risk_s_max: 0.8        # 最大膨胀量 (m)，降低到0.8防止椭球过大
+mpc_planner/risk_s_max: 1.2        # 最大膨胀量 (m)，避免过度膨胀
 
 # 各向异性参数（椭球朝向和形状）
-mpc_planner/risk_kappa: 0.20       # 各向异性强度 [0,1)，降低以防变形过大（建议 0.2-0.5）
+mpc_planner/risk_kappa: 0.35       # 各向异性强度 [0,1)，0=圆形，越大越扁（建议 0.2-0.5）
 mpc_planner/risk_vel_threshold: 0.15  # 低速阈值 (m/s)，低于此速度时退化成圆形，避免抖动
 
 # ========== 稳定性补丁参数 ==========
 # 这些参数用于平滑椭球参数的时间变化，防止 QP 不可行或轨迹抖动
-mpc_planner/risk_time_const_s: 0.8     # s 的时间常数 (s)，增大以让变化更平滑
-mpc_planner/risk_time_const_phi: 0.8   # phi 的时间常数 (s)，增大以让变化更平滑
-mpc_planner/risk_max_delta_s: 0.2      # s 的最大变化率 (m/step)，降低以防突变
-mpc_planner/risk_max_delta_phi: 20.0   # phi 的最大变化率 (deg/step)，降低以防突变 
+mpc_planner/risk_time_const_s: 0.5     # s 的时间常数 (s)，越大越平滑（建议 0.3-1.0）
+mpc_planner/risk_time_const_phi: 0.5   # phi 的时间常数 (s)，越大越平滑（建议 0.3-1.0）
+mpc_planner/risk_max_delta_s: 0.3      # s 的最大变化率 (m/step)，防止突变（建议 0.2-0.5）
+mpc_planner/risk_max_delta_phi: 30.0   # phi 的最大变化率 (deg/step)，防止突变（建议 20-45） 
 # MPC clustering params
 mpc_planner/cloud_res: 0.2
 mpc_planner/local_cloud_region_x: 6.0 # forward
 mpc_planner/local_cloud_region_y: 4.0 # left and right
 mpc_planner/ground_height: 0.5
 mpc_planner/ceiling_height: 3.0
+
+# ========== 2.5D风险地图参数 ==========
+# 单层2.5D风险地图：在固定高度维护一个2D风险栅格
+risk_map_25d/resolution: 0.1              # 栅格分辨率 (m)
+risk_map_25d/grid_width: 200              # 栅格宽度（格子数）
+risk_map_25d/grid_height: 200             # 栅格高度（格子数）
+risk_map_25d/fixed_height: 1.0            # 固定高度 (m)，忽略z坐标查询
+
+# 静态风险参数
+risk_map_25d/d_s: 0.5                     # 安全距离 (m)
+risk_map_25d/gamma_s: 1.0                 # 静态风险权重
+
+# 动态风险参数
+risk_map_25d/gamma_d: 1.0                 # 动态风险权重
+risk_map_25d/beta: 1.0                    # 椭圆核指数（m^beta）
+risk_map_25d/num_pred_steps: 30           # 预测步数
+risk_map_25d/lambda_time: 0.1             # 时间衰减系数
+
+# 数值稳定性参数
+risk_map_25d/sigma_min: 0.1               # 最小标准差 (m)
+risk_map_25d/m_cut: 9.0                   # Mahalanobis距离截断（3-sigma）
+risk_map_25d/risk_epsilon: 0.0001         # 最小风险阈值

@@ -19,17 +19,17 @@ add_custom_target(dynamic_predictor_generate_messages ALL)
 
 get_filename_component(_filename "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg" NAME_WE)
 add_custom_target(_dynamic_predictor_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg" "geometry_msgs/Point:geometry_msgs/Vector3"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg" "geometry_msgs/Vector3:geometry_msgs/Point"
 )
 
 get_filename_component(_filename "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg" NAME_WE)
 add_custom_target(_dynamic_predictor_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg" "geometry_msgs/Point:dynamic_predictor/PredictedTrajectory:geometry_msgs/Vector3"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg" "geometry_msgs/Vector3:geometry_msgs/Point:dynamic_predictor/PredictedTrajectory"
 )
 
 get_filename_component(_filename "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg" NAME_WE)
 add_custom_target(_dynamic_predictor_generate_messages_check_deps_${_filename}
-  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg" "geometry_msgs/Point:dynamic_predictor/PredictedObstacle:std_msgs/Header:dynamic_predictor/PredictedTrajectory:geometry_msgs/Vector3"
+  COMMAND ${CATKIN_ENV} ${PYTHON_EXECUTABLE} ${GENMSG_CHECK_DEPS_SCRIPT} "dynamic_predictor" "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg" "geometry_msgs/Vector3:dynamic_predictor/PredictedTrajectory:geometry_msgs/Point:std_msgs/Header:dynamic_predictor/PredictedObstacle"
 )
 
 #
@@ -41,19 +41,19 @@ add_custom_target(_dynamic_predictor_generate_messages_check_deps_${_filename}
 _generate_msg_cpp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_cpp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_cpp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   ${CATKIN_DEVEL_PREFIX}/${gencpp_INSTALL_DIR}/dynamic_predictor
 )
 
@@ -90,19 +90,19 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS dynamic_predictor_generate_messages
 _generate_msg_eus(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_eus(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_eus(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   ${CATKIN_DEVEL_PREFIX}/${geneus_INSTALL_DIR}/dynamic_predictor
 )
 
@@ -139,19 +139,19 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS dynamic_predictor_generate_messages
 _generate_msg_lisp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_lisp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_lisp(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   ${CATKIN_DEVEL_PREFIX}/${genlisp_INSTALL_DIR}/dynamic_predictor
 )
 
@@ -188,19 +188,19 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS dynamic_predictor_generate_messages
 _generate_msg_nodejs(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_nodejs(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_nodejs(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   ${CATKIN_DEVEL_PREFIX}/${gennodejs_INSTALL_DIR}/dynamic_predictor
 )
 
@@ -237,19 +237,19 @@ list(APPEND ${PROJECT_NAME}_EXPORTED_TARGETS dynamic_predictor_generate_messages
 _generate_msg_py(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_py(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/dynamic_predictor
 )
 _generate_msg_py(dynamic_predictor
   "/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacles.msg"
   "${MSG_I_FLAGS}"
-  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg"
+  "/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Vector3.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedTrajectory.msg;/opt/ros/noetic/share/geometry_msgs/cmake/../msg/Point.msg;/opt/ros/noetic/share/std_msgs/cmake/../msg/Header.msg;/home/ff/intent-mpc/src/Intent-MPC/dynamic_predictor/msg/PredictedObstacle.msg"
   ${CATKIN_DEVEL_PREFIX}/${genpy_INSTALL_DIR}/dynamic_predictor
 )
 

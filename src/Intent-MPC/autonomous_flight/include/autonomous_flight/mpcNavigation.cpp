@@ -292,12 +292,32 @@ namespace AutoFlight{
 									ROS_ERROR("[MPC-A*-CALL] Exception in updateGoal: %s", e.what());
 									throw;
 								}
-								// 设置风险地图（如果已更新）
-								if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
-									ROS_WARN("[MPC-A*-CALL] Setting risk map before makePlan");
+								// 🔧 设置风险地图（优先使用2.5D）
+								if (use_risk_map_25d_ && this->riskMap25D_ && this->riskMap25D_->isValid()) {
+									// ✨ 使用新版2.5D风险地图
+									ROS_INFO_THROTTLE(5.0, "[MPC-A*-CALL] Using RiskMap25D (2.5D fused)");
+									try {
+										// 更新地图中心为当前位置
+										this->riskMap25D_->setMapCenter(this->currPos_);
+										
+										// TODO: 更新动态预测数据（需要从predictor获取）
+										// 暂时先使用静态风险地图功能
+										
+										// 设置到A*
+										this->aStarPlanner_->setRiskMap25D(this->riskMap25D_);
+										ROS_INFO_THROTTLE(10.0, "[MPC-A*-CALL] ✅ RiskMap25D set successfully");
+									} catch (const std::exception& e) {
+										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap25D: %s", e.what());
+										// 回退到旧版2D
+										if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
+											this->aStarPlanner_->setRiskMap(this->riskMap2D_);
+										}
+									}
+								} else if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
+									// 回退到旧版2D风险地图
+									ROS_WARN_THROTTLE(5.0, "[MPC-A*-CALL] Using RiskMap2D (legacy 2D)");
 									try {
 										this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-										ROS_WARN("[MPC-A*-CALL] setRiskMap completed");
 									} catch (const std::exception& e) {
 										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap: %s", e.what());
 										throw;

@@ -5,6 +5,7 @@
 #include <geometry_msgs/Pose.h>
 #include <map_manager/occupancyMap.h>
 #include <global_planner/risk_map_2d.h>
+#include <global_planner/risk_map_25d.h>  // 🔧 新增：支持2.5D风险地图
 #include <Eigen/Dense>
 #include <queue>
 #include <unordered_map>
@@ -45,8 +46,15 @@ public:
   /**
    * @brief 设置风险地图（用于风险感知路径规划）
    * @param risk_map 风险地图指针（可以为 nullptr，表示不使用风险地图）
+   * @note 保留此接口以兼容现有代码，但推荐使用RiskMap25D
    */
   void setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map);
+  
+  /**
+   * @brief 设置2.5D风险地图（新版本，支持3D查询）
+   * @param risk_map_25d 2.5D风险地图指针
+   */
+  void setRiskMap25D(const std::shared_ptr<RiskMap25D>& risk_map_25d);
 
   /**
    * @brief 设置动态障碍物方框（用于硬约束避障）
@@ -110,10 +118,12 @@ private:
   std::size_t max_expanded_nodes_{300000};
   
   // 风险地图相关
-  std::shared_ptr<RiskMap2D> risk_map_;  // 风险地图指针
-  double w_risk_{0.0};                    // 风险代价权重
-  double k_risk_{1.0};                    // 风险转换系数
-  double z_gate_{2.0};                    // 高度门限（米）
+  std::shared_ptr<RiskMap2D> risk_map_;      // 风险地图指针（旧版2D）
+  std::shared_ptr<RiskMap25D> risk_map_25d_; // 2.5D风险地图指针（新版）
+  bool use_risk_map_25d_{false};             // 是否使用2.5D风险地图
+  double w_risk_{0.0};                       // 风险代价权重
+  double k_risk_{1.0};                       // 风险转换系数（仅RiskMap2D使用）
+  double z_gate_{2.0};                       // 高度门限（米，仅RiskMap2D使用）
   
   // 动态障碍物方框硬约束
   struct DynamicObstacleBox {

@@ -139,13 +139,28 @@ Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.s: c
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.s"
 	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/risk_map_2d.cpp -o CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.s
 
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/flags.make
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o: /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/risk_map_25d.cpp
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o -MF CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o.d -o CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o -c /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/risk_map_25d.cpp
+
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.i"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/risk_map_25d.cpp > CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.i
+
+Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.s"
+	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/ff/intent-mpc/src/Intent-MPC/global_planner/src/risk_map_25d.cpp -o CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.s
+
 # Object files for target global_planner
 global_planner_OBJECTS = \
 "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o" \
 "CMakeFiles/global_planner.dir/include/global_planner/PRMKDTree.cpp.o" \
 "CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o" \
 "CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o" \
-"CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.o"
+"CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.o" \
+"CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o"
 
 # External object files for target global_planner
 global_planner_EXTERNAL_OBJECTS =
@@ -155,6 +170,7 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/include/global_planner/dep.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.o
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/liboctomap_ros.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/liboctomap.so
@@ -185,7 +201,11 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_apps.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_outofcore.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_people.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libqhull.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/libOpenNI.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/libOpenNI2.so
@@ -475,7 +495,24 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpython3.8.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libtinyxml2.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libxmlrpcpp.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libroscpp_serialization.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/librostime.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libcpp_common.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libxmlrpcpp.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libroscpp_serialization.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/librostime.so
+/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libcpp_common.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libqhull.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/libOpenNI.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/libOpenNI2.so
@@ -483,14 +520,6 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpng.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libtiff.so
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libexpat.so
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_filesystem.so.1.71.0
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_regex.so.1.71.0
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libxmlrpcpp.so
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libroscpp_serialization.so
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/librostime.so
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_date_time.so.1.71.0
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /opt/ros/noetic/lib/libcpp_common.so
-/home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_system.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libboost_thread.so.1.71.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libconsole_bridge.so.0.4
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libpcl_apps.so
@@ -590,7 +619,7 @@ global_planner_EXTERNAL_OBJECTS =
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libopencv_imgproc.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: /usr/lib/x86_64-linux-gnu/libopencv_core.so.4.2.0
 /home/ff/intent-mpc/devel/lib/libglobal_planner.so: Intent-MPC/global_planner/CMakeFiles/global_planner.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX shared library /home/ff/intent-mpc/devel/lib/libglobal_planner.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/ff/intent-mpc/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX shared library /home/ff/intent-mpc/devel/lib/libglobal_planner.so"
 	cd /home/ff/intent-mpc/build/Intent-MPC/global_planner && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/global_planner.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

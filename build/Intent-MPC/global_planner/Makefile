@@ -367,6 +367,132 @@ test_dep_node/fast:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_dep_node.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_dep_node.dir/build
 .PHONY : test_dep_node/fast
 
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/rule
+
+# Convenience name for target.
+risk_map_25d_visualizer: Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/rule
+.PHONY : risk_map_25d_visualizer
+
+# fast build rule for target.
+risk_map_25d_visualizer/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/build.make Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/build
+.PHONY : risk_map_25d_visualizer/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/rule
+
+# Convenience name for target.
+test_risk_map_25d: Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/rule
+.PHONY : test_risk_map_25d
+
+# fast build rule for target.
+test_risk_map_25d/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/build
+.PHONY : test_risk_map_25d/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/rule
+
+# Convenience name for target.
+run_tests_global_planner: Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/rule
+.PHONY : run_tests_global_planner
+
+# fast build rule for target.
+run_tests_global_planner/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner.dir/build
+.PHONY : run_tests_global_planner/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/rule
+
+# Convenience name for target.
+_run_tests_global_planner: Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/rule
+.PHONY : _run_tests_global_planner
+
+# fast build rule for target.
+_run_tests_global_planner/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner.dir/build
+.PHONY : _run_tests_global_planner/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/rule
+
+# Convenience name for target.
+run_tests_global_planner_rostest: Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/rule
+.PHONY : run_tests_global_planner_rostest
+
+# fast build rule for target.
+run_tests_global_planner_rostest/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/build.make Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest.dir/build
+.PHONY : run_tests_global_planner_rostest/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/rule
+
+# Convenience name for target.
+_run_tests_global_planner_rostest: Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/rule
+.PHONY : _run_tests_global_planner_rostest
+
+# fast build rule for target.
+_run_tests_global_planner_rostest/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/build.make Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest.dir/build
+.PHONY : _run_tests_global_planner_rostest/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+
+# Convenience name for target.
+run_tests_global_planner_rostest_test_test_risk_map_25d.test: Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+.PHONY : run_tests_global_planner_rostest_test_test_risk_map_25d.test
+
+# fast build rule for target.
+run_tests_global_planner_rostest_test_test_risk_map_25d.test/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/build.make Intent-MPC/global_planner/CMakeFiles/run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/build
+.PHONY : run_tests_global_planner_rostest_test_test_risk_map_25d.test/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+
+# Convenience name for target.
+_run_tests_global_planner_rostest_test_test_risk_map_25d.test: Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/rule
+.PHONY : _run_tests_global_planner_rostest_test_test_risk_map_25d.test
+
+# fast build rule for target.
+_run_tests_global_planner_rostest_test_test_risk_map_25d.test/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/build.make Intent-MPC/global_planner/CMakeFiles/_run_tests_global_planner_rostest_test_test_risk_map_25d.test.dir/build
+.PHONY : _run_tests_global_planner_rostest_test_test_risk_map_25d.test/fast
+
+# Convenience name for target.
+Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/rule:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/rule
+.PHONY : Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/rule
+
+# Convenience name for target.
+clean_test_results_global_planner: Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/rule
+.PHONY : clean_test_results_global_planner
+
+# fast build rule for target.
+clean_test_results_global_planner/fast:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/clean_test_results_global_planner.dir/build
+.PHONY : clean_test_results_global_planner/fast
+
 include/global_planner/PRMKDTree.o: include/global_planner/PRMKDTree.cpp.o
 .PHONY : include/global_planner/PRMKDTree.o
 
@@ -462,6 +588,54 @@ src/globalPlannerLib.s: src/globalPlannerLib.cpp.s
 src/globalPlannerLib.cpp.s:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.s
 .PHONY : src/globalPlannerLib.cpp.s
+
+src/risk_map_25d.o: src/risk_map_25d.cpp.o
+.PHONY : src/risk_map_25d.o
+
+# target to build an object file
+src/risk_map_25d.cpp.o:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o
+.PHONY : src/risk_map_25d.cpp.o
+
+src/risk_map_25d.i: src/risk_map_25d.cpp.i
+.PHONY : src/risk_map_25d.i
+
+# target to preprocess a source file
+src/risk_map_25d.cpp.i:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.i
+.PHONY : src/risk_map_25d.cpp.i
+
+src/risk_map_25d.s: src/risk_map_25d.cpp.s
+.PHONY : src/risk_map_25d.s
+
+# target to generate assembly for a file
+src/risk_map_25d.cpp.s:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/global_planner.dir/build.make Intent-MPC/global_planner/CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.s
+.PHONY : src/risk_map_25d.cpp.s
+
+src/risk_map_25d_visualizer.o: src/risk_map_25d_visualizer.cpp.o
+.PHONY : src/risk_map_25d_visualizer.o
+
+# target to build an object file
+src/risk_map_25d_visualizer.cpp.o:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/build.make Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/src/risk_map_25d_visualizer.cpp.o
+.PHONY : src/risk_map_25d_visualizer.cpp.o
+
+src/risk_map_25d_visualizer.i: src/risk_map_25d_visualizer.cpp.i
+.PHONY : src/risk_map_25d_visualizer.i
+
+# target to preprocess a source file
+src/risk_map_25d_visualizer.cpp.i:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/build.make Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/src/risk_map_25d_visualizer.cpp.i
+.PHONY : src/risk_map_25d_visualizer.cpp.i
+
+src/risk_map_25d_visualizer.s: src/risk_map_25d_visualizer.cpp.s
+.PHONY : src/risk_map_25d_visualizer.s
+
+# target to generate assembly for a file
+src/risk_map_25d_visualizer.cpp.s:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/build.make Intent-MPC/global_planner/CMakeFiles/risk_map_25d_visualizer.dir/src/risk_map_25d_visualizer.cpp.s
+.PHONY : src/risk_map_25d_visualizer.cpp.s
 
 src/risk_map_2d.o: src/risk_map_2d.cpp.o
 .PHONY : src/risk_map_2d.o
@@ -559,6 +733,30 @@ src/test_dep_node.cpp.s:
 	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_dep_node.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_dep_node.dir/src/test_dep_node.cpp.s
 .PHONY : src/test_dep_node.cpp.s
 
+test/test_risk_map_25d.o: test/test_risk_map_25d.cpp.o
+.PHONY : test/test_risk_map_25d.o
+
+# target to build an object file
+test/test_risk_map_25d.cpp.o:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/test/test_risk_map_25d.cpp.o
+.PHONY : test/test_risk_map_25d.cpp.o
+
+test/test_risk_map_25d.i: test/test_risk_map_25d.cpp.i
+.PHONY : test/test_risk_map_25d.i
+
+# target to preprocess a source file
+test/test_risk_map_25d.cpp.i:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/test/test_risk_map_25d.cpp.i
+.PHONY : test/test_risk_map_25d.cpp.i
+
+test/test_risk_map_25d.s: test/test_risk_map_25d.cpp.s
+.PHONY : test/test_risk_map_25d.s
+
+# target to generate assembly for a file
+test/test_risk_map_25d.cpp.s:
+	cd /home/ff/intent-mpc/build && $(MAKE) $(MAKESILENT) -f Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/build.make Intent-MPC/global_planner/CMakeFiles/test_risk_map_25d.dir/test/test_risk_map_25d.cpp.s
+.PHONY : test/test_risk_map_25d.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -572,20 +770,29 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test"
+	@echo "... _run_tests_global_planner"
+	@echo "... _run_tests_global_planner_rostest"
+	@echo "... _run_tests_global_planner_rostest_test_test_risk_map_25d.test"
+	@echo "... clean_test_results_global_planner"
 	@echo "... octomap_msgs_generate_messages_cpp"
 	@echo "... octomap_msgs_generate_messages_eus"
 	@echo "... octomap_msgs_generate_messages_lisp"
 	@echo "... octomap_msgs_generate_messages_nodejs"
 	@echo "... octomap_msgs_generate_messages_py"
+	@echo "... run_tests_global_planner"
+	@echo "... run_tests_global_planner_rostest"
+	@echo "... run_tests_global_planner_rostest_test_test_risk_map_25d.test"
 	@echo "... tf_generate_messages_cpp"
 	@echo "... tf_generate_messages_eus"
 	@echo "... tf_generate_messages_lisp"
 	@echo "... tf_generate_messages_nodejs"
 	@echo "... tf_generate_messages_py"
 	@echo "... global_planner"
+	@echo "... risk_map_25d_visualizer"
 	@echo "... rrt_interactive_node"
 	@echo "... rrt_star_interactive_node"
 	@echo "... test_dep_node"
+	@echo "... test_risk_map_25d"
 	@echo "... include/global_planner/PRMKDTree.o"
 	@echo "... include/global_planner/PRMKDTree.i"
 	@echo "... include/global_planner/PRMKDTree.s"
@@ -598,6 +805,12 @@ help:
 	@echo "... src/globalPlannerLib.o"
 	@echo "... src/globalPlannerLib.i"
 	@echo "... src/globalPlannerLib.s"
+	@echo "... src/risk_map_25d.o"
+	@echo "... src/risk_map_25d.i"
+	@echo "... src/risk_map_25d.s"
+	@echo "... src/risk_map_25d_visualizer.o"
+	@echo "... src/risk_map_25d_visualizer.i"
+	@echo "... src/risk_map_25d_visualizer.s"
 	@echo "... src/risk_map_2d.o"
 	@echo "... src/risk_map_2d.i"
 	@echo "... src/risk_map_2d.s"
@@ -610,6 +823,9 @@ help:
 	@echo "... src/test_dep_node.o"
 	@echo "... src/test_dep_node.i"
 	@echo "... src/test_dep_node.s"
+	@echo "... test/test_risk_map_25d.o"
+	@echo "... test/test_risk_map_25d.i"
+	@echo "... test/test_risk_map_25d.s"
 .PHONY : help
 
 

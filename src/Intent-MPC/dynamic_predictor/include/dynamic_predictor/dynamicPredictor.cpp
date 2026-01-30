@@ -361,6 +361,16 @@ namespace dynamicPredictor{
             std::cout << this->hint_ << ": The history_window is set to: " << this->historyWindow_ << std::endl;
         }
 
+        // 轨迹采样优化参数
+        if (not this->nh_.getParam(this->ns_ + "/use_optimized_sampling", this->useOptimizedSampling_)){
+            this->useOptimizedSampling_ = true;  // 默认使用优化方法
+            std::cout << this->hint_ << ": No use_optimized_sampling parameter found. Use default: true (optimized)." << std::endl;
+        }
+        else{
+            std::cout << this->hint_ << ": Trajectory sampling method: " 
+                      << (this->useOptimizedSampling_ ? "OPTIMIZED (fast)" : "ORIGINAL (conservative)") << std::endl;
+        }
+
         // 历史数据现在由 intentProb 循环逐帧传递，不再需要全局历史容器初始化
 
         // 注释：日志文件已在构造函数中初始化（带时间戳的intent_eval_<timestamp>.csv）
@@ -536,13 +546,17 @@ namespace dynamicPredictor{
      *   f_jerk(t) = min(||jerk_t|| / j_max, 1.0)
      */
     double predictor::computeJerkFeature(const Eigen::Vector3d& currAcc, const Eigen::Vector3d& prevAcc) {
-        // 计算加加速度向量 (m/s^3)
-        Eigen::Vector3d jerk = (currAcc - prevAcc) / dt_;
-        double jerkNorm = jerk.norm();
+        // 🔧 V3改进：使用窗口化加速度变化量（鲁棒版Jerk）
+        // 不除以dt，避免二阶差分噪声放大
+        Eigen::Vector3d deltaAcc = currAcc - prevAcc;
+        double deltaAccNorm = deltaAcc.norm();
         
-        // 归一化到 [0, 1]
-        double f_jerk = std::min(jerkNorm / j_max_, 1.0);
-        return f_jerk;
+        // 归一化：使用加速度变化量级（而非jerk量级）
+        // a_change_max = 2.0 m/s² （行人典型加速度变化）
+        double a_change_max = 2.0;  // 可配置为参数
+        double f_delta_a = std::min(deltaAccNorm / a_change_max, 1.0);
+        
+        return f_delta_a;
     }
 
     /**
@@ -636,6 +650,7 @@ namespace dynamicPredictor{
         currentDt_.resize(numOb, 0.0);
         currentSAdaptive_.resize(numOb, 1.0);
         currentKAdaptive_.resize(numOb, -1);
+        currentMtSmoothed_.resize(numOb, 0.0);  // 🔧 V3新增：Mt平滑缓冲区
         
         for (int i=0; i<numOb; ++i){
             // init state prob P
@@ -667,8 +682,12 @@ namespace dynamicPredictor{
                 // 计算角度（朝向）
                 double prevPrevAngle = atan2(prevPos(1) - prevPrevPos(1), prevPos(0) - prevPrevPos(0));
                 double prevAngle = atan2(currPos(1) - prevPos(1), currPos(0) - prevPos(0));
-                // 修正：currAngle应该基于当前速度方向，而不是位置差
-                double currAngle = atan2(currVel(1), currVel(0));
+                
+                // 🔧 关键修复：对速度进行平滑处理，降低噪声对角度计算的影响
+                // 方法：使用平滑后的速度计算角度
+                // 平滑速度 = 0.7 * 当前速度 + 0.3 * 前一速度（低通滤波）
+                Eigen::Vector3d smoothedVel = 0.7 * currVel + 0.3 * prevVel;
+                double currAngle = atan2(smoothedVel(1), smoothedVel(0));
                 
                 // 判断是否有有效的前一帧数据（第一帧j=2时没有有效的前一帧）
                 bool hasValidPrevFrame = (j > 2);
@@ -803,17 +822,25 @@ namespace dynamicPredictor{
         }
 
         // 4. 多维特征融合：综合运动变化指标 M_t
-        // M_t = w1 * f_jerk + w2 * f_angular + w3 * f_error
-        double Mt = w1_ * f_jerk + w2_ * f_angular + w3_ * f_error;
+        // M_t = w1 * f_delta_a + w2 * f_angular + w3 * f_error
+        double Mt_instant = w1_ * f_jerk + w2_ * f_angular + w3_ * f_error;
         // 安全截断到 [0, 1]（防止权重设置不当导致越界）
-        Mt = std::max(0.0, std::min(Mt, 1.0));
+        Mt_instant = std::max(0.0, std::min(Mt_instant, 1.0));
+        
+        // 🔧 V3新增：对Mt进行指数移动平均(EMA)平滑，消除高频抖动
+        double Mt = Mt_instant;  // 默认使用瞬时值
+        if (obsIdx >= 0 && obsIdx < static_cast<int>(currentMtSmoothed_.size())) {
+            double lambda = 0.8;  // 平滑系数：0.7-0.9，推荐0.8
+            Mt = lambda * currentMtSmoothed_[obsIdx] + (1.0 - lambda) * Mt_instant;
+            currentMtSmoothed_[obsIdx] = Mt;  // 更新缓存
+        }
 
         // 5. Sigmoid映射：计算自适应意图惯性参数 s_adaptive
         double s_adaptive = computeAdaptiveS(Mt);
         
-        // 调试输出：监控自适应参数变化
-        // ROS_INFO_THROTTLE(2.0, "Obs %d: f_jerk=%.3f, f_angular=%.3f, f_error=%.3f => Mt=%.3f => s_adaptive=%.3f",
-        //                   obsIdx, f_jerk, f_angular, f_error, Mt, s_adaptive);
+        // 调试输出：监控自适应参数变化（已启用，用于诊断）
+        ROS_INFO_THROTTLE(2.0, "Obs %d: f_jerk=%.3f, f_angular=%.3f, f_error=%.3f => Mt=%.3f => s_adaptive=%.3f",
+                          obsIdx, f_jerk, f_angular, f_error, Mt, s_adaptive);
         
         // 6. 保存当前障碍物的自适应指标（用于可视化和日志）
         if (obsIdx >= 0 && obsIdx < static_cast<int>(currentSAdaptive_.size())) {
@@ -970,39 +997,97 @@ namespace dynamicPredictor{
         maxVel = vel+vel;     //采样最大速度为2倍当前速度
         minAngle = angleInit - this->frontAngle_;    //frontAngle_一个采样范围参数
         maxAngle = angleInit + this->frontAngle_;
-        bool isValid = true;
 
-        // const velocity
-        for (double i=minAngle; i<maxAngle; i+=0.1){
-            for (double j=minVel; j<maxVel; j+=0.1){
-                std::vector<Eigen::Vector3d> predPointTemp;
-                Eigen::VectorXd currState(4);
-                currState<<currPos(0), currPos(1), j*cos(i), j*sin(i);
-                predPointTemp.clear();
-                predPointTemp.push_back(currPos);
-                for (int k=0; k<this->numPred_;k++){
-                    // TODO: check const acc model
-                    Eigen::MatrixXd model;
-                    model = MatrixXd::Identity(4,4);
-                    model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
-                    Eigen::VectorXd nextState = model*currState;
-                    Eigen::Vector3d p;
-                    p << nextState(0), nextState(1), currPos(2);
-                    if (this->map_->isInflatedOccupied(p)){
-                        isValid = false;
-                        break;
+        // 根据参数选择采样方法
+        if (this->useOptimizedSampling_) {
+            // ✅ 优化方法：终点预检测 + 线段检测
+            double maxPredTime = this->numPred_ * this->dt_;
+
+            for (double i=minAngle; i<maxAngle; i+=0.1){
+                for (double j=minVel; j<maxVel; j+=0.1){
+                    // ✅ 优化1：快速计算终点位置（恒定速度模型）
+                    double predDist = j * maxPredTime;
+                    Eigen::Vector3d endPos = currPos + Eigen::Vector3d(
+                        predDist * cos(i),
+                        predDist * sin(i),
+                        currPos(2)
+                    );
+                    
+                    // ✅ 优化2：终点预检测（最快判断，避免无效采样）
+                    if (this->map_->isInflatedOccupied(endPos)){
+                        continue;  // 终点碰撞，跳过这条轨迹
+                    }
+                    
+                    // ✅ 优化3：线段检测（比逐步点检测快得多）
+                    if (this->map_->isInflatedOccupiedLine(currPos, endPos)){
+                        continue;  // 路径上有碰撞，跳过
+                    }
+                    
+                    // ✅ 优化4：通过预检测的才进行详细预测
+                    std::vector<Eigen::Vector3d> predPointTemp;
+                    Eigen::VectorXd currState(4);
+                    currState<<currPos(0), currPos(1), j*cos(i), j*sin(i);
+                    predPointTemp.clear();
+                    predPointTemp.push_back(currPos);
+                    
+                    bool isValid = true;
+                    for (int k=0; k<this->numPred_;k++){
+                        // TODO: check const acc model
+                        Eigen::MatrixXd model;
+                        model = MatrixXd::Identity(4,4);
+                        model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
+                        Eigen::VectorXd nextState = model*currState;
+                        Eigen::Vector3d p;
+                        p << nextState(0), nextState(1), currPos(2);
+                        // 双重保险：虽然预检测过了，但还是要检查（防止数值误差或小障碍物）
+                        if (this->map_->isInflatedOccupied(p)){
+                            isValid = false;
+                            break;
+                        }
+                        else{
+                            predPointTemp.push_back(p);
+                        }
+                        currState = nextState;
+                    }
+                    if (isValid){
+                        predPoints.push_back(predPointTemp);
+                    }
+                }
+            }
+        } else {
+            // 原方法：逐步点检测
+            bool isValid = true;
+            for (double i=minAngle; i<maxAngle; i+=0.1){
+                for (double j=minVel; j<maxVel; j+=0.1){
+                    std::vector<Eigen::Vector3d> predPointTemp;
+                    Eigen::VectorXd currState(4);
+                    currState<<currPos(0), currPos(1), j*cos(i), j*sin(i);
+                    predPointTemp.clear();
+                    predPointTemp.push_back(currPos);
+                    for (int k=0; k<this->numPred_;k++){
+                        // TODO: check const acc model
+                        Eigen::MatrixXd model;
+                        model = MatrixXd::Identity(4,4);
+                        model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
+                        Eigen::VectorXd nextState = model*currState;
+                        Eigen::Vector3d p;
+                        p << nextState(0), nextState(1), currPos(2);
+                        if (this->map_->isInflatedOccupied(p)){
+                            isValid = false;
+                            break;
+                        }
+                        else{
+                            predPointTemp.push_back(p);
+                        }
+                        currState = nextState;
+                    }
+                    if (isValid){
+                        predPoints.push_back(predPointTemp);
                     }
                     else{
-                        predPointTemp.push_back(p);
+                        isValid = true;
+                        break;
                     }
-                    currState = nextState;
-                }
-                if (isValid){
-                    predPoints.push_back(predPointTemp);
-                }
-                else{
-                    isValid = true;
-                    break;
                 }
             }
         }
@@ -1044,53 +1129,153 @@ namespace dynamicPredictor{
             minAngVel = (-M_PI/2)/this->minTurningTime_;
             maxAngVel = (-M_PI/2)/this->maxTurningTime_;
         }
-        bool isValid = true;
+        
+        // 根据参数选择采样方法
+        if (this->useOptimizedSampling_) {
+            // ✅ 优化方法：终点预检测 + 折线段检测
+            const int segmentStride = 3;  // 折线段检测步长：每3个点检测一次线段
 
-        for (double i = minVel; i<maxVel;i+=0.2){
-            for (double j = minAngVel;j<maxAngVel;j+=0.2){
-                for (double endAngle = endMin;endAngle<endMax;endAngle+=0.2){
-                    std::vector<Eigen::Vector3d> predPointTemp;
-                    Eigen::VectorXd currState(4);
-                    angle = angleInit;
-                    currState<<currPos(0), currPos(1), i*cos(angle), i*sin(angle);
-                    predPointTemp.clear();
-                    predPointTemp.push_back(currPos);
-                    for (int k=0; k<this->numPred_;k++){
-                        Eigen::MatrixXd model;
-                        model = MatrixXd::Identity(4,4);
-                        model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
-                        Eigen::VectorXd nextState = model*currState;
-                        Eigen::Vector3d p;
-                        p << nextState(0), nextState(1), currPos(2);
-                        if (this->map_->isInflatedOccupied(p)){
-                            isValid = false;
-                            break;
+            for (double i = minVel; i<maxVel;i+=0.2){
+                for (double j = minAngVel;j<maxAngVel;j+=0.2){
+                    for (double endAngle = endMin;endAngle<endMax;endAngle+=0.2){
+                        // ✅ 优化1：快速估算转弯轨迹终点（用于终点预检测）
+                        // 转弯半径：r = v / angular_vel
+                        double radius = (i > 0.1) ? i / std::abs(j) : 1.0;  // 避免除零
+                        double totalAngle = std::abs(endAngle - angleInit);
+                        totalAngle = std::min(totalAngle, M_PI);  // 限制最大转角
+                        
+                        // 圆弧终点（近似）
+                        double arcLength = radius * totalAngle;
+                        double avgAngle = (angleInit + endAngle) / 2.0;
+                        Eigen::Vector3d endPos = currPos + Eigen::Vector3d(
+                            arcLength * cos(avgAngle),
+                            arcLength * sin(avgAngle),
+                            currPos(2)
+                        );
+                        
+                        // ✅ 优化2：终点预检测（快速拒绝）
+                        if (this->map_->isInflatedOccupied(endPos)){
+                            continue;  // 终点碰撞，跳过
                         }
-                        else{
+                        
+                        // ✅ 优化3：生成轨迹离散点（用于折线段检测）
+                        std::vector<Eigen::Vector3d> predPointTemp;
+                        Eigen::VectorXd currState(4);
+                        angle = angleInit;
+                        currState<<currPos(0), currPos(1), i*cos(angle), i*sin(angle);
+                        predPointTemp.clear();
+                        predPointTemp.push_back(currPos);
+                        
+                        // ✅ 优化4：折线段碰撞检测（polyline collision checking）
+                        // 对圆弧轨迹，用折线段近似，每隔stride个点检测一次线段
+                        bool isValid = true;
+                        for (int k=0; k<this->numPred_;k++){
+                            Eigen::MatrixXd model;
+                            model = MatrixXd::Identity(4,4);
+                            model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
+                            Eigen::VectorXd nextState = model*currState;
+                            Eigen::Vector3d p;
+                            p << nextState(0), nextState(1), currPos(2);
+                            
+                            // 点检测（双重保险，防止小障碍物）
+                            if (this->map_->isInflatedOccupied(p)){
+                                isValid = false;
+                                break;
+                            }
+                            
                             predPointTemp.push_back(p);
+                            
+                            // 折线段检测：每隔stride个点检测一次线段
+                            // 当size = segmentStride+1, 2*segmentStride+1, ... 时检测
+                            if (predPointTemp.size() > segmentStride && 
+                                (predPointTemp.size() - 1) % segmentStride == 0) {
+                                size_t segStartIdx = predPointTemp.size() - segmentStride - 1;
+                                size_t segEndIdx = predPointTemp.size() - 1;
+                                if (this->map_->isInflatedOccupiedLine(
+                                        predPointTemp[segStartIdx], 
+                                        predPointTemp[segEndIdx])) {
+                                    isValid = false;
+                                    break;  // 线段碰撞，early rejection
+                                }
+                            }
+                            
+                            currState = nextState;
+                            angle += j*this->dt_;
+                            if(intentType == LEFT){
+                                angle  = min(angle, endAngle);
+                            }
+                            else if (intentType == RIGHT){
+                                angle  = max(angle, endAngle);
+                            }
+                            double v = sqrt(pow(currState(2),2)+pow(currState(3),2));
+                            currState(2) = v*cos(angle);
+                            currState(3) = v*sin(angle);
                         }
-                        currState = nextState;
-                        angle += j*this->dt_;
-                        if(intentType == LEFT){
-                            angle  = min(angle, endAngle);
+                        
+                        // ✅ 优化5：最后一段折线段检测（检查最后几个点）
+                        if (isValid && predPointTemp.size() > segmentStride) {
+                            size_t lastSegStart = predPointTemp.size() - segmentStride - 1;
+                            if (this->map_->isInflatedOccupiedLine(
+                                    predPointTemp[lastSegStart], 
+                                    predPointTemp[predPointTemp.size()-1])) {
+                                isValid = false;
+                            }
                         }
-                        else if (intentType == RIGHT){
-                            angle  = max(angle, endAngle);
+                        
+                        if (isValid){
+                            predPoints.push_back(predPointTemp);
                         }
-                        double v = sqrt(pow(currState(2),2)+pow(currState(3),2));
-                        currState(2) = v*cos(angle);
-                        currState(3) = v*sin(angle);
                     }
-                    if (isValid){
-                        predPoints.push_back(predPointTemp);
-                    }
-                    else{
-                        isValid = true;
-                    }
-                }
-                    
                 }
             }
+        } else {
+            // 原方法：逐步点检测
+            bool isValid = true;
+            for (double i = minVel; i<maxVel;i+=0.2){
+                for (double j = minAngVel;j<maxAngVel;j+=0.2){
+                    for (double endAngle = endMin;endAngle<endMax;endAngle+=0.2){
+                        std::vector<Eigen::Vector3d> predPointTemp;
+                        Eigen::VectorXd currState(4);
+                        angle = angleInit;
+                        currState<<currPos(0), currPos(1), i*cos(angle), i*sin(angle);
+                        predPointTemp.clear();
+                        predPointTemp.push_back(currPos);
+                        for (int k=0; k<this->numPred_;k++){
+                            Eigen::MatrixXd model;
+                            model = MatrixXd::Identity(4,4);
+                            model.block(0,2,2,2) = Eigen::MatrixXd::Identity(2,2)*this->dt_;
+                            Eigen::VectorXd nextState = model*currState;
+                            Eigen::Vector3d p;
+                            p << nextState(0), nextState(1), currPos(2);
+                            if (this->map_->isInflatedOccupied(p)){
+                                isValid = false;
+                                break;
+                            }
+                            else{
+                                predPointTemp.push_back(p);
+                            }
+                            currState = nextState;
+                            angle += j*this->dt_;
+                            if(intentType == LEFT){
+                                angle  = min(angle, endAngle);
+                            }
+                            else if (intentType == RIGHT){
+                                angle  = max(angle, endAngle);
+                            }
+                            double v = sqrt(pow(currState(2),2)+pow(currState(3),2));
+                            currState(2) = v*cos(angle);
+                            currState(3) = v*sin(angle);
+                        }
+                        if (isValid){
+                            predPoints.push_back(predPointTemp);
+                        }
+                        else{
+                            isValid = true;
+                        }
+                    }
+                }
+            }
+        }
         for (int i=0;i<this->numPred_+1;i++){
             predSize.push_back(currSize);
         }
@@ -1909,6 +2094,10 @@ namespace dynamicPredictor{
             double minADE = INFINITY;
             double minFDE = INFINITY;
             int bestIntent = -1;
+            
+            // 🔧 修复：先计算所有意图的ADE，然后用概率选择最佳意图
+            std::vector<double> adeValues(predTrajs.size(), INFINITY);
+            std::vector<double> fdeValues(predTrajs.size(), INFINITY);
 
             for (size_t intentIdx = 0; intentIdx < predTrajs.size(); ++intentIdx) {
                 const auto& predTraj = predTrajs[intentIdx]; // 该意图的预测轨迹
@@ -1960,12 +2149,40 @@ namespace dynamicPredictor{
                     continue;
                 }
 
+                // 保存该意图的ADE和FDE
+                adeValues[intentIdx] = ade;
+                fdeValues[intentIdx] = fde;
+                
                 // 更新最小ADE和FDE
                 if (ade < minADE) {
                     minADE = ade;
                     minFDE = fde;
-                    bestIntent = static_cast<int>(intentIdx);
                 }
+            }
+            
+            // 🔧 关键修复：用概率最高的意图作为最佳意图，而不是ADE最小的
+            // 原因：ADE评估使用回测，当障碍物速度慢时STOP模型会错误地得到最小ADE
+            // 而intentProb_反映的是真实的历史运动模式，更准确
+            if (static_cast<size_t>(obsIdx) < intentProb_.size() && intentProb_[obsIdx].size() > 0) {
+                const auto& intentProbVec = intentProb_[obsIdx];
+                double maxProb = -1.0;
+                for (int i = 0; i < numIntent_; ++i) {
+                    if (i < intentProbVec.size() && intentProbVec(i) > maxProb) {
+                        maxProb = intentProbVec(i);
+                        bestIntent = i;
+                    }
+                }
+                ROS_INFO_THROTTLE(2.0, "Obstacle %zu | Best Intent (by Prob): %d (P=%.3f) | Min ADE: %.4f", 
+                                  obsIdx, bestIntent, maxProb, minADE);
+            } else {
+                // 如果没有概率数据，回退到ADE最小的意图
+                for (size_t i = 0; i < adeValues.size(); ++i) {
+                    if (adeValues[i] == minADE) {
+                        bestIntent = static_cast<int>(i);
+                        break;
+                    }
+                }
+                ROS_WARN_THROTTLE(2.0, "Obstacle %zu | No intentProb data, using ADE-based selection", obsIdx);
             }
 
             // 打印结果（只打印有有效预测的障碍物）

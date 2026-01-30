@@ -1,0 +1,21 @@
+<launch>
+  <!-- RiskMap25D单元测试 -->
+  <test test-name="test_risk_map_25d" pkg="global_planner" type="test_risk_map_25d">
+    <!-- 测试参数 -->
+    <param name="risk_map_25d/resolution" value="0.1"/>
+    <param name="risk_map_25d/grid_width" value="100"/>
+    <param name="risk_map_25d/grid_height" value="100"/>
+    <param name="risk_map_25d/layer_min" value="0.0"/>
+    <param name="risk_map_25d/layer_max" value="2.0"/>
+    <param name="risk_map_25d/layer_thickness" value="0.5"/>
+    <param name="risk_map_25d/d_s" value="0.5"/>
+    <param name="risk_map_25d/gamma_s" value="1.0"/>
+    <param name="risk_map_25d/gamma_d" value="1.0"/>
+    <param name="risk_map_25d/beta" value="1.0"/>
+    <param name="risk_map_25d/num_pred_steps" value="10"/>
+    <param name="risk_map_25d/lambda_time" value="0.1"/>
+    <param name="risk_map_25d/sigma_min" value="0.1"/>
+    <param name="risk_map_25d/m_cut" value="9.0"/>
+    <param name="risk_map_25d/risk_epsilon" value="1e-4"/>
+  </test>
+</launch>

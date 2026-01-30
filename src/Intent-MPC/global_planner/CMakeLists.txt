@@ -149,6 +149,7 @@ add_library(${PROJECT_NAME} src/globalPlannerLib.cpp
 add_executable(rrt_interactive_node src/rrt_interactive_node.cpp)
 add_executable(rrt_star_interactive_node src/rrt_star_interactive_node.cpp)
 add_executable(test_dep_node src/test_dep_node.cpp)
+add_executable(risk_map_25d_visualizer src/risk_map_25d_visualizer.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -168,13 +169,14 @@ add_executable(test_dep_node src/test_dep_node.cpp)
 # )
 target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES} ${OpenCV_LIBS})
 # library 增加 A* 和风险地图源
-target_sources(${PROJECT_NAME} PRIVATE src/a_star_occ.cpp src/risk_map_2d.cpp)
+target_sources(${PROJECT_NAME} PRIVATE src/a_star_occ.cpp src/risk_map_2d.cpp src/risk_map_25d.cpp)
 # target_link_libraries(test_kdtree ${catkin_LIBRARIES})
 # target_link_libraries(test_prm_kdtree ${catkin_LIBRARIES} ${PROJECT_NAME} ${OpenCV_LIBS})
 # target_link_libraries(test_blob_detection ${catkin_LIBRARIES})
 target_link_libraries(rrt_interactive_node ${catkin_LIBRARIES})
 target_link_libraries(rrt_star_interactive_node ${catkin_LIBRARIES})
 target_link_libraries(test_dep_node ${catkin_LIBRARIES} ${PROJECT_NAME})
+target_link_libraries(risk_map_25d_visualizer ${catkin_LIBRARIES} ${PROJECT_NAME})
 
 
 #############
@@ -230,6 +232,16 @@ install(DIRECTORY include/${PROJECT_NAME}/
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
+
+## RiskMap25D单元测试
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
+  add_rostest_gtest(test_risk_map_25d
+    test/test_risk_map_25d.test
+    test/test_risk_map_25d.cpp
+  )
+  target_link_libraries(test_risk_map_25d ${catkin_LIBRARIES} ${PROJECT_NAME})
+endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)

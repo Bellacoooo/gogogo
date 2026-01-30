@@ -82,6 +82,7 @@ void AStarOccMap::updateGoal(const geometry_msgs::Pose &goal)
 void AStarOccMap::setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map)
 {
   risk_map_ = risk_map;
+  use_risk_map_25d_ = false;  // 🔧 使用旧版2D风险地图
   // ROS_WARN("[A*-RISK-DEBUG] setRiskMap called: risk_map_=%p, w_risk_=%.3f, k_risk_=%.3f, z_gate_=%.3f",
   //          risk_map_.get(), w_risk_, k_risk_, z_gate_);
   
@@ -128,6 +129,39 @@ void AStarOccMap::setRiskMap(const std::shared_ptr<RiskMap2D>& risk_map)
   else
   {
     // ROS_WARN("[A*-RISK-DEBUG] w_risk_ = 0, risk cost will NOT be used");
+  }
+}
+
+void AStarOccMap::setRiskMap25D(const std::shared_ptr<RiskMap25D>& risk_map_25d)
+{
+  risk_map_25d_ = risk_map_25d;
+  use_risk_map_25d_ = true;  // 🔧 启用2.5D风险地图
+  
+  ROS_INFO("[A*] 🎯 Using RiskMap25D (2.5D fused static+dynamic risk map)");
+  
+  if (risk_map_25d_ && risk_map_25d_->isValid())
+  {
+    // 获取栅格信息
+    double resolution;
+    int width, height;
+    Eigen::Vector2d origin;
+    risk_map_25d_->getGridInfo(resolution, width, height, origin);
+    
+    ROS_INFO("[A*-RiskMap25D] Grid: %dx%d, res=%.2fm, origin=(%.2f,%.2f)",
+             width, height, resolution, origin(0), origin(1));
+    
+    // 测试查询
+    try {
+      Eigen::Vector3d test_pos(0.0, 0.0, 1.0);
+      double test_risk = risk_map_25d_->query(test_pos);
+      ROS_INFO("[A*-RiskMap25D] Test query at (0,0,1): risk=%.6f", test_risk);
+    } catch (const std::exception& e) {
+      ROS_ERROR("[A*-RiskMap25D] Exception in query: %s", e.what());
+    }
+  }
+  else
+  {
+    ROS_WARN("[A*-RiskMap25D] Risk map not valid or nullptr");
   }
 }
 
@@ -428,13 +462,16 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
     }
   }
 
-  // 简化的启发函数：只使用欧几里得距离，tie-breaking由优先队列处理
-  // 移除cross-product项，因为它可能导致数值不稳定和路径不一致
+  // 启发函数：欧几里得距离 + tie-breaking 因子
+  // tie-breaking 因子让路径更倾向于直线，减少扭曲
+  // 🔧 增大 tie-breaker，更强烈地偏好直线和对角线路径
+  const double tie_breaker = 1.001;  // 0.1% 的提升，偏好直线路径
   auto heuristic = [&](int x, int y, int z) -> double {
     double dx = static_cast<double>(x - gx);
     double dy = static_cast<double>(y - gy);
     double dz = static_cast<double>(z - gz);
-    return std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
+    double h = std::sqrt(dx * dx + dy * dy + dz * dz) * grid_res_;
+    return h * tie_breaker;  // 添加 tie-breaking 因子
   };
 
   // 使用map存储节点信息，key是idx1d
@@ -443,31 +480,22 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
   std::unordered_map<long long, double> gscore;
   
   // 优先队列：pair<f值, node_key>
-  // 强化的tie-breaking：确保完全确定性，避免路径抖动
+  // 🔧 简化的tie-breaking：只比较f值，让启发式函数的tie-breaker发挥作用
   auto cmp = [&](const std::pair<double, long long> &a, const std::pair<double, long long> &b) {
-    // 首先比较f值
-    if (std::abs(a.first - b.first) > 1e-9) {
+    // 比较f值（由于启发式函数已经包含了tie-breaker，这里只需简单比较）
+    if (std::abs(a.first - b.first) > 1e-12) {
       return a.first > b.first;  // f值小的优先
     }
     
-    // f值相同时，使用g-max策略（偏好更接近起点的节点，即直线路径）
+    // f值几乎相同时，偏好g值大的节点（更接近目标）
+    // 🔧 修复：这次真正实现 g-max（h-min）策略
     double g_a = gscore.count(a.second) ? gscore[a.second] : 0.0;
     double g_b = gscore.count(b.second) ? gscore[b.second] : 0.0;
-    if (std::abs(g_a - g_b) > 1e-9) {
-      return g_a < g_b;  // g值大的优先（更接近起点，更接近直线）
+    if (std::abs(g_a - g_b) > 1e-12) {
+      return g_a < g_b;  // 返回true表示a优先级低，所以g大的(b)优先
     }
     
-    // g值也相同时，使用节点坐标作为最后的tie-breaker（确保完全确定性）
-    if (all_nodes.count(a.second) && all_nodes.count(b.second)) {
-      const Node &na = all_nodes[a.second];
-      const Node &nb = all_nodes[b.second];
-      // 按字典序比较坐标，确保完全确定性
-      if (na.x != nb.x) return na.x > nb.x;
-      if (na.y != nb.y) return na.y > nb.y;
-      return na.z > nb.z;
-    }
-    
-    // 如果节点不存在，使用key作为最后的tie-breaker
+    // 最后的tie-breaker：使用key（避免坐标字典序带来的方向偏好）
     return a.second > b.second;
   };
   std::priority_queue<std::pair<double, long long>, 
@@ -577,12 +605,25 @@ void AStarOccMap::makePlan(nav_msgs::Path &path)
       
       // Step4-B: 计算风险代价
       double risk_cost = 0.0;
-      if (w_risk_ > 0.0 && risk_map_)
+      
+      // 🔧 新逻辑：优先使用RiskMap25D（如果可用）
+      if (w_risk_ > 0.0)
       {
-        // 双重检查：在调用前再次检查有效性（防止并发修改）
-        if (risk_map_->isValid())
+        if (use_risk_map_25d_ && risk_map_25d_ && risk_map_25d_->isValid())
         {
-          // 获取邻居节点的世界坐标
+          // ✨ 使用RiskMap25D的3D查询（融合静态+动态风险）
+          Eigen::Vector3d neighbor_world = indexToPos(nx, ny, nz);
+          
+          // 直接查询融合后的风险值
+          double fused_risk = risk_map_25d_->query(neighbor_world);
+          
+          // RiskMap25D已经融合了静态和动态风险，直接作为代价
+          // 不需要liftRiskGated和riskToCostLog
+          risk_cost = w_risk_ * fused_risk;
+        }
+        else if (risk_map_ && risk_map_->isValid())
+        {
+          // 🔧 回退到旧版RiskMap2D逻辑
           Eigen::Vector3d neighbor_world = indexToPos(nx, ny, nz);
           double wx = neighbor_world(0);
           double wy = neighbor_world(1);

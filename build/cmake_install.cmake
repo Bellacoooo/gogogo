@@ -12,7 +12,7 @@ if(NOT DEFINED CMAKE_INSTALL_CONFIG_NAME)
     string(REGEX REPLACE "^[^A-Za-z0-9_]+" ""
            CMAKE_INSTALL_CONFIG_NAME "${BUILD_TYPE}")
   else()
-    set(CMAKE_INSTALL_CONFIG_NAME "")
+    set(CMAKE_INSTALL_CONFIG_NAME "Release")
   endif()
   message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 endif()
@@ -136,7 +136,14 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/ff/intent-mpc/build/gtest/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/tracking_controller/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/onboard_detector/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/map_manager/cmake_install.cmake")
   include("/home/ff/intent-mpc/build/Intent-MPC/dynamic_predictor/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/global_planner/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/trajectory_planner/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/time_optimizer/cmake_install.cmake")
+  include("/home/ff/intent-mpc/build/Intent-MPC/autonomous_flight/cmake_install.cmake")
 
 endif()
 
