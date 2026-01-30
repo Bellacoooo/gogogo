@@ -322,24 +322,10 @@ namespace AutoFlight{
 										ROS_INFO_THROTTLE(10.0, "[MPC-A*-CALL] ✅ RiskMap25D set successfully");
 									} catch (const std::exception& e) {
 										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap25D: %s", e.what());
-										// 回退到旧版2D
-										if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
-											this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-										}
-									}
-								} else if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
-									// 回退到旧版2D风险地图
-									ROS_WARN_THROTTLE(5.0, "[MPC-A*-CALL] Using RiskMap2D (legacy 2D)");
-									try {
-										this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-									} catch (const std::exception& e) {
-										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap: %s", e.what());
-										throw;
+										ROS_ERROR("[MPC-A*-CALL] ❌ Cannot fallback, RiskMap2D is deprecated");
 									}
 								} else {
-									ROS_WARN("[MPC-A*-CALL] Risk map not set: riskMap2D_=%p, isValid()=%s", 
-									         this->riskMap2D_.get(), 
-									         (this->riskMap2D_ && this->riskMap2D_->isValid()) ? "true" : "false");
+									ROS_WARN("[MPC-A*-CALL] ❌ RiskMap25D not valid!");
 								}
 								
 								// 设置动态障碍物方框（硬约束）
@@ -1011,37 +997,9 @@ namespace AutoFlight{
 		// ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
 		//          this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
 		
-		// 更新旧版2D风险地图（向后兼容）
-		if (this->riskMap2D_) {
-			// ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
-			try {
-				this->riskMap2D_->updateFromMsg(*msg);
-				// ROS_WARN("[MPC-RISK-CB] updateFromMsg completed");
-			} catch (const std::exception& e) {
-				ROS_ERROR("[MPC-RISK-CB] Exception in updateFromMsg: %s", e.what());
-				return;
-			} catch (...) {
-				ROS_ERROR("[MPC-RISK-CB] Unknown exception in updateFromMsg");
-				return;
-			}
-			
-			// 如果 A* 规划器已初始化，立即更新风险地图
-			if (this->aStarPlanner_) {
-				// ROS_WARN("[MPC-RISK-CB] Calling aStarPlanner_->setRiskMap...");
-				try {
-					this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-					// ROS_WARN("[MPC-RISK-CB] setRiskMap completed");
-				} catch (const std::exception& e) {
-					ROS_ERROR("[MPC-RISK-CB] Exception in setRiskMap: %s", e.what());
-				} catch (...) {
-					ROS_ERROR("[MPC-RISK-CB] Unknown exception in setRiskMap");
-				}
-			} else {
-				// ROS_WARN("[MPC-RISK-CB] aStarPlanner_ is NULL, skipping setRiskMap");
-			}
-		} else {
-			// ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
-		}
+		// ❌ 旧版RiskMap2D已弃用（有大量调试日志导致性能问题）
+		// 现在完全使用RiskMap25D替代
+		// if (this->riskMap2D_) { ... }
 		
 		// 🔧 更新新版2.5D风险地图的动态部分
 		if (this->riskMap25D_) {
