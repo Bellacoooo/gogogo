@@ -46,6 +46,7 @@ namespace AutoFlight{
 		ros::Timer trajExeTimer_;
 		ros::Timer visTimer_;
 		ros::Timer freeMapTimer_;
+		ros::Timer riskMapUpdateTimer_;  // 🔧 定期更新RiskMap25D
 
 	ros::Publisher rrtPathPub_;
 	ros::Publisher polyTrajPub_;
@@ -111,7 +112,8 @@ namespace AutoFlight{
 		void initModules();
 		void registerPub();
 		void registerCallback();
-		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调
+		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调（旧版2D）
+		void updateRiskMap25DCB(const ros::TimerEvent&);  // 🔧 更新2.5D风险地图
 
 		void mpcCB();
 		void staticPlannerCB(const ros::TimerEvent&);

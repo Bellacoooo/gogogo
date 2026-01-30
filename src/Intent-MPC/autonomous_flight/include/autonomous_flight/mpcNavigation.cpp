@@ -199,12 +199,25 @@ namespace AutoFlight{
 		this->goalPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("mpcNavigation/goal", 10);
 		this->mpcStatusPub_ = this->nh_.advertise<std_msgs::Bool>("mpcNavigation/infeasible", 10);
 		
-		// 订阅风险地图
+		// 订阅风险地图（保留旧的，向后兼容）
 		this->riskMapSub_ = this->nh_.subscribe("dynamic_predictor/dynamic_risk_map", 1, 
 		                                         &mpcNavigation::riskMapCB, this);
 		
 		// 初始化风险地图对象
 		this->riskMap2D_.reset(new globalPlanner::RiskMap2D());
+		
+		// 初始化2.5D风险地图
+		this->riskMap25D_.reset(new globalPlanner::RiskMap25D(this->nh_));
+		
+		// 设置occupancy map（用于查询静态距离）
+		if (this->map_) {
+			this->riskMap25D_->setOccupancyMap(this->map_);
+		}
+		
+		// 启动定时器：定期更新RiskMap25D
+		this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(0.1), &mpcNavigation::updateRiskMap25DCB, this);
+		
+		ROS_INFO("[MPC-Nav] RiskMap25D initialized");
 	}
 
 	void mpcNavigation::registerCallback(){
@@ -997,6 +1010,7 @@ namespace AutoFlight{
 		// ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
 		//          this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
 		
+		// 更新旧版2D风险地图（向后兼容）
 		if (this->riskMap2D_) {
 			// ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
 			try {
@@ -1027,6 +1041,31 @@ namespace AutoFlight{
 		} else {
 			// ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
 		}
+		
+		// 🔧 更新新版2.5D风险地图的动态部分
+		if (this->riskMap25D_) {
+			try {
+				this->riskMap25D_->updateFromDynamicMsg(*msg);
+				ROS_INFO_THROTTLE(10.0, "[MPC-RISK-CB] RiskMap25D dynamic risk updated");
+			} catch (const std::exception& e) {
+				ROS_ERROR_THROTTLE(5.0, "[MPC-RISK-CB] Exception updating RiskMap25D: %s", e.what());
+			}
+		}
+		
 		// ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
+	}
+
+	void mpcNavigation::updateRiskMap25DCB(const ros::TimerEvent&){
+		if (!this->riskMap25D_ || !this->map_) {
+			return;
+		}
+
+		// 1. 设置地图中心（机器人当前位置）
+		this->riskMap25D_->setMapCenter(this->currPos_);
+		
+		// 注意：
+		// - 静态风险从occupancy map计算（通过getDistance接口）
+		// - 动态风险通过订阅 dynamic_predictor/dynamic_risk_map 更新（在riskMapCB中）
+		// 这里我们将静态风险计算集成到riskMapCB中，与动态风险一起更新
 	}
 }

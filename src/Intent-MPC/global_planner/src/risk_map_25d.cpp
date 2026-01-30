@@ -4,7 +4,8 @@
  */
 
 #include "global_planner/risk_map_25d.h"
-#include "map_manager/ESDFMap.h"
+#include "map_manager/occupancyMap.h"
+#include <nav_msgs/OccupancyGrid.h>
 #include <cmath>
 #include <algorithm>
 #include <ros/console.h>
@@ -88,31 +89,22 @@ void RiskMap25D::setMapCenter(const Eigen::Vector3d& center)
                                      center(1) - grid_height_ * resolution_ / 2.0);
 }
 
-void RiskMap25D::updateStatic(const std::shared_ptr<mapManager::ESDFMap>& esdf_map)
+void RiskMap25D::setOccupancyMap(const std::shared_ptr<mapManager::occMap>& map)
 {
-    if (!esdf_map) {
-        ROS_WARN_THROTTLE(5.0, "[RiskMap25D] updateStatic: nullptr ESDF map");
+    occ_map_ = map;
+    ROS_INFO("[RiskMap25D] Occupancy map set");
+}
+
+void RiskMap25D::updateStaticRisk()
+{
+    if (!occ_map_) {
+        ROS_WARN_THROTTLE(5.0, "[RiskMap25D] updateStaticRisk: no occupancy map set");
         return;
     }
     
-    esdf_map_ = esdf_map;
+    // 注意：不锁mutex，因为这个函数会被updateFromDynamicMsg调用，那里已经锁了
     
-    // 预计算静态风险到栅格（在固定高度）
-    precomputeStaticRisk();
-    
-    static_updated_ = true;
-}
-
-void RiskMap25D::precomputeStaticRisk()
-{
-    if (!esdf_map_) return;
-    
-    std::lock_guard<std::mutex> lock(map_mutex_);
-    
-    // 清零
-    std::fill(risk_grid_.begin(), risk_grid_.end(), 0.0);
-    
-    // 遍历栅格计算静态风险
+    // 遍历栅格计算静态风险（简化版：检查周围是否有障碍物）
     for (int iy = 0; iy < grid_height_; ++iy) {
         for (int ix = 0; ix < grid_width_; ++ix) {
             // 栅格→世界坐标（固定高度）
@@ -121,11 +113,32 @@ void RiskMap25D::precomputeStaticRisk()
             world_pos(1) = grid_origin_(1) + (iy + 0.5) * resolution_;
             world_pos(2) = fixed_height_;
             
-            // 计算静态风险
-            double dist = esdf_map_->getDistance(world_pos);
+            // 简化的静态风险计算：搜索附近是否有障碍物
             double r_s = 0.0;
-            if (dist < d_s_) {
-                double delta = d_s_ - dist;
+            double search_radius = d_s_;  // 搜索半径
+            int search_steps = static_cast<int>(std::ceil(search_radius / resolution_));
+            double min_dist = search_radius + 1.0;  // 初始化为超过search_radius
+            
+            // 搜索周围的栅格
+            for (int dy = -search_steps; dy <= search_steps; ++dy) {
+                for (int dx = -search_steps; dx <= search_steps; ++dx) {
+                    Eigen::Vector3d check_pos;
+                    check_pos(0) = world_pos(0) + dx * resolution_;
+                    check_pos(1) = world_pos(1) + dy * resolution_;
+                    check_pos(2) = world_pos(2);
+                    
+                    if (occ_map_->isInflatedOccupied(check_pos)) {
+                        double dist = std::sqrt(dx * dx + dy * dy) * resolution_;
+                        if (dist < min_dist) {
+                            min_dist = dist;
+                        }
+                    }
+                }
+            }
+            
+            // 计算风险
+            if (min_dist < d_s_) {
+                double delta = d_s_ - min_dist;
                 r_s = delta * delta;  // (d_s - d)^2
             }
             
@@ -134,6 +147,57 @@ void RiskMap25D::precomputeStaticRisk()
             risk_grid_[idx] = gamma_s_ * r_s;
         }
     }
+    
+    static_updated_ = true;
+    ROS_INFO_THROTTLE(10.0, "[RiskMap25D] Static risk updated from occupancy map");
+}
+
+void RiskMap25D::updateFromDynamicMsg(const nav_msgs::OccupancyGrid& msg)
+{
+    if (!is_initialized_) return;
+    
+    std::lock_guard<std::mutex> lock(map_mutex_);
+    
+    // 1. 先更新静态风险（清零并重新计算）
+    updateStaticRisk();
+    
+    // 2. 从消息中提取动态风险并叠加
+    // 注意：msg的分辨率和尺寸可能与我们的不同，需要重采样
+    double msg_res = msg.info.resolution;
+    int msg_width = msg.info.width;
+    int msg_height = msg.info.height;
+    double msg_origin_x = msg.info.origin.position.x;
+    double msg_origin_y = msg.info.origin.position.y;
+    
+    // 遍历我们的栅格，从消息中采样
+    for (int iy = 0; iy < grid_height_; ++iy) {
+        for (int ix = 0; ix < grid_width_; ++ix) {
+            // 我们的栅格中心世界坐标
+            double wx = grid_origin_(0) + (ix + 0.5) * resolution_;
+            double wy = grid_origin_(1) + (iy + 0.5) * resolution_;
+            
+            // 转换到消息的栅格坐标
+            int msg_ix = static_cast<int>((wx - msg_origin_x) / msg_res);
+            int msg_iy = static_cast<int>((wy - msg_origin_y) / msg_res);
+            
+            // 边界检查
+            if (msg_ix >= 0 && msg_ix < msg_width && msg_iy >= 0 && msg_iy < msg_height) {
+                int msg_idx = msg_iy * msg_width + msg_ix;
+                if (msg_idx >= 0 && msg_idx < static_cast<int>(msg.data.size())) {
+                    // 获取动态风险（0-100 -> 0-1）
+                    double dynamic_risk = msg.data[msg_idx] / 100.0;
+                    
+                    // 叠加到静态风险上（加权）
+                    int idx = iy * grid_width_ + ix;
+                    risk_grid_[idx] += gamma_d_ * dynamic_risk;
+                }
+            }
+        }
+    }
+    
+    dynamic_updated_ = true;
+    ROS_INFO_THROTTLE(10.0, "[RiskMap25D] Updated from dynamic message (res=%.2f, size=%dx%d)", 
+                      msg_res, msg_width, msg_height);
 }
 
 void RiskMap25D::updateDynamic(const std::vector<ObstaclePrediction>& predictions)

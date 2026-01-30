@@ -20,10 +20,11 @@
 #include <mutex>
 #include <Eigen/Dense>
 #include <ros/ros.h>
+#include <nav_msgs/OccupancyGrid.h>
 
 // 前向声明
 namespace mapManager {
-    class ESDFMap;
+    class occMap;
 }
 
 namespace globalPlanner {
@@ -90,16 +91,27 @@ public:
     ~RiskMap25D() = default;
 
     /**
-     * @brief 更新静态风险（基于ESDF地图）
-     * @param esdf_map ESDF地图指针
+     * @brief 设置地图指针（用于查询静态距离）
+     * @param map 占位栅格地图指针
      */
-    void updateStatic(const std::shared_ptr<mapManager::ESDFMap>& esdf_map);
+    void setOccupancyMap(const std::shared_ptr<mapManager::occMap>& map);
+    
+    /**
+     * @brief 更新静态风险（从内部occupancy map计算）
+     */
+    void updateStaticRisk();
 
     /**
      * @brief 更新动态风险（基于意图预测）
      * @param predictions 动态障碍物预测数据
      */
     void updateDynamic(const std::vector<ObstaclePrediction>& predictions);
+
+    /**
+     * @brief 从OccupancyGrid消息更新动态风险（简化接口，用于兼容旧系统）
+     * @param msg 风险地图消息（来自dynamic_predictor）
+     */
+    void updateFromDynamicMsg(const nav_msgs::OccupancyGrid& msg);
 
     /**
      * @brief 查询给定3D点的融合风险值（忽略z坐标）
@@ -186,8 +198,8 @@ private:
     /// 单层风险栅格：risk_grid_[y * width + x]
     std::vector<double> risk_grid_;
     
-    /// ESDF地图指针
-    std::shared_ptr<mapManager::ESDFMap> esdf_map_;
+    /// 占位栅格地图指针（用于查询静态距离）
+    std::shared_ptr<mapManager::occMap> occ_map_;
     
     /// 状态标志
     bool is_initialized_;
