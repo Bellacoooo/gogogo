@@ -52,9 +52,11 @@ roslaunch autonomous_flight intent_mpc_demo.launch
 rosrun global_planner risk_map_25d_visualizer
 
 # 在RViz中添加
-# Topic: /risk_map_25d/occupancy_grid
+# Topic: /risk_map_25d/grid
 # Type: OccupancyGrid
 ```
+
+**注意**：现在可视化节点已经集成到主launch文件中，会自动启动，无需手动运行！
 
 ---
 

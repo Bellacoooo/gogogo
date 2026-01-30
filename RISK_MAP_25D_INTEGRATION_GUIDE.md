@@ -164,7 +164,7 @@ rosrun global_planner risk_map_25d_visualizer
 ```
 
 在RViz中添加：
-- **Topic**: `/risk_map_25d/occupancy_grid`
+- **Topic**: `/risk_map_25d/grid`
 - **Type**: `OccupancyGrid`
 
 ---
