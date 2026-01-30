@@ -54,7 +54,7 @@
   <!-- 第一个急转弯的场景 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_turn.world" /> -->
   <!-- 第二个急停的场景 -->
-  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_stop.world" />
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_stop.world" /> -->
   <!-- 第三个意图混乱的场景 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_change.world" /> -->
   <!-- 第四个场景-正常行走的场景，目前还不能循环 -->
@@ -79,7 +79,7 @@
 
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/room/room_empty.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/room/room_static.world" /> -->
-  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/generated_env/generated_env.world" /> -->
+  <arg name="world_name" value="$(find uav_simulator)/worlds/generated_env/generated_env.world" />
   
   <!-- launch the custom world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >

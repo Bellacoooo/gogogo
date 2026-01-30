@@ -23,7 +23,7 @@
       <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
         <orientation>false</orientation>
         <loop>1</loop>
-        <velocity>1.0</velocity>
+        <velocity>0.4</velocity>
         <path>
           <waypoint>-2.38 3.25 0.85</waypoint>
           <waypoint>-2.38 -2.49 0.85</waypoint>
@@ -55,7 +55,7 @@
       <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
         <orientation>false</orientation>
         <loop>1</loop>
-        <velocity>1.0</velocity>
+        <velocity>0.4</velocity>
         <path>
           <waypoint>-4.82 -3.29 0.85</waypoint>
           <waypoint>-4.82 3.29 0.85</waypoint>
@@ -87,7 +87,7 @@
       <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
         <orientation>false</orientation>
         <loop>1</loop>
-        <velocity>1.0</velocity>
+        <velocity>0.4</velocity>
         <path>
           <waypoint>-7.94 3.0 0.85</waypoint>
           <waypoint>-7.94 -3.19 0.85</waypoint>

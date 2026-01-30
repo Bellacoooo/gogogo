@@ -1,1 +1,1 @@
-set(ORDERED_PATHS "/home/ff/intent-mpc/devel/lib;/opt/ros/noetic/lib")
+set(ORDERED_PATHS "/opt/ros/noetic/lib")

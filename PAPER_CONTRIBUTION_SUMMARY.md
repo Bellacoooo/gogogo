@@ -146,3 +146,4 @@ A = [I, I*Δt; 0, I],  B = [0.5*Δt²*I; Δt*I]
 
 *本文档基于代码库 `/home/ff/intent-mpc/src/Intent-MPC/` 分析整理，与IEEE RA-L 2025论文对应*
 
+

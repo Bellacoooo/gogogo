@@ -109,19 +109,22 @@ inline double liftRiskGated(double p2d, double wz, double z_gate)
 }
 
 /**
- * @brief 将风险值转换为代价（二次方公式）
+ * @brief 将风险值转换为代价（分段幂函数公式，软约束）
  * 
- * 公式：cost = k_risk * risk * risk
+ * 🔧 改进：使用 1.5 次方而不是 2 次方，让低风险区域的代价更温和
+ * 公式：cost = k_risk * risk^1.5
  * 
  * 特性：
  * - risk = 0 时，cost = 0
- * - risk = 1 时，cost = k_risk
+ * - risk = 0.5 时，cost = k_risk * 0.354（比原来的 0.25 稍高，更鼓励通过）
+ * - risk = 1.0 时，cost = k_risk
  * - k_risk 控制转换的敏感度
  * 
  * 优点：
- * - 避免 NaN：不会出现 log(0) 的情况，数值更稳定
- * - 梯度平滑：二次方函数提供平滑的梯度，有利于路径优化
- * - 计算快速：比对数函数更快
+ * - 软约束：低风险区域代价较小，鼓励路径通过
+ * - 避免完全回避：不会让 A* 完全避开低-中风险区域
+ * - 梯度平滑：幂函数提供平滑的梯度，有利于路径优化
+ * - 避免 NaN：不会出现 log(0) 的情况，数值稳定
  * 
  * @param risk 风险值 [0.0, 1.0]
  * @param k_risk 风险代价系数（默认 1.0）
@@ -131,7 +134,8 @@ inline double riskToCostLog(double risk, double k_risk = 1.0)
 {
   if (risk <= 0.0) return 0.0;
   if (risk > 1.0) risk = 1.0;  // 限制在 [0, 1] 范围内
-  return k_risk * risk * risk;
+  // 使用 1.5 次方：比线性更重视高风险，比二次方更温和
+  return k_risk * std::pow(risk, 1.5);
 }
 
 } // namespace globalPlanner

@@ -16,6 +16,7 @@
 #include <global_planner/a_star_occ.h>
 // #include <global_planner/sipp_occ_map.h>  // SIPP已删除
 #include <global_planner/risk_map_2d.h>
+#include <global_planner/risk_map_25d.h>  // 🔧 新增：2.5D风险地图
 #include <nav_msgs/OccupancyGrid.h>
 #include <trajectory_planner/polyTrajOccMap.h>
 #include <trajectory_planner/piecewiseLinearTraj.h>
@@ -34,7 +35,9 @@ namespace AutoFlight{
 		std::shared_ptr<globalPlanner::rrtOccMap<3>> rrtPlanner_;
 		std::shared_ptr<globalPlanner::AStarOccMap> aStarPlanner_;
 		// std::shared_ptr<globalPlanner::SippOccMap> sippPlanner_;  // SIPP已删除
-		std::shared_ptr<globalPlanner::RiskMap2D> riskMap2D_;  // 风险地图
+		std::shared_ptr<globalPlanner::RiskMap2D> riskMap2D_;    // 风险地图（旧版2D）
+		std::shared_ptr<globalPlanner::RiskMap25D> riskMap25D_;  // 🔧 风险地图（新版2.5D）
+		bool use_risk_map_25d_{true};  // 🔧 默认使用2.5D风险地图
 		std::shared_ptr<trajPlanner::polyTrajOccMap> polyTraj_;
 		std::shared_ptr<trajPlanner::pwlTraj> pwlTraj_;
 		std::shared_ptr<trajPlanner::mpcPlanner> mpc_;
@@ -43,6 +46,7 @@ namespace AutoFlight{
 		ros::Timer trajExeTimer_;
 		ros::Timer visTimer_;
 		ros::Timer freeMapTimer_;
+		ros::Timer riskMapUpdateTimer_;  // 🔧 定期更新RiskMap25D
 
 	ros::Publisher rrtPathPub_;
 	ros::Publisher polyTrajPub_;
@@ -51,6 +55,7 @@ namespace AutoFlight{
 	ros::Publisher inputTrajPub_;
 	ros::Publisher goalPub_;
 	ros::Publisher mpcStatusPub_;  // 发布 MPC 求解状态（用于数据记录）
+	ros::Publisher riskMap25DPub_;  // 🔧 发布2.5D风险地图（用于可视化）
 	
 	ros::Subscriber riskMapSub_;  // 订阅风险地图
 
@@ -108,7 +113,9 @@ namespace AutoFlight{
 		void initModules();
 		void registerPub();
 		void registerCallback();
-		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调
+		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调（旧版2D）
+		void updateRiskMap25DCB(const ros::TimerEvent&);  // 🔧 更新2.5D风险地图
+		void publishRiskMap25D();  // 🔧 发布2.5D风险地图用于可视化
 
 		void mpcCB();
 		void staticPlannerCB(const ros::TimerEvent&);

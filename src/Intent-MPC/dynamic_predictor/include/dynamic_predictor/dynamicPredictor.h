@@ -63,6 +63,7 @@ namespace dynamicPredictor{
         double paramf_,paraml_,paramr_,params_; // Probablity
         double pscale_;
         bool useFakeDetector_ = false;
+        bool useOptimizedSampling_ = true;  // 是否使用优化的采样方法
 
         bool mapReady_ = false;
         bool detectorReady_ = false;
@@ -117,9 +118,10 @@ namespace dynamicPredictor{
         std::ofstream logFile_;  // 日志文件流
         
         // 新增：存储当前时刻的自适应指标（每个障碍物一个）
-        std::vector<double> currentDt_;      // 当前时刻的 D_t
+        std::vector<double> currentDt_;      // 当前时刻的 Mt（注意：变量名历史遗留，实际存储Mt）
         std::vector<double> currentSAdaptive_; // 当前时刻的 s_adaptive
         std::vector<int> currentKAdaptive_;   // 当前时刻的 k_adaptive (best intent)
+        std::vector<double> currentMtSmoothed_; // 🔧 V3新增：Mt的EMA平滑值
 
         // 新增：计时相关变量
         std::chrono::duration<double, std::milli> mainIntentTime_;    // 主意图生成耗时(ms)

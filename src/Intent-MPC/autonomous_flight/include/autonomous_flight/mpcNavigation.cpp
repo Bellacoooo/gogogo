@@ -198,13 +198,28 @@ namespace AutoFlight{
 		this->inputTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/input_trajectory", 10);
 		this->goalPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("mpcNavigation/goal", 10);
 		this->mpcStatusPub_ = this->nh_.advertise<std_msgs::Bool>("mpcNavigation/infeasible", 10);
+		this->riskMap25DPub_ = this->nh_.advertise<nav_msgs::OccupancyGrid>("/risk_map_25d/grid", 1);
 		
-		// 订阅风险地图
+		// 订阅风险地图（保留旧的，向后兼容）
 		this->riskMapSub_ = this->nh_.subscribe("dynamic_predictor/dynamic_risk_map", 1, 
 		                                         &mpcNavigation::riskMapCB, this);
 		
 		// 初始化风险地图对象
 		this->riskMap2D_.reset(new globalPlanner::RiskMap2D());
+		
+		// 初始化2.5D风险地图
+		this->riskMap25D_.reset(new globalPlanner::RiskMap25D(this->nh_));
+		
+		// 设置occupancy map（用于查询静态距离）
+		if (this->map_) {
+			this->riskMap25D_->setOccupancyMap(this->map_);
+		}
+		
+		// ❌ 禁用定时器：静态风险不需要定期更新（静态环境不变）
+		// 改为在A*规划前按需更新（见updateRiskMap25DCB的调用）
+		// this->riskMapUpdateTimer_ = this->nh_.createTimer(ros::Duration(1.0), &mpcNavigation::updateRiskMap25DCB, this);
+		
+		ROS_INFO("[MPC-Nav] RiskMap25D initialized");
 	}
 
 	void mpcNavigation::registerCallback(){
@@ -292,20 +307,35 @@ namespace AutoFlight{
 									ROS_ERROR("[MPC-A*-CALL] Exception in updateGoal: %s", e.what());
 									throw;
 								}
-								// 设置风险地图（如果已更新）
-								if (this->riskMap2D_ && this->riskMap2D_->isValid()) {
-									ROS_WARN("[MPC-A*-CALL] Setting risk map before makePlan");
+								// 🔧 设置风险地图（优先使用2.5D）
+								if (use_risk_map_25d_ && this->riskMap25D_ && this->riskMap25D_->isValid()) {
+									// ✨ 使用新版2.5D风险地图
+									ROS_INFO_THROTTLE(5.0, "[MPC-A*-CALL] Using RiskMap25D (2.5D fused)");
 									try {
-										this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-										ROS_WARN("[MPC-A*-CALL] setRiskMap completed");
+										// 更新地图中心为当前位置
+										this->riskMap25D_->setMapCenter(this->currPos_);
+										
+										// 按需更新静态风险（只在首次或地图中心移动较远时）
+										static Eigen::Vector3d lastUpdatePos(0, 0, 0);
+										static bool firstUpdate = true;
+										double moveDist = (this->currPos_ - lastUpdatePos).norm();
+										
+										if (firstUpdate || moveDist > 2.0) {  // 移动超过2米才更新
+											this->riskMap25D_->updateStaticRiskOnly();
+											lastUpdatePos = this->currPos_;
+											firstUpdate = false;
+											ROS_INFO_THROTTLE(5.0, "[MPC-A*-CALL] Static risk updated (moved %.1fm)", moveDist);
+										}
+										
+										// 设置到A*
+										this->aStarPlanner_->setRiskMap25D(this->riskMap25D_);
+										ROS_INFO_THROTTLE(10.0, "[MPC-A*-CALL] ✅ RiskMap25D set successfully");
 									} catch (const std::exception& e) {
-										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap: %s", e.what());
-										throw;
+										ROS_ERROR("[MPC-A*-CALL] Exception in setRiskMap25D: %s", e.what());
+										ROS_ERROR("[MPC-A*-CALL] ❌ Cannot fallback, RiskMap2D is deprecated");
 									}
 								} else {
-									ROS_WARN("[MPC-A*-CALL] Risk map not set: riskMap2D_=%p, isValid()=%s", 
-									         this->riskMap2D_.get(), 
-									         (this->riskMap2D_ && this->riskMap2D_->isValid()) ? "true" : "false");
+									ROS_WARN("[MPC-A*-CALL] ❌ RiskMap25D not valid!");
 								}
 								
 								// 设置动态障碍物方框（硬约束）
@@ -977,36 +1007,99 @@ namespace AutoFlight{
 		// ROS_WARN("[MPC-RISK-CB] riskMapCB called: riskMap2D_=%p, aStarPlanner_=%p, msg->width=%u, msg->height=%u",
 		//          this->riskMap2D_.get(), this->aStarPlanner_.get(), msg->info.width, msg->info.height);
 		
-		if (this->riskMap2D_) {
-			// ROS_WARN("[MPC-RISK-CB] Calling updateFromMsg...");
+		// ❌ 旧版RiskMap2D已弃用（有大量调试日志导致性能问题）
+		// 现在完全使用RiskMap25D替代
+		// if (this->riskMap2D_) { ... }
+		
+		// 🔧 更新新版2.5D风险地图的动态部分
+		if (this->riskMap25D_) {
 			try {
-				this->riskMap2D_->updateFromMsg(*msg);
-				// ROS_WARN("[MPC-RISK-CB] updateFromMsg completed");
+				this->riskMap25D_->updateFromDynamicMsg(*msg);
+				ROS_INFO_THROTTLE(10.0, "[MPC-RISK-CB] RiskMap25D dynamic risk updated");
+				
+				// 发布风险地图用于可视化
+				publishRiskMap25D();
 			} catch (const std::exception& e) {
-				ROS_ERROR("[MPC-RISK-CB] Exception in updateFromMsg: %s", e.what());
-				return;
-			} catch (...) {
-				ROS_ERROR("[MPC-RISK-CB] Unknown exception in updateFromMsg");
-				return;
+				ROS_ERROR_THROTTLE(5.0, "[MPC-RISK-CB] Exception updating RiskMap25D: %s", e.what());
 			}
-			
-			// 如果 A* 规划器已初始化，立即更新风险地图
-			if (this->aStarPlanner_) {
-				// ROS_WARN("[MPC-RISK-CB] Calling aStarPlanner_->setRiskMap...");
-				try {
-					this->aStarPlanner_->setRiskMap(this->riskMap2D_);
-					// ROS_WARN("[MPC-RISK-CB] setRiskMap completed");
-				} catch (const std::exception& e) {
-					ROS_ERROR("[MPC-RISK-CB] Exception in setRiskMap: %s", e.what());
-				} catch (...) {
-					ROS_ERROR("[MPC-RISK-CB] Unknown exception in setRiskMap");
-				}
-			} else {
-				// ROS_WARN("[MPC-RISK-CB] aStarPlanner_ is NULL, skipping setRiskMap");
+		}
+		
+		// ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
+	}
+
+	void mpcNavigation::updateRiskMap25DCB(const ros::TimerEvent&){
+		if (!this->riskMap25D_ || !this->map_) {
+			return;
+		}
+
+		// 1. 设置地图中心（机器人当前位置）
+		this->riskMap25D_->setMapCenter(this->currPos_);
+		
+		// 2. 独立更新静态风险（不依赖动态风险消息）
+		try {
+			this->riskMap25D_->updateStaticRiskOnly();
+			ROS_INFO_THROTTLE(10.0, "[RiskMap25D-Timer] Static risk updated independently");
+		} catch (const std::exception& e) {
+			ROS_ERROR_THROTTLE(5.0, "[RiskMap25D-Timer] Error updating static risk: %s", e.what());
+		}
+		
+		// 3. 发布风险地图（即使只有静态风险）
+		publishRiskMap25D();
+	}
+
+	void mpcNavigation::publishRiskMap25D(){
+		if (!this->riskMap25D_ || !this->riskMap25D_->isValid()) {
+			return;
+		}
+
+		// 导出栅格数据
+		std::vector<double> grid_data;
+		if (!this->riskMap25D_->exportGridData(grid_data)) {
+			ROS_WARN_THROTTLE(5.0, "[MPC-Nav] Failed to export RiskMap25D grid data");
+			return;
+		}
+
+		// 创建OccupancyGrid消息
+		nav_msgs::OccupancyGrid grid_msg;
+		grid_msg.header.stamp = ros::Time::now();
+		grid_msg.header.frame_id = "map";
+
+		// 获取栅格信息
+		double resolution;
+		int width, height;
+		Eigen::Vector2d origin;
+		this->riskMap25D_->getGridInfo(resolution, width, height, origin);
+
+		grid_msg.info.resolution = resolution;
+		grid_msg.info.width = width;
+		grid_msg.info.height = height;
+		grid_msg.info.origin.position.x = origin(0);
+		grid_msg.info.origin.position.y = origin(1);
+		grid_msg.info.origin.position.z = 0.0;
+		grid_msg.info.origin.orientation.w = 1.0;
+
+		// 转换数据：double (0-inf) -> int8 (0-100)
+		grid_msg.data.resize(grid_data.size());
+		
+		// 找到最大风险值用于归一化
+		double max_risk = 0.0;
+		for (double risk : grid_data) {
+			if (risk > max_risk) max_risk = risk;
+		}
+
+		if (max_risk > 1e-8) {
+			for (size_t i = 0; i < grid_data.size(); ++i) {
+				double norm = grid_data[i] / max_risk;  // 0~1
+				grid_msg.data[i] = static_cast<int8_t>(std::min(100, static_cast<int>(norm * 100.0)));
 			}
 		} else {
-			// ROS_WARN("[MPC-RISK-CB] riskMap2D_ is NULL, skipping update");
+			// 全是0
+			std::fill(grid_msg.data.begin(), grid_msg.data.end(), 0);
 		}
-		// ROS_WARN("[MPC-RISK-CB] riskMapCB completed");
+
+		// 发布
+		this->riskMap25DPub_.publish(grid_msg);
+		
+		ROS_INFO_THROTTLE(10.0, "[MPC-Nav] Published RiskMap25D (max_risk=%.4f)", max_risk);
 	}
 }

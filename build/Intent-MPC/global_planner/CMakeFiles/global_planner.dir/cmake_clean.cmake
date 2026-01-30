@@ -9,6 +9,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/global_planner.dir/src/a_star_occ.cpp.o.d"
   "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o"
   "CMakeFiles/global_planner.dir/src/globalPlannerLib.cpp.o.d"
+  "CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o"
+  "CMakeFiles/global_planner.dir/src/risk_map_25d.cpp.o.d"
   "CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.o"
   "CMakeFiles/global_planner.dir/src/risk_map_2d.cpp.o.d"
 )

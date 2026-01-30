@@ -133,84 +133,7 @@ Visualization Manager:
       Namespaces:
         GT osbtacles0: true
         GT osbtacles1: true
-        GT osbtacles10: true
-        GT osbtacles11: true
-        GT osbtacles12: true
-        GT osbtacles13: true
-        GT osbtacles14: true
-        GT osbtacles15: true
-        GT osbtacles16: true
-        GT osbtacles17: true
-        GT osbtacles18: true
-        GT osbtacles19: true
         GT osbtacles2: true
-        GT osbtacles20: true
-        GT osbtacles21: true
-        GT osbtacles22: true
-        GT osbtacles23: true
-        GT osbtacles24: true
-        GT osbtacles25: true
-        GT osbtacles26: true
-        GT osbtacles27: true
-        GT osbtacles28: true
-        GT osbtacles29: true
-        GT osbtacles3: true
-        GT osbtacles30: true
-        GT osbtacles31: true
-        GT osbtacles32: true
-        GT osbtacles33: true
-        GT osbtacles34: true
-        GT osbtacles35: true
-        GT osbtacles36: true
-        GT osbtacles37: true
-        GT osbtacles38: true
-        GT osbtacles39: true
-        GT osbtacles4: true
-        GT osbtacles40: true
-        GT osbtacles41: true
-        GT osbtacles42: true
-        GT osbtacles43: true
-        GT osbtacles44: true
-        GT osbtacles45: true
-        GT osbtacles46: true
-        GT osbtacles47: true
-        GT osbtacles48: true
-        GT osbtacles49: true
-        GT osbtacles5: true
-        GT osbtacles50: true
-        GT osbtacles51: true
-        GT osbtacles52: true
-        GT osbtacles53: true
-        GT osbtacles54: true
-        GT osbtacles55: true
-        GT osbtacles56: true
-        GT osbtacles57: true
-        GT osbtacles58: true
-        GT osbtacles59: true
-        GT osbtacles6: true
-        GT osbtacles60: true
-        GT osbtacles61: true
-        GT osbtacles62: true
-        GT osbtacles63: true
-        GT osbtacles64: true
-        GT osbtacles65: true
-        GT osbtacles66: true
-        GT osbtacles67: true
-        GT osbtacles68: true
-        GT osbtacles69: true
-        GT osbtacles7: true
-        GT osbtacles70: true
-        GT osbtacles71: true
-        GT osbtacles72: true
-        GT osbtacles73: true
-        GT osbtacles74: true
-        GT osbtacles75: true
-        GT osbtacles76: true
-        GT osbtacles77: true
-        GT osbtacles78: true
-        GT osbtacles79: true
-        GT osbtacles8: true
-        GT osbtacles9: true
       Queue Size: 100
       Value: true
     - Class: rviz/MarkerArray
@@ -355,6 +278,16 @@ Visualization Manager:
       Namespaces:
         mpc_ellipsoid_obstacles: true
       Queue Size: 100
+      Value: true
+    - Alpha: 0.699999988079071
+      Class: rviz/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic: /risk_map_25d/grid
+      Unreliable: false
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:

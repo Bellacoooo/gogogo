@@ -11,6 +11,12 @@
 	<node pkg="onboard_detector" type="fake_detector_node" name="fake_detector_node" output="screen" />
 	<node pkg="autonomous_flight" type="mpc_navigation_node" name="mpc_navigation_node" output="screen" />
 	<!-- <node pkg="onboard_detector" type="yolo_detector_node.py" name="yolo_detector_node" output="screen" /> -->
+	
+	<!-- 2.5D风险地图可视化：现在由mpc_navigation_node直接发布到 /risk_map_25d/grid -->
+	<!-- <node pkg="global_planner" type="risk_map_25d_visualizer" name="risk_map_25d_visualizer" output="screen">
+		<param name="publish_rate" value="2.0" />
+		<param name="use_color_map" value="true" />
+	</node> -->
 
 	<!-- Flight Data Recorder -->
 	<include file="$(find flight_data_recorder)/launch/data_recorder.launch" />
