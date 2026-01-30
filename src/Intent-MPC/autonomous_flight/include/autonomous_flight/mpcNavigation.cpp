@@ -198,6 +198,7 @@ namespace AutoFlight{
 		this->inputTrajPub_ = this->nh_.advertise<nav_msgs::Path>("mpcNavigation/input_trajectory", 10);
 		this->goalPub_ = this->nh_.advertise<visualization_msgs::MarkerArray>("mpcNavigation/goal", 10);
 		this->mpcStatusPub_ = this->nh_.advertise<std_msgs::Bool>("mpcNavigation/infeasible", 10);
+		this->riskMap25DPub_ = this->nh_.advertise<nav_msgs::OccupancyGrid>("/risk_map_25d/grid", 1);
 		
 		// 订阅风险地图（保留旧的，向后兼容）
 		this->riskMapSub_ = this->nh_.subscribe("dynamic_predictor/dynamic_risk_map", 1, 
@@ -1047,6 +1048,9 @@ namespace AutoFlight{
 			try {
 				this->riskMap25D_->updateFromDynamicMsg(*msg);
 				ROS_INFO_THROTTLE(10.0, "[MPC-RISK-CB] RiskMap25D dynamic risk updated");
+				
+				// 发布风险地图用于可视化
+				publishRiskMap25D();
 			} catch (const std::exception& e) {
 				ROS_ERROR_THROTTLE(5.0, "[MPC-RISK-CB] Exception updating RiskMap25D: %s", e.what());
 			}
@@ -1067,5 +1071,61 @@ namespace AutoFlight{
 		// - 静态风险从occupancy map计算（通过getDistance接口）
 		// - 动态风险通过订阅 dynamic_predictor/dynamic_risk_map 更新（在riskMapCB中）
 		// 这里我们将静态风险计算集成到riskMapCB中，与动态风险一起更新
+	}
+
+	void mpcNavigation::publishRiskMap25D(){
+		if (!this->riskMap25D_ || !this->riskMap25D_->isValid()) {
+			return;
+		}
+
+		// 导出栅格数据
+		std::vector<double> grid_data;
+		if (!this->riskMap25D_->exportGridData(grid_data)) {
+			ROS_WARN_THROTTLE(5.0, "[MPC-Nav] Failed to export RiskMap25D grid data");
+			return;
+		}
+
+		// 创建OccupancyGrid消息
+		nav_msgs::OccupancyGrid grid_msg;
+		grid_msg.header.stamp = ros::Time::now();
+		grid_msg.header.frame_id = "map";
+
+		// 获取栅格信息
+		double resolution;
+		int width, height;
+		Eigen::Vector2d origin;
+		this->riskMap25D_->getGridInfo(resolution, width, height, origin);
+
+		grid_msg.info.resolution = resolution;
+		grid_msg.info.width = width;
+		grid_msg.info.height = height;
+		grid_msg.info.origin.position.x = origin(0);
+		grid_msg.info.origin.position.y = origin(1);
+		grid_msg.info.origin.position.z = 0.0;
+		grid_msg.info.origin.orientation.w = 1.0;
+
+		// 转换数据：double (0-inf) -> int8 (0-100)
+		grid_msg.data.resize(grid_data.size());
+		
+		// 找到最大风险值用于归一化
+		double max_risk = 0.0;
+		for (double risk : grid_data) {
+			if (risk > max_risk) max_risk = risk;
+		}
+
+		if (max_risk > 1e-8) {
+			for (size_t i = 0; i < grid_data.size(); ++i) {
+				double norm = grid_data[i] / max_risk;  // 0~1
+				grid_msg.data[i] = static_cast<int8_t>(std::min(100, static_cast<int>(norm * 100.0)));
+			}
+		} else {
+			// 全是0
+			std::fill(grid_msg.data.begin(), grid_msg.data.end(), 0);
+		}
+
+		// 发布
+		this->riskMap25DPub_.publish(grid_msg);
+		
+		ROS_INFO_THROTTLE(10.0, "[MPC-Nav] Published RiskMap25D (max_risk=%.4f)", max_risk);
 	}
 }

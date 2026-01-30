@@ -55,6 +55,7 @@ namespace AutoFlight{
 	ros::Publisher inputTrajPub_;
 	ros::Publisher goalPub_;
 	ros::Publisher mpcStatusPub_;  // 发布 MPC 求解状态（用于数据记录）
+	ros::Publisher riskMap25DPub_;  // 🔧 发布2.5D风险地图（用于可视化）
 	
 	ros::Subscriber riskMapSub_;  // 订阅风险地图
 
@@ -114,6 +115,7 @@ namespace AutoFlight{
 		void registerCallback();
 		void riskMapCB(const nav_msgs::OccupancyGridConstPtr& msg);  // 风险地图回调（旧版2D）
 		void updateRiskMap25DCB(const ros::TimerEvent&);  // 🔧 更新2.5D风险地图
+		void publishRiskMap25D();  // 🔧 发布2.5D风险地图用于可视化
 
 		void mpcCB();
 		void staticPlannerCB(const ros::TimerEvent&);
