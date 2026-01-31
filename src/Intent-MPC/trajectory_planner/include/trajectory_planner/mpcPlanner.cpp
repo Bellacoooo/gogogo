@@ -1253,191 +1253,23 @@ void mpcPlanner::updateObstacleParam(const std::vector<staticObstacle> &staticOb
 			vi = Eigen::Vector2d(v3(0), v3(1));
 		}
 
-		// 默认值（不启用风险自适应时使用）
+		// ========== 固定椭球大小（原始方式）==========
+		// 椭球大小 = 障碍物尺寸/2 + 固定安全距离
+		// 不考虑相对运动、TTC等因素，保持简单稳定
 		double a = a0;
 		double b = b0;
 		double c = c0;
-		double phi = 0.0;
-
-		if (this->useRiskAdaptive_){
-			// ========== 风险自适应椭球计算（带稳定性补丁）==========
-			
-			// 算危险程度（相对运动）
-			Eigen::Vector2d pi(pi3(0), pi3(1));
-			Eigen::Vector2d r = pr - pi;
-			double d = r.norm();
-			const double eps = 1e-6;
-			
-			// 安全检查：距离太近时使用保守策略
-			if (d < 0.1){
-				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: distance too close (%.3fm), using conservative ellipsoid", i, d);
-				// 使用最大膨胀作为保守策略
-				double s_conservative = this->riskSMax_;
-				a = a0 + s_conservative * (1.0 + this->riskKappa_);
-				b = b0 + s_conservative * (1.0 - this->riskKappa_);
-				c = c0;
-				phi = 0.0;
-				
-				s_filt_per_obstacle[i] = s_conservative;
-				phi_filt_per_obstacle[i] = phi;
-				a_per_obstacle[i] = a;
-				b_per_obstacle[i] = b;
-				c_per_obstacle[i] = c;
-				continue;  // 跳过正常计算
-			}
-			
-			Eigen::Vector2d r_hat = r / (d + eps);
-
-			Eigen::Vector2d v_rel = vr - vi;
-			double vc = std::max(0.0, -r_hat.dot(v_rel));  // closing speed
-			
-			// TTC 限制：避免过小的值导致 exp 爆炸
-			double ttc = d / (vc + eps);
-			ttc = std::max(ttc, 0.1);  // TTC 最小 0.1s
-			ttc = std::min(ttc, 100.0); // TTC 最大 100s（避免 exp 下溢）
-
-			// 计算原始风险裕量 s_raw
-			double exp_term = std::exp(-ttc / this->riskTau_);
-			// 检查 exp 是否有效
-			if (std::isnan(exp_term) || std::isinf(exp_term)){
-				exp_term = 0.0;
-				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: exp term invalid, set to 0", i);
-			}
-			
-			double s_raw = this->riskS0_ + this->riskAlpha_ * vc + this->riskBeta_ * exp_term;
-			
-			// ========== 稳定性补丁 A: s 的平滑和限幅 ==========
-			s_raw = clamp(s_raw, this->riskSMin_, this->riskSMax_);
-			
-			double s_filt;
-			double s_prev = prevSFilt_[i];  // 保存用于调试输出
-			
-			if (isFirstUpdate_[i]){
-				s_filt = s_raw;
-				isFirstUpdate_[i] = false;
-			}
-			else{
-				s_filt = (1.0 - lambda_s) * prevSFilt_[i] + lambda_s * s_raw;
-				s_filt = clamp(s_filt, this->riskSMin_, this->riskSMax_);
-				
-				double ds = s_filt - prevSFilt_[i];
-				ds = clamp(ds, -this->riskMaxDeltaS_, this->riskMaxDeltaS_);
-				s_filt = prevSFilt_[i] + ds;
-				s_filt = clamp(s_filt, this->riskSMin_, this->riskSMax_);
-			}
-			prevSFilt_[i] = s_filt;
-
-			// 确定原始椭球朝向 phi_raw
-			double vi_norm = vi.norm();
-			double phi_raw = std::atan2(vi.y(), vi.x());
-			
-			// ========== 稳定性补丁 B: phi 的平滑 ==========
-			double dphi = wrapToPi(phi_raw - prevPhiFilt_[i]);
-			double phi_filt = wrapToPi(prevPhiFilt_[i] + lambda_phi * dphi);
-			
-			double dphi_limited = wrapToPi(phi_filt - prevPhiFilt_[i]);
-			dphi_limited = clamp(dphi_limited, -this->riskMaxDeltaPhi_, this->riskMaxDeltaPhi_);
-			phi_filt = wrapToPi(prevPhiFilt_[i] + dphi_limited);
-			prevPhiFilt_[i] = phi_filt;
-
-			// ========== 稳定性补丁 C: 低速退化 ==========
-			double kappa_eff = this->riskKappa_;
-			double phi_use = phi_filt;
-			
-			if (vi_norm < this->riskVelThreshold_){
-				kappa_eff = 0.0;
-				phi_use = (prevYaw_[i].size() > 0) ? prevYaw_[i][0] : prevPhiFilt_[i];
-			}
-			else{
-				phi_use = phi_filt;
-			}
-
-			// 各向异性分配
-			double delta_parallel = s_filt * (1.0 + kappa_eff);
-			double delta_perp     = s_filt * (1.0 - kappa_eff);
-
-			a = a0 + delta_parallel;
-			b = b0 + delta_perp;
-			c = c0;
-			
-			if (kappa_eff == 0.0){
-				b = a;
-			}
-			
-			phi = phi_use;
-
-			// ========== 安全检查：椭球大小合理性 ==========
-			const double MAX_ELLIPSOID_AXIS = 3.0;  // 椭球半轴不超过 3m
-			bool size_valid = true;
-			
-			if (a > MAX_ELLIPSOID_AXIS || b > MAX_ELLIPSOID_AXIS || c > MAX_ELLIPSOID_AXIS){
-				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Ellipsoid too large! a=%.2f, b=%.2f, c=%.2f. Clamping to %.2fm", 
-				                  i, a, b, c, MAX_ELLIPSOID_AXIS);
-				a = std::min(a, MAX_ELLIPSOID_AXIS);
-				b = std::min(b, MAX_ELLIPSOID_AXIS);
-				c = std::min(c, MAX_ELLIPSOID_AXIS);
-				size_valid = false;
-			}
-			
-			// 检查 NaN/Inf
-			if (std::isnan(a) || std::isinf(a) || std::isnan(b) || std::isinf(b) || 
-			    std::isnan(c) || std::isinf(c) || std::isnan(phi) || std::isinf(phi)){
-				ROS_ERROR_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: NaN/Inf detected! Using baseline ellipsoid", i);
-				a = a0;
-				b = b0;
-				c = c0;
-				phi = 0.0;
-				size_valid = false;
-			}
-			
-			// 检查椭球是否退化（太小）
-			if (a < a0 * 0.5 || b < b0 * 0.5){
-				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Ellipsoid too small, using baseline", i);
-				a = a0;
-				b = b0;
-				size_valid = false;
-			}
-
-			// 调试输出（每秒一次）
-			if (size_valid){
-				ROS_INFO_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: d=%.2fm, vc=%.2fm/s, ttc=%.2fs | "
-				                       "s_raw=%.2f→s_filt=%.2f(Δ%.3f) | phi=%.1f° | "
-				                       "a=%.2f, b=%.2f, κ=%.2f", 
-				                       i, d, vc, ttc,
-				                       s_raw, s_filt, (s_filt - s_prev),
-				                       phi*180/M_PI,
-				                       a, b, kappa_eff);
-			}
-			else{
-				ROS_WARN_THROTTLE(1.0, "[Risk-Adaptive] Obs_%d: Using safe fallback - a=%.2f, b=%.2f", i, a, b);
-			}
-		}
+		double phi = 0.0;  // 朝向固定为0（不旋转）
+		
+		ROS_INFO_THROTTLE(2.0, "[Fixed-Ellipsoid] Obs_%d: Using fixed ellipsoid - a=%.2f, b=%.2f, c=%.2f", 
+		                  i, a, b, c);
 
 		// 保存计算结果
-		s_filt_per_obstacle[i] = (this->useRiskAdaptive_) ? prevSFilt_[i] : this->riskS0_;
+		s_filt_per_obstacle[i] = 0.0;  // 固定椭球不需要记录 s
 		phi_filt_per_obstacle[i] = phi;
 		a_per_obstacle[i] = a;
 		b_per_obstacle[i] = b;
 		c_per_obstacle[i] = c;
-		
-		// ========== 额外诊断：检测可能导致倒退的情况 ==========
-		if (this->useRiskAdaptive_){
-			// 如果椭球比距离还大，MPC 可能找不到前进路径而倒退
-			double max_radius = std::max({a, b, c});
-			Eigen::Vector2d pi(pi3(0), pi3(1));
-			double dist_xy = (pr - pi).norm();
-			
-			if (max_radius > dist_xy * 0.7){
-				ROS_WARN_THROTTLE(0.5, "[Risk-Adaptive] ⚠️ Obs_%d: Ellipsoid TOO LARGE! "
-				                       "max_radius=%.2fm, dist=%.2fm (%.0f%%) - MPC may RETREAT!", 
-				                       i, max_radius, dist_xy, (max_radius/dist_xy)*100.0);
-			}
-		}
-	}
-	
-	// ========== 机器人运动诊断 ==========
-	if (this->useRiskAdaptive_ && vr.x() < -0.1){
-		ROS_WARN_THROTTLE(0.5, "[Risk-Adaptive] ⚠️ Robot RETREATING! vr=(%.2f, %.2f) m/s", vr.x(), vr.y());
 	}
 
 	// ========== 第二步：填充 horizon 内的所有步（使用相同的参数）==========

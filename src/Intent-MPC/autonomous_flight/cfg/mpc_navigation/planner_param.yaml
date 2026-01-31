@@ -47,9 +47,9 @@ mpc_planner/static_constraint_slack_ratio: 0.01
 mpc_planner/dynamic_constraint_slack_ratio: 0.2
 
 # ========== 风险自适应椭球参数 ==========
-# 🚨 紧急禁用：如果遇到倒退、崩溃或椭球过大问题，将下面改为 false
+# 🚨 此分支使用固定椭球大小，不使用TTC动态调整
 # 启用/禁用风险自适应椭球（true=启用，false=使用原始固定椭球）
-mpc_planner/use_risk_adaptive: true
+mpc_planner/use_risk_adaptive: false
 
 # 风险裕量计算参数：s = clip(s0 + alpha*vc + beta*exp(-ttc/tau), s_min, s_max)
 mpc_planner/risk_s0: 0.15          # 基线膨胀量 (m)，静态风险
