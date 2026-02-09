@@ -59,8 +59,10 @@
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_change.world" /> -->
   <!-- 第四个场景-正常行走的场景，目前还不能循环 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_normal.world" /> -->
-  <!-- A*前瞻性场景 -->
-  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_A_star.world" /> -->
+  <!-- A*前瞻性场景+椭球定性实验1 -->
+  <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_A_star.world" />
+  <!-- 同向场景，椭球定性实验2 -->
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_tongxiang.world" /> -->
   <!-- 前后左右 -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/test/test_front_back_left_right.world" /> -->
   <!-- keepsome -->
@@ -79,7 +81,7 @@
 
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/room/room_empty.world" /> -->
   <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/room/room_static.world" /> -->
-  <arg name="world_name" value="$(find uav_simulator)/worlds/generated_env/generated_env.world" />
+  <!-- <arg name="world_name" value="$(find uav_simulator)/worlds/generated_env/generated_env.world" /> -->
   
   <!-- launch the custom world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >

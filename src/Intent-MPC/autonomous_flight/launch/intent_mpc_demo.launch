@@ -1,4 +1,5 @@
 <launch>
+	<!-- ==================== 参数配置 ==================== -->
 	<rosparam file="$(find tracking_controller)/cfg/controller_param.yaml" ns="controller"/>
 	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/fake_detector_param.yaml" />
 	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/flight_base.yaml" ns="autonomous_flight"/>
@@ -6,6 +7,12 @@
 	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/mapping_param.yaml" ns="/dynamic_map" />
 	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/dynamic_detector_param.yaml" ns="/onboard_detector" />
 	<rosparam file="$(find autonomous_flight)/cfg/mpc_navigation/predictor_param.yaml" ns="/dynamic_predictor" />
+	
+	<!-- ==================== 可选功能开关 ==================== -->
+	<!-- TTC^{-1} 实时绘图：设置为 true 启用，false 禁用 -->
+	<arg name="enable_ttc_plotter" default="true" />
+	<!-- TTC 绘图保存路径 -->
+	<arg name="ttc_save_path" default="/home/ff/Desktop/ttc_inverse_plot.png" />
 
 	<node pkg="tracking_controller" type="tracking_controller_node" name="tracking_controller_node" output="screen" />
 	<node pkg="onboard_detector" type="fake_detector_node" name="fake_detector_node" output="screen" />
@@ -18,9 +25,24 @@
 		<param name="use_color_map" value="true" />
 	</node> -->
 
+	<!-- ==================== 数据记录与可视化 ==================== -->
+	
 	<!-- Flight Data Recorder -->
 	<include file="$(find flight_data_recorder)/launch/data_recorder.launch" />
+	
+	<!-- TTC^{-1} (Inverse Time to Collision) 实时绘图 -->
+	<!-- 自动保存图像到桌面，每2秒更新一次 -->
+	<include file="$(find flight_data_recorder)/launch/ttc_inverse_plotter.launch" if="$(arg enable_ttc_plotter)">
+		<arg name="save_path" value="$(arg ttc_save_path)" />
+		<arg name="auto_save" value="true" />
+		<arg name="save_interval_sec" value="2.0" />
+		<arg name="obstacle_ids" value="[0, 1, 2]" />
+		<arg name="window_sec" value="20.0" />
+		<arg name="y_min" value="-1.5" />
+		<arg name="y_max" value="1.5" />
+	</include>
 
+	<!-- ==================== RViz 可视化 ==================== -->
 	<include file="$(find remote_control)/launch/mpc_navigation_rviz.launch" />
 	
 	<!-- 运行轨迹可视化评估脚本 -->

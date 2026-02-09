@@ -8,35 +8,49 @@ import numpy as np
 
 def create_simple_map(output_file):
     """
-    生成一个仅包含两个圆柱障碍物的简单地图
+    生成一个仅包含五个长方体障碍物的简单地图
     - 无围墙
-    - 两个圆柱在无人机前方（默认朝 +x 方向看）
+    - 五个长方体在无人机前方（默认朝 +x 方向看）
     """
     all_points = []
     # 注意：这里分辨率最好比 mapping_param.yaml 里的 map_resolution 更细一些，
     # 这样每个体素里至少会落到一个点，不会出现“漏格子”的情况。
     resolution = 0.05  # 点云采样间距（米），建议 <= map_resolution/2
 
-    # ========== 自定义障碍物：两个“实心”圆柱 ==========
-    cylinders = [
-        {'center': [-2.0, 1.0, 0.0], 'radius': 0.5, 'height': 2.0},  # 前方偏左
-        {'center': [-4.0, -1.0, 0.0], 'radius': 0.5, 'height': 2.0}, # 更远偏右
+    # ========== 自定义障碍物：五个"实心"长方体 ==========
+# five_square的静态地图参数
+    boxes = [
+        {'center': [-1.0, 2.0, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},  # 前方偏左
+        {'center': [-1.0, -2.5, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0}, # 更远偏右
+        {'center': [-7.0, 2.5, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},
+        {'center': [-7.0, -2.2, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},
+        {'center': [-4, -0.25, 0.0], 'width': 0.5, 'depth': 0.8, 'height': 2.0},
     ]
 
-    for cyl in cylinders:
-        cx, cy, cz = cyl['center']
-        r = cyl['radius']
-        h = cyl['height']
+# tongxiang的静态地图参数
+    # boxes = [
+    #     {'center': [-1.0, 2.0, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},  # 前方偏左
+    #     {'center': [-1.0, -2.5, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0}, # 更远偏右
+    #     {'center': [-5.0, 2.5, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},
+    #     {'center': [-7.0, -2.2, 0.0], 'width': 0.5, 'depth': 0.5, 'height': 2.0},
+    #     {'center': [1.45, -1.25, 0.0], 'width': 0.5, 'depth': 0.7, 'height': 2.0},
+    # ]
 
-        # 体素方式填充整个圆柱体体积（不是只画外壳）
+    for box in boxes:
+        cx, cy, cz = box['center']
+        w = box['width']   # x方向宽度
+        d = box['depth']   # y方向深度
+        h = box['height']  # z方向高度
+
+        # 体素方式填充整个长方体体积（不是只画外壳）
         # 为了尽量对齐到栅格中心，我们在每个方向上偏移 half_res
         half_res = resolution * 0.5
         z_min = cz
         z_max = cz + h
-        x_min = cx - r
-        x_max = cx + r
-        y_min = cy - r
-        y_max = cy + r
+        x_min = cx - w / 2.0
+        x_max = cx + w / 2.0
+        y_min = cy - d / 2.0
+        y_max = cy + d / 2.0
 
         z_vals = np.arange(z_min + half_res, z_max + half_res, resolution)
         x_vals = np.arange(x_min + half_res, x_max + half_res, resolution)
@@ -45,8 +59,8 @@ def create_simple_map(output_file):
         for z in z_vals:
             for x in x_vals:
                 for y in y_vals:
-                    if (x - cx) ** 2 + (y - cy) ** 2 <= r ** 2:
-                        all_points.append([x, y, z])
+                    # 长方体不需要判断，直接添加所有点
+                    all_points.append([x, y, z])
 
     # 写入 PCD 文件
     # 规范化路径，方便后续在 mapping_param.yaml 中直接使用绝对路径
@@ -71,7 +85,7 @@ def create_simple_map(output_file):
 
     print(f"✓ 成功创建静态地图: {abs_output}")
     print(f"  - 总点数: {len(all_points)}")
-    print(f"  - 圆柱数量: {len(cylinders)}，半径约 {cylinders[0]['radius']} m，高度约 {cylinders[0]['height']} m")
+    print(f"  - 长方体数量: {len(boxes)}，宽度 {boxes[0]['width']} m，深度 {boxes[0]['depth']} m，高度 {boxes[0]['height']} m")
     print("\n下一步把下面这行填到 mapping_param.yaml 的 prebuilt_map_directory:")
     print(f'prebuilt_map_directory: "{abs_output}"')
 

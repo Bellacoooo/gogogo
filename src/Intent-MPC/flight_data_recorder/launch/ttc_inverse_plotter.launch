@@ -1,0 +1,51 @@
+<launch>
+  <!-- TTC^{-1} (Inverse Time to Collision) 实时计算与绘图节点 -->
+  
+  <!-- 配置参数 -->
+  <!-- 无人机位姿topic -->
+  <arg name="drone_odom_topic" default="/CERLAB/quadcopter/odom" />
+  
+  <!-- 障碍物信息topic -->
+  <arg name="obstacle_topic" default="/dynamic_predictor/predicted_obstacles" />
+  
+  <!-- 是否使用服务获取障碍物尺寸 -->
+  <arg name="use_service_for_size" default="true" />
+  <arg name="obstacle_service" default="/fake_detector/get_dynamic_obstacles" />
+  
+  <!-- 要跟踪的障碍物ID列表（从0开始）-->
+  <arg name="obstacle_ids" default="[0, 1, 2]" />
+  
+  <!-- TTC^{-1} 计算参数 -->
+  <arg name="eps" default="1e-3" />  <!-- 避免除零的小量 -->
+  <arg name="r_safe_default" default="0.5" />  <!-- 默认安全半径(m) -->
+  
+  <!-- 绘图参数 -->
+  <arg name="window_sec" default="20.0" />  <!-- 显示最近N秒的数据 -->
+  <arg name="y_min" default="-1.5" />  <!-- Y轴最小值 -->
+  <arg name="y_max" default="1.5" />   <!-- Y轴最大值 -->
+  <arg name="update_rate_hz" default="20" />  <!-- 绘图刷新频率 -->
+  
+  <!-- 自动保存参数 -->
+  <arg name="auto_save" default="true" />  <!-- 是否自动保存图像 -->
+  <arg name="save_path" default="/home/ff/Desktop/ttc_inverse_plot.png" />  <!-- 保存路径 -->
+  <arg name="save_interval_sec" default="2.0" />  <!-- 每N秒保存一次 -->
+  
+  <!-- 启动TTC^{-1}绘图节点 -->
+  <node name="ttc_inverse_plotter" pkg="flight_data_recorder" type="ttc_inverse_plotter.py" output="screen">
+    <param name="drone_odom_topic" value="$(arg drone_odom_topic)" />
+    <param name="obstacle_topic" value="$(arg obstacle_topic)" />
+    <param name="use_service_for_size" value="$(arg use_service_for_size)" />
+    <param name="obstacle_service" value="$(arg obstacle_service)" />
+    <rosparam param="obstacle_ids" subst_value="True">$(arg obstacle_ids)</rosparam>
+    <param name="eps" value="$(arg eps)" />
+    <param name="r_safe_default" value="$(arg r_safe_default)" />
+    <param name="window_sec" value="$(arg window_sec)" />
+    <param name="y_min" value="$(arg y_min)" />
+    <param name="y_max" value="$(arg y_max)" />
+    <param name="update_rate_hz" value="$(arg update_rate_hz)" />
+    <param name="auto_save" value="$(arg auto_save)" />
+    <param name="save_path" value="$(arg save_path)" />
+    <param name="save_interval_sec" value="$(arg save_interval_sec)" />
+  </node>
+  
+</launch>

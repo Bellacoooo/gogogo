@@ -48,12 +48,15 @@ visualize_global_map: true
 verbose: false
 
 # prebuilt_map_directory: "No"
+# A*和椭球1的定性试验静态地图
+prebuilt_map_directory: "/home/ff/intent-mpc/five_square.pcd"
 # 原论文的静态地图
 # 注意：如果路径以'/'开头，会被当作绝对路径；否则会相对于autonomous_flight包路径
 # prebuilt_map_directory: "cfg/saved_map/demo_map.pcd"  # 相对路径（推荐）
 # 或者使用绝对路径：
 # prebuilt_map_directory: "/home/ff/intent-mpc/src/Intent-MPC/autonomous_flight/cfg/saved_map/demo_map.pcd"
-# 静态背景test地图
-prebuilt_map_directory: "/home/ff/intent-mpc/my_two_cylinders.pcd"
+
+# 椭球2的定性试验静态地图
+# prebuilt_map_directory: "/home/ff/intent-mpc/tongxaing.pcd"
 # 在无人机下面的两个圆柱体，是mpc一个动态障碍物用的
 # prebuilt_map_directory: "/home/ff/intent-mpc/output.pcd"

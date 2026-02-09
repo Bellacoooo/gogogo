@@ -15,6 +15,7 @@
   <depend>geometry_msgs</depend>
   <depend>std_msgs</depend>
   <depend>onboard_detector</depend>
+  <depend>dynamic_predictor</depend>
   
   <export>
   </export>

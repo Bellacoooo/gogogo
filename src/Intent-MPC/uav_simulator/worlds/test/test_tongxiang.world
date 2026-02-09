@@ -1,10 +1,10 @@
 <sdf version='1.7'>
   <world name='default'>
     <!-- 动态障碍物：参考 generated_env.world 的格式 -->
-    <!-- 障碍物1：从 (-2.38, 3) 到 (-2.38, -0.5) -->
+    <!-- 障碍物1：从 (-1, 1) 到 (-7, 1) -->
     <model name='dynamic_cylinder_0_0.6_0.6_1.7'>
       <static>true</static>
-      <pose>-2.38 3 0.85 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+      <pose>-1 1 0.85 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -25,16 +25,16 @@
         <loop>1</loop>
         <velocity>0.4</velocity>
         <path>
-          <waypoint>-2.38 3 0.85</waypoint>
-          <waypoint>-2.38 -0.5 0.85</waypoint>
+          <waypoint>-1 1 0.85</waypoint>
+          <waypoint>-7 1 0.85</waypoint>
         </path>
       </plugin>
     </model> 
     
-    <!-- 障碍物2：从 (-5.5, 3) 到 (-5.5, -0.5) -->
+    <!-- 障碍物2：从 (-1, -2) 到 (-7, -2) -->
     <model name='dynamic_cylinder_1_0.6_0.6_1.7'>
       <static>true</static>
-      <pose>-5.5 3 0.85 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
+      <pose>-1 -2 0.85 0 0 0</pose> <!-- X, Y, Z, Roll, Pitch, Yaw -->
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -55,8 +55,8 @@
         <loop>1</loop>
         <velocity>0.4</velocity>
         <path>
-          <waypoint>-5.5 3 0.85</waypoint>
-          <waypoint>-5.5 -0.5 0.85</waypoint>
+          <waypoint>-1 -2 0.85</waypoint>
+          <waypoint>-7 -2 0.85</waypoint>
         </path>
       </plugin>
     </model> 
@@ -67,7 +67,7 @@
     <!-- 静态长方体障碍物1 -->
     <model name='static_box_0'>
       <static>true</static>
-      <pose>-1.0 2.0 1.0 0 0 0</pose> <!-- X, Y, Z(height/2), Roll, Pitch, Yaw -->
+      <pose>-1.0 3.0 1.0 0 0 0</pose> <!-- X, Y, Z(height/2), Roll, Pitch, Yaw -->
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -94,7 +94,7 @@
     <!-- 静态长方体障碍物2 -->
     <model name='static_box_1'>
       <static>true</static>
-      <pose>-1.0 -2.5 1.0 0 0 0</pose>
+      <pose>-1.0 -3.5 1.0 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -121,7 +121,7 @@
     <!-- 静态长方体障碍物3 -->
     <model name='static_box_2'>
       <static>true</static>
-      <pose>-7.0 2.5 1.0 0 0 0</pose>
+      <pose>-5.0 2.5 1.0 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -148,7 +148,7 @@
     <!-- 静态长方体障碍物4 -->
     <model name='static_box_3'>
       <static>true</static>
-      <pose>-7.0 -2.2 1.0 0 0 0</pose>
+      <pose>-7.0 -3.2 1.0 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
@@ -175,12 +175,12 @@
     <!-- 静态长方体障碍物5 -->
     <model name='static_box_4'>
       <static>true</static>
-      <pose>-4.0 -0.25 1.0 0 0 0</pose>
+      <pose>1.45 -1.25 1.0 0 0 0</pose>
       <link name='link'>
         <visual name='visual'>
           <geometry>
             <box>
-              <size>1.0 1.5 2.0</size>
+              <size>1.0 1.2 2.0</size>
             </box>
           </geometry>
           <material>
@@ -192,7 +192,7 @@
         <collision name='collision'>
           <geometry>
             <box>
-              <size>1.0 1.0 2.0</size>
+              <size>0.5 0.7 2.0</size>
             </box>
           </geometry>
         </collision>
