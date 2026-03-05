@@ -1,0 +1,587 @@
+<sdf version='1.7'>
+  <world name='default'>
+
+    <!-- ============================================================ -->
+    <!-- 场景说明: 10x20 地图 (X: [-5,5], Y: [-10,10])               -->
+    <!-- 8 个静态方形障碍物 (灰色) + 10 个动态圆柱障碍物 (红色)      -->
+    <!-- 环境/颜色参考 test_A_star.world                              -->
+    <!-- ============================================================ -->
+
+    <!-- ===================== 动态圆柱障碍物 ====================== -->
+
+    <!-- 动态0: 沿 X 往返 (-4,-9) <-> (4,-9) -->
+    <model name='dynamic_cylinder_0_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>-4.0 -9.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.4</velocity>
+        <path>
+          <waypoint>-4.0 -9.0 0.85</waypoint>
+          <waypoint>4.0 -9.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态1: 沿 Y 往返 (1,-7) <-> (1,-1) -->
+    <model name='dynamic_cylinder_1_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>1.0 -7.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.45</velocity>
+        <path>
+          <waypoint>1.0 -7.0 0.85</waypoint>
+          <waypoint>1.0 -1.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态2: 沿 Y 往返 (4,-6) <-> (4,1) -->
+    <model name='dynamic_cylinder_2_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>4.0 -6.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.38</velocity>
+        <path>
+          <waypoint>4.0 -6.0 0.85</waypoint>
+          <waypoint>4.0 1.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态3: 斜向往返 (-1,-5) <-> (3,-1) -->
+    <model name='dynamic_cylinder_3_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>-1.0 -5.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.42</velocity>
+        <path>
+          <waypoint>-1.0 -5.0 0.85</waypoint>
+          <waypoint>3.0 -1.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态4: 沿 Y 往返 (0,-2) <-> (0,5) -->
+    <model name='dynamic_cylinder_4_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>0.0 -2.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.5</velocity>
+        <path>
+          <waypoint>0.0 -2.0 0.85</waypoint>
+          <waypoint>0.0 5.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态5: 沿 X 往返 (0,3) <-> (4,3) -->
+    <model name='dynamic_cylinder_5_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>0.0 3.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.35</velocity>
+        <path>
+          <waypoint>0.0 3.0 0.85</waypoint>
+          <waypoint>4.0 3.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态6: 斜向往返 (-1,1) <-> (3,6) -->
+    <model name='dynamic_cylinder_6_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>-1.0 1.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.48</velocity>
+        <path>
+          <waypoint>-1.0 1.0 0.85</waypoint>
+          <waypoint>3.0 6.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态7: 斜向往返 (4,5) <-> (-4,8) -->
+    <model name='dynamic_cylinder_7_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>4.0 5.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.4</velocity>
+        <path>
+          <waypoint>4.0 5.0 0.85</waypoint>
+          <waypoint>-4.0 8.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态8: 沿 X 往返 (-4,7) <-> (4,7) -->
+    <model name='dynamic_cylinder_8_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>-4.0 7.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.43</velocity>
+        <path>
+          <waypoint>-4.0 7.0 0.85</waypoint>
+          <waypoint>4.0 7.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- 动态9: 斜向往返 (3,-8) <-> (-3,0) -->
+    <model name='dynamic_cylinder_9_0.6_0.6_1.7'>
+      <static>true</static>
+      <pose>3.0 -8.0 0.85 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>1.7</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.5 0.5 0.5 1</specular>
+          </material>
+        </visual>
+      </link>
+      <plugin name="obstacle_motion" filename="libobstaclePathPlugin.so">
+        <orientation>false</orientation>
+        <loop>1</loop>
+        <velocity>0.46</velocity>
+        <path>
+          <waypoint>3.0 -8.0 0.85</waypoint>
+          <waypoint>-3.0 0.0 0.85</waypoint>
+        </path>
+      </plugin>
+    </model>
+
+    <!-- ===================== 静态方形障碍物 ====================== -->
+
+    <!-- 静态方形0: (-3, -8) -->
+    <model name='static_box_0'>
+      <static>true</static>
+      <pose>-3.0 -8.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形1: (3, -7) -->
+    <model name='static_box_1'>
+      <static>true</static>
+      <pose>3.0 -7.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形2: (-2, -4) -->
+    <model name='static_box_2'>
+      <static>true</static>
+      <pose>-2.0 -4.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形3: (3, -3) -->
+    <model name='static_box_3'>
+      <static>true</static>
+      <pose>3.0 -3.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形4: (-3, 0) -->
+    <model name='static_box_4'>
+      <static>true</static>
+      <pose>-3.0 0.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形5: (1, 2) -->
+    <model name='static_box_5'>
+      <static>true</static>
+      <pose>1.0 2.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.5 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.5 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形6: (-3, 5) -->
+    <model name='static_box_6'>
+      <static>true</static>
+      <pose>-3.0 5.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- 静态方形7: (3, 7) -->
+    <model name='static_box_7'>
+      <static>true</static>
+      <pose>3.0 7.0 1.0 0 0 0</pose>
+      <link name='link'>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+            <specular>0.3 0.3 0.3 1</specular>
+          </material>
+        </visual>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>1.0 1.0 2.0</size>
+            </box>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <!-- ===================== 环境基础（参考 test_A_star.world）== -->
+
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+      <spot>
+        <inner_angle>0</inner_angle>
+        <outer_angle>0</outer_angle>
+        <falloff>0</falloff>
+      </spot>
+    </light>
+
+    <!-- 地面：只保留 collision，不加 visual（避免昏暗） -->
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+        </collision>
+      </link>
+    </model>
+
+    <physics type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose>6.39292 -16.0551 24.6198 0 0.913797 2.1162</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+  </world>
+</sdf>
